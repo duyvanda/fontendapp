@@ -39,11 +39,6 @@
     "experiments": {
       "typedRoutes": true
     },
-    "expo": {
-      "router": {
-        "root": "src/app"
-      }
-    },
     "extra": {
       "router": {},
       "eas": {
