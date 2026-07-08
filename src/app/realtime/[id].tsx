@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Modal, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { globalStyles, colors, spacing } from '@/styles/global';
 import CustomHeader from '@/components/CustomHeader';
@@ -21,10 +21,10 @@ export default function RealtimeReportScreen() {
   const [showParamModal, setShowParamModal] = useState(false);
   const [paramsConfig, setParamsConfig] = useState<any[]>([]);
   const [formData, setFormData] = useState<Record<string, string>>({});
-  const [init, setInit] = useState(false);
+  const [initializedId, setInitializedId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user_info && id) {
+    if (user_info && id && initializedId !== id) {
       const config = REPORT_PARAMS_CONFIG[id];
       if (config && config.length > 0) {
         setParamsConfig(config);
@@ -37,9 +37,9 @@ export default function RealtimeReportScreen() {
       } else {
         fetch_filter_reports_rt(id, true, {});
       }
-      setInit(true);
+      setInitializedId(id);
     }
-  }, [user_info, id, fetch_filter_reports_rt]);
+  }, [user_info, id, initializedId, fetch_filter_reports_rt]);
 
   const handleInputChange = (key: string, value: string) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -52,13 +52,13 @@ export default function RealtimeReportScreen() {
     }
   };
 
-  if (!init) {
+  if (initializedId !== id) {
     return <View style={globalStyles.screen} />;
   }
 
   return (
     <View style={globalStyles.screen}>
-      <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} showBack />
+      <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} show_back />
       
       <Modal visible={showParamModal} transparent={true} animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
@@ -98,11 +98,16 @@ export default function RealtimeReportScreen() {
         </View>
       </Modal>
 
-      {loading ? (
-        <View style={globalStyles.emptyContainer}>
-          <Text style={globalStyles.emptyText}>Đang tải...</Text>
+      <Modal transparent={true} visible={loading} animationType="fade">
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#6c757d', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6 }}>
+            <ActivityIndicator color="#fff" size="small" style={{ marginRight: 8 }} />
+            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>Đang tải...</Text>
+          </View>
         </View>
-      ) : shared ? (
+      </Modal>
+
+      {shared ? (
         <ReportWebView 
           uri={`https://datastudio.google.com/embed/reporting/${report_id}${report_param}`}
         />

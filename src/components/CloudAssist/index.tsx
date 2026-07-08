@@ -4,20 +4,26 @@ import {
   FlatList, ActivityIndicator, KeyboardAvoidingView, Platform,
   StyleSheet
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import Markdown from 'react-native-markdown-display';
 import * as DocumentPicker from 'expo-document-picker';
 import { Camera as VisionCamera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
-import { biraStyles } from './styles';
-import { colors } from '@/styles/global';
+import Markdown from 'react-native-markdown-display';
 import { useFeedback } from '@/context/FeedbackContext';
+import { Ionicons } from '@expo/vector-icons';
 import { getBiraSessionId, saveBiraSessionId } from '@/storage/auth';
 import { 
   loadMessages, saveMessages,
   ChatMessage, createUserMessage, createBotMessage 
 } from '@/storage/chat';
 import { BIRA_API_URL, MARKDOWN_CONVERT_URL } from '@/utils/api';
-import { get_id } from '@/utils/string';
+import { 
+  get_id, 
+  generate_month_options, 
+  inserted_at, 
+  remove_accents_with_case, 
+  format_date_ymd 
+} from '@/utils/string';
+import { colors } from '@/styles/global';
+import { biraStyles } from './styles';
 
 interface CloudAssistProps {
   visible: boolean;
@@ -25,65 +31,86 @@ interface CloudAssistProps {
 }
 
 export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
-  const { user_info, user_hr_info } = useFeedback();
+  const {
+    user_info,
+    user_hr_info,
+    login_text,
+    login_loading,
+    reports,
+    filter_reports,
+    report_id,
+    report_param,
+    shared,
+    loading,
+    rp_screen,
+    login_user,
+    logout_user,
+    fetch_reports,
+    fetch_filter_reports,
+    fetch_filter_reports_rt,
+    clear_filter_report,
+    user_logger,
+    set_rp_screen,
+  } = useFeedback();
+
   const manv = user_info?.manv || 'Unknown';
   
-  const [sessionId, setSessionId] = useState<string>('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [isThinking, setIsThinking] = useState(false);
+  const [session_id, set_session_id] = useState<string>('');
+  const [messages, set_messages] = useState<ChatMessage[]>([]);
+  const [input, set_input] = useState('');
+  const [is_thinking, set_is_thinking] = useState(false);
   
-  const [attachedFiles, setAttachedFiles] = useState<{name: string, content: string}[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const { hasPermission, requestPermission } = useCameraPermission();
+  const [attached_files, set_attached_files] = useState<{name: string, content: string}[]>([]);
+  const [is_uploading, set_is_uploading] = useState(false);
+  const { hasPermission: has_permission, requestPermission: request_permission } = useCameraPermission();
   const device = useCameraDevice('back');
-  const [showCamera, setShowCamera] = useState(false);
-  const cameraRef = useRef<any>(null);
+  const [show_camera, set_show_camera] = useState(false);
+  const camera_ref = useRef<any>(null);
   
   const CameraComponent = VisionCamera as any;
   
-  const flatListRef = useRef<FlatList>(null);
+  const flat_list_ref = useRef<FlatList>(null);
 
-  const userMessageCount = messages.filter(m => m.sender === 'user').length;
-  const isChatDisabled = userMessageCount >= 10 || messages.some(m => m.sender === 'bot' && m.text.includes("STOP AGENT"));
+  const user_message_count = messages.filter(m => m.sender === 'user').length;
+  const is_chat_disabled = user_message_count >= 10 || messages.some(m => m.sender === 'bot' && m.text.includes("STOP AGENT"));
 
   // Init Session
   useEffect(() => {
     (async () => {
-      if (visible && !sessionId) {
-        let storedSession = await getBiraSessionId();
-        if (!storedSession) {
-          storedSession = get_id(); // Use generated ID as session fallback if needed
-          await saveBiraSessionId(storedSession);
+      if (visible && !session_id) {
+        let stored_session = await getBiraSessionId();
+        if (!stored_session) {
+          stored_session = get_id(); // Use generated ID as session fallback if needed
+          await saveBiraSessionId(stored_session);
         }
-        setSessionId(storedSession);
-        const storedMsgs = await loadMessages(storedSession);
-        if (storedMsgs.length > 0) {
-          setMessages(storedMsgs);
+        set_session_id(stored_session);
+        const stored_msgs = await loadMessages(stored_session);
+        if (stored_msgs.length > 0) {
+          set_messages(stored_msgs);
         }
       }
     })();
-  }, [visible, sessionId]);
+  }, [visible, session_id]);
 
   // Save Messages on change
   useEffect(() => {
-    if (sessionId && messages.length > 0) {
-      saveMessages(sessionId, messages);
+    if (session_id && messages.length > 0) {
+      saveMessages(session_id, messages);
     }
-  }, [messages, sessionId]);
+  }, [messages, session_id]);
 
-  const handleNewChat = async () => {
-    if (!sessionId) return;
-    const newSession = get_id();
-    await saveBiraSessionId(newSession);
-    setSessionId(newSession);
-    setMessages([]);
-    setInput('');
-    setAttachedFiles([]);
+  const handle_new_chat = async () => {
+    if (!session_id) return;
+    const new_session = get_id();
+    await saveBiraSessionId(new_session);
+    set_session_id(new_session);
+    set_messages([]);
+    set_input('');
+    set_attached_files([]);
   };
 
-  const handlePickFile = async () => {
-    if (isChatDisabled || isUploading || attachedFiles.length >= 2) return;
+  const handle_pick_file = async () => {
+    if (is_chat_disabled || is_uploading || attached_files.length >= 2) return;
     
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -96,22 +123,22 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
         // Note: In RN, uploading file to API requires FormData with uri, type, name.
         // For simplicity in this port, we mock the behavior or you can implement actual fetch with FormData
         alert("File attach feature requires full backend integration. Appending dummy content for demo.");
-        setAttachedFiles(prev => [...prev, { name: file.name, content: "Dummy extracted content" }]);
+        set_attached_files(prev => [...prev, { name: file.name, content: "Dummy extracted content" }]);
       }
     } catch (error) {
       console.error("Error picking file", error);
     }
   };
 
-  const removeFile = (index: number) => {
-    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  const remove_file = (index: number) => {
+    set_attached_files(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleOpenCamera = async () => {
-    if (isChatDisabled || isUploading || attachedFiles.length >= 2) return;
+  const handle_open_camera = async () => {
+    if (is_chat_disabled || is_uploading || attached_files.length >= 2) return;
     
-    if (!hasPermission) {
-      const granted = await requestPermission();
+    if (!has_permission) {
+      const granted = await request_permission();
       if (!granted) {
         alert("Cần cấp quyền truy cập camera để chụp ảnh.");
         return;
@@ -123,62 +150,62 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
       return;
     }
     
-    setShowCamera(true);
+    set_show_camera(true);
   };
   
-  const handleTakePicture = async () => {
-    if (cameraRef.current) {
-      setIsUploading(true);
-      setShowCamera(false);
+  const handle_take_picture = async () => {
+    if (camera_ref.current) {
+      set_is_uploading(true);
+      set_show_camera(false);
       try {
-        const photo = await cameraRef.current.takePhoto({
+        const photo = await camera_ref.current.takePhoto({
           qualityPrioritization: 'speed'
         });
         if (photo) {
-          setAttachedFiles(prev => [...prev, { name: `photo_${Date.now()}.jpg`, content: "Hình ảnh chụp từ Camera" }]);
+          set_attached_files(prev => [...prev, { name: `photo_${Date.now()}.jpg`, content: "Hình ảnh chụp từ Camera" }]);
         }
       } catch (e) {
         console.error("Camera error", e);
       } finally {
-        setIsUploading(false);
+        set_is_uploading(false);
       }
     }
   };
 
-  const handleSend = async (suggestedText?: string) => {
-    if (isChatDisabled || isThinking) return;
+  const handle_send = async (suggested_text?: string) => {
+    if (is_chat_disabled || is_thinking) return;
     
-    const query = suggestedText || input;
-    if (!query.trim() && attachedFiles.length === 0) return;
+    const query = suggested_text || input;
+    if (!query.trim() && attached_files.length === 0) return;
 
-    let displayText = query.trim();
-    if (attachedFiles.length > 0) {
-      const fileNames = attachedFiles.map(f => f.name).join(", ");
-      if (!displayText) displayText = `📎 [Đã gửi tài liệu: ${fileNames}]`;
+    let display_text = query.trim();
+    if (attached_files.length > 0) {
+      const file_names = attached_files.map(f => f.name).join(", ");
+      if (!display_text) display_text = `📎 [Đã gửi tài liệu: ${file_names}]`;
     }
 
-    const userMsg = createUserMessage(displayText);
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    setIsThinking(true);
+    const user_msg = createUserMessage(display_text);
+    set_messages(prev => [...prev, user_msg]);
+    set_input('');
+    set_is_thinking(true);
 
     // Build payload
-    const msgParts = [];
-    if (query.trim()) msgParts.push(`[Câu hỏi của user]: ${query.trim()}`);
-    else if (attachedFiles.length > 0) msgParts.push(`[Câu hỏi của user]: Đọc nội dung tài liệu.`);
+    const msg_parts = [];
+    if (query.trim()) msg_parts.push(`[Câu hỏi của user]: ${query.trim()}`);
+    else if (attached_files.length > 0) msg_parts.push(`[Câu hỏi của user]: Đọc nội dung tài liệu.`);
     
-    attachedFiles.forEach(f => {
-      msgParts.push(`[Tài liệu đính kèm (${f.name})]: ${f.content}`);
+    attached_files.forEach(f => {
+      msg_parts.push(`[Tài liệu đính kèm (${f.name})]: ${f.content}`);
     });
 
-    const finalQuery = msgParts.join('\n');
+    const final_query = msg_parts.join('\n');
 
     const payload = {
       appName: "bira_agent",
       userId: manv,
-      sessionId,
+      sessionId: session_id,
       state: { ma_phan_quyen: manv },
-      newMessage: { role: "user", parts: [{ text: finalQuery }] }
+      newMessage: { role: "user", parts: [{ text: final_query }] }
     };
 
     try {
@@ -191,39 +218,39 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       
       const events = await response.json();
-      let botResponse = "Không tìm thấy phản hồi từ Agent.";
+      let bot_response = "Không tìm thấy phản hồi từ Agent.";
       
       if (Array.isArray(events)) {
         for (let i = events.length - 1; i >= 0; i--) {
           const event = events[i];
           if (event.content && event.author !== "user" && event.content.parts?.[0]?.text) {
-            botResponse = event.content.parts[0].text;
+            bot_response = event.content.parts[0].text;
             break;
           }
         }
       } else if (events.errorMessage) {
-        botResponse = events.errorMessage;
+        bot_response = events.errorMessage;
       }
 
-      setMessages(prev => [...prev, createBotMessage(botResponse)]);
+      set_messages(prev => [...prev, createBotMessage(bot_response)]);
     } catch (error: any) {
-      setMessages(prev => [...prev, createBotMessage(`**Lỗi:** ${error.message || "Kết nối thất bại"}`, true)]);
+      set_messages(prev => [...prev, createBotMessage(`**Lỗi:** ${error.message || "Kết nối thất bại"}`, true)]);
     } finally {
-      setIsThinking(false);
-      setAttachedFiles([]);
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+      set_is_thinking(false);
+      set_attached_files([]);
+      setTimeout(() => flat_list_ref.current?.scrollToEnd({ animated: true }), 100);
     }
   };
 
-  const renderMessage = ({ item }: { item: ChatMessage }) => {
-    const isUser = item.sender === 'user';
+  const render_message = ({ item }: { item: ChatMessage }) => {
+    const is_user = item.sender === 'user';
     const date = new Date(item.timestamp);
-    const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    const time_str = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
 
     return (
-      <View style={[biraStyles.messageWrapper, isUser ? biraStyles.messageUser : biraStyles.messageBot]}>
-        <View style={[biraStyles.bubble, isUser ? biraStyles.bubbleUser : biraStyles.bubbleBot]}>
-          {isUser ? (
+      <View style={[biraStyles.messageWrapper, is_user ? biraStyles.messageUser : biraStyles.messageBot]}>
+        <View style={[biraStyles.bubble, is_user ? biraStyles.bubbleUser : biraStyles.bubbleBot]}>
+          {is_user ? (
             <Text style={biraStyles.messageTextUser}>{item.text}</Text>
           ) : (
             <Markdown style={{ body: { color: colors.textPrimary, fontSize: 15 } }}>
@@ -231,8 +258,8 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
             </Markdown>
           )}
         </View>
-        <Text style={[biraStyles.timestamp, isUser ? biraStyles.timestampUser : biraStyles.timestampBot]}>
-          {isUser ? 'Bạn' : 'Bira'} • {timeStr}
+        <Text style={[biraStyles.timestamp, is_user ? biraStyles.timestampUser : biraStyles.timestampBot]}>
+          {is_user ? 'Bạn' : 'Bira'} • {time_str}
         </Text>
       </View>
     );
@@ -259,7 +286,7 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {messages.length > 0 && (
-                <TouchableOpacity onPress={handleNewChat} style={{ marginRight: 16 }}>
+                <TouchableOpacity onPress={handle_new_chat} style={{ marginRight: 16 }}>
                   <Ionicons name="refresh" size={24} color={colors.textCaption} />
                 </TouchableOpacity>
               )}
@@ -271,12 +298,12 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
 
           {/* Messages */}
           <FlatList
-            ref={flatListRef}
+            ref={flat_list_ref}
             data={messages}
             keyExtractor={item => item.id}
-            renderItem={renderMessage}
+            renderItem={render_message}
             contentContainerStyle={biraStyles.messagesList}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onContentSizeChange={() => flat_list_ref.current?.scrollToEnd({ animated: true })}
             ListHeaderComponent={
               messages.length === 0 ? (
                 <View>
@@ -288,7 +315,7 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
                   <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.textCaption, marginBottom: 8 }}>TÔI SẼ GIÚP NHANH:</Text>
                   <View style={biraStyles.suggestionsContainer}>
                     {user_hr_info?.cloud_assist_questions?.map((q, idx) => (
-                      <TouchableOpacity key={idx} style={biraStyles.suggestionChip} onPress={() => handleSend(q.question)}>
+                      <TouchableOpacity key={idx} style={biraStyles.suggestionChip} onPress={() => handle_send(q.question)}>
                         <Text style={biraStyles.suggestionText}>{q.question}</Text>
                       </TouchableOpacity>
                     ))}
@@ -297,7 +324,7 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
               ) : null
             }
             ListFooterComponent={
-              isThinking ? (
+              is_thinking ? (
                 <View style={[biraStyles.messageWrapper, biraStyles.messageBot]}>
                   <View style={[biraStyles.bubble, biraStyles.bubbleBot, { flexDirection: 'row', alignItems: 'center' }]}>
                     <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
@@ -309,18 +336,18 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
           />
 
           {/* Attachments Preview */}
-          {(attachedFiles.length > 0 || isUploading) && (
+          {(attached_files.length > 0 || is_uploading) && (
             <View style={biraStyles.attachmentsArea}>
-              {attachedFiles.map((f, idx) => (
+              {attached_files.map((f, idx) => (
                 <View key={idx} style={biraStyles.attachmentItem}>
                   <Ionicons name="document-attach" size={16} color={colors.textSecondary} />
                   <Text style={biraStyles.attachmentName} numberOfLines={1}>{f.name}</Text>
-                  <TouchableOpacity onPress={() => removeFile(idx)}>
+                  <TouchableOpacity onPress={() => remove_file(idx)}>
                     <Ionicons name="close-circle" size={18} color={colors.textCaption} />
                   </TouchableOpacity>
                 </View>
               ))}
-              {isUploading && (
+              {is_uploading && (
                 <View style={biraStyles.attachmentItem}>
                   <ActivityIndicator size="small" color={colors.primary} />
                   <Text style={biraStyles.attachmentName}>Đang xử lý file...</Text>
@@ -334,41 +361,41 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
             <View style={biraStyles.inputWrapper}>
               <TouchableOpacity 
                 style={biraStyles.attachButton} 
-                onPress={handlePickFile}
-                disabled={isChatDisabled || attachedFiles.length >= 2 || isThinking}
+                onPress={handle_pick_file}
+                disabled={is_chat_disabled || attached_files.length >= 2 || is_thinking}
               >
                 <Ionicons name="attach" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
               
               <TouchableOpacity 
                 style={[biraStyles.attachButton, { marginLeft: -8 }]} 
-                onPress={handleOpenCamera}
-                disabled={isChatDisabled || attachedFiles.length >= 2 || isThinking}
+                onPress={handle_open_camera}
+                disabled={is_chat_disabled || attached_files.length >= 2 || is_thinking}
               >
                 <Ionicons name="camera" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
               
               <TextInput
                 style={biraStyles.textInput}
-                placeholder={isChatDisabled ? "Vui lòng Reset để tiếp tục" : "Nhập câu hỏi..."}
+                placeholder={is_chat_disabled ? "Vui lòng Reset để tiếp tục" : "Nhập câu hỏi..."}
                 value={input}
-                onChangeText={setInput}
+                onChangeText={set_input}
                 multiline
                 maxLength={500}
-                editable={!isChatDisabled && !isThinking}
+                editable={!is_chat_disabled && !is_thinking}
               />
 
-              <View style={[biraStyles.limitBadge, userMessageCount >= 10 ? biraStyles.limitBadgeDanger : userMessageCount >= 8 ? biraStyles.limitBadgeWarning : null]}>
-                <Text style={[biraStyles.limitText, userMessageCount >= 10 && biraStyles.limitTextDanger]}>
-                  {userMessageCount}/10
+              <View style={[biraStyles.limitBadge, user_message_count >= 10 ? biraStyles.limitBadgeDanger : user_message_count >= 8 ? biraStyles.limitBadgeWarning : null]}>
+                <Text style={[biraStyles.limitText, user_message_count >= 10 && biraStyles.limitTextDanger]}>
+                  {user_message_count}/10
                 </Text>
               </View>
             </View>
 
             <TouchableOpacity 
-              style={[biraStyles.sendButton, (!input.trim() && attachedFiles.length === 0) || isChatDisabled || isThinking ? biraStyles.sendButtonDisabled : null]}
-              onPress={() => handleSend()}
-              disabled={(!input.trim() && attachedFiles.length === 0) || isChatDisabled || isThinking}
+              style={[biraStyles.sendButton, (!input.trim() && attached_files.length === 0) || is_chat_disabled || is_thinking ? biraStyles.sendButtonDisabled : null]}
+              onPress={() => handle_send()}
+              disabled={(!input.trim() && attached_files.length === 0) || is_chat_disabled || is_thinking}
             >
               <Ionicons name="send" size={20} color={colors.textInverse} style={{ marginLeft: 4 }} />
             </TouchableOpacity>
@@ -378,20 +405,20 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
       </KeyboardAvoidingView>
 
       {/* Fullscreen Camera Overlay */}
-      {showCamera && device && (
+      {show_camera && device && (
         <View style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }, { zIndex: 9999, backgroundColor: 'black' }]}>
           <CameraComponent 
             style={{ flex: 1 }} 
             device={device}
             isActive={true}
             photo={true}
-            ref={cameraRef}
+            ref={camera_ref}
           />
           <View style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }, { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end', padding: 32, alignItems: 'center' }]}>
-            <TouchableOpacity onPress={handleTakePicture} style={{
+            <TouchableOpacity onPress={handle_take_picture} style={{
               width: 70, height: 70, borderRadius: 35, backgroundColor: 'white', borderWidth: 4, borderColor: colors.primary
             }} />
-            <TouchableOpacity onPress={() => setShowCamera(false)} style={{ position: 'absolute', top: 50, right: 20 }}>
+            <TouchableOpacity onPress={() => set_show_camera(false)} style={{ position: 'absolute', top: 50, right: 20 }}>
               <Ionicons name="close-circle" size={40} color="white" />
             </TouchableOpacity>
           </View>

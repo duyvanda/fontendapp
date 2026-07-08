@@ -6,7 +6,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Dimensions } from 'react-native';
 
-import { LOCALURL, REPORTS_API_URL } from '@/utils/api';
+import { LOCALURL, REPORTS_API_URL, API_BASE_URL } from '@/utils/api';
 import { get_version } from '@/utils/string';
 import {
   saveUserInfo,
@@ -109,7 +109,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     set_login_loading(true);
     set_login_text('');
     try {
-      const response = await fetch(`${LOCALURL}/loginv1/`, {
+      const response = await fetch(`${API_BASE_URL}/loginv1/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(logindata),
@@ -143,7 +143,10 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   const fetch_reports = async (manv: string) => {
     try {
       const response = await fetch(`${REPORTS_API_URL}?manv=${manv}`);
-      const data = await response.json();
+      const responseText = await response.text();
+      // Replace http with https for any hardcoded backend URLs
+      const replacedText = responseText.replace(/http:\/\/bi\.meraplion\.com/g, 'https://bi.meraplion.com');
+      const data = JSON.parse(replacedText);
       const raw_reports: Report[] = data['rows_data'] || [];
       const lstreports = raw_reports.map((el) => ({ ...el, manv }));
       set_reports(lstreports);

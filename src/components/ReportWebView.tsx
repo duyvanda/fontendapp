@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { globalStyles, colors } from '@/styles/global';
 
@@ -17,16 +17,24 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       )}
-      <WebView
-        source={{ uri }}
-        onLoadStart={() => setLoading(true)}
-        onLoadEnd={() => setLoading(false)}
-        style={{ flex: 1, backgroundColor: 'transparent' }}
-        startInLoadingState={true}
-        renderLoading={() => <View />} // Handled by outer ActivityIndicator
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-      />
+      {Platform.OS === 'web' ? (
+        <iframe 
+          src={uri} 
+          style={{ flex: 1, width: '100%', height: '100%', border: 'none' }} 
+          onLoad={() => setLoading(false)}
+        />
+      ) : (
+        <WebView
+          source={{ uri }}
+          onLoadStart={() => setLoading(true)}
+          onLoadEnd={() => setLoading(false)}
+          style={{ flex: 1, backgroundColor: 'transparent' }}
+          startInLoadingState={true}
+          renderLoading={() => <View />} // Handled by outer ActivityIndicator
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+        />
+      )}
     </View>
   );
 }

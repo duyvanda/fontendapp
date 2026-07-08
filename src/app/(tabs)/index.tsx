@@ -1,327 +1,249 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  Dimensions
+  View, Text, FlatList, RefreshControl, TextInput,
+  TouchableOpacity, StyleSheet, Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { globalStyles, colors, spacing, radius } from '@/styles/global';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedback, Report } from '@/context/FeedbackContext';
 import { Ionicons } from '@expo/vector-icons';
-import { remove_accents } from '@/utils/string';
-
-const { width } = Dimensions.get('window');
+import { remove_accents_with_case } from '@/utils/string';
+import { colors, spacing, radius } from '@/styles/global';
 
 const REPORT_ICONS = ['analytics', 'pie-chart', 'stats-chart', 'bar-chart', 'trending-up'];
 const REPORT_COLORS = [
   { bg: 'rgba(0, 167, 157, 0.1)', icon: '#00A79D' },
-  { bg: 'rgba(14, 165, 233, 0.1)', icon: '#0ea5e9' },
-  { bg: 'rgba(220, 123, 83, 0.2)', icon: '#984623' },
-  { bg: 'rgba(16, 185, 129, 0.1)', icon: '#10b981' },
-  { bg: 'rgba(245, 158, 11, 0.1)', icon: '#f59e0b' },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user_info, reports, fetch_reports, clear_filter_report } = useFeedback();
-  const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'favorites'>('all');
+  const insets = useSafeAreaInsets();
+  const {
+    user_info, reports, fetch_reports, clear_filter_report, logout_user
+  } = useFeedback();
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    if (user_info?.manv) {
-      await fetch_reports(user_info.manv);
-    }
-    setRefreshing(false);
+  const [refreshing, set_refreshing] = useState(false);
+  const [search_query, set_search_query] = useState('');
+  const [active_tab, set_active_tab] = useState<'all' | 'favorites'>('all');
+
+  const on_refresh = useCallback(async () => {
+    set_refreshing(true);
+    if (user_info?.manv) await fetch_reports(user_info.manv);
+    set_refreshing(false);
   }, [user_info, fetch_reports]);
 
-  const filteredReports = useMemo(() => {
+  const filtered_reports = useMemo(() => {
     let list = reports;
-    if (activeTab === 'favorites') {
+    if (active_tab === 'favorites') {
       list = list.filter(r => r.yeu_thich && String(r.yeu_thich) !== '0');
     }
-    
-    if (searchQuery) {
-      const q = remove_accents(searchQuery.toLowerCase());
-      list = list.filter(r => remove_accents(r.tenreport.toLowerCase()).includes(q));
+    if (search_query) {
+      const q = remove_accents_with_case(search_query.toLowerCase());
+      list = list.filter(r => remove_accents_with_case(r.tenreport.toLowerCase()).includes(q));
     }
     return list;
-  }, [reports, searchQuery, activeTab]);
+  }, [reports, search_query, active_tab]);
 
-  const handleOpenReport = (report: Report) => {
+  const handle_open_report = (report: Report) => {
     clear_filter_report();
     if (report.link_report?.startsWith('/realtime')) {
-      router.push(`/report/realtime-${report.stt}`);
+      router.push(`/realtime/${report.stt}` as any);
     } else {
-      router.push(`/report/${report.stt}`);
+      router.push(`/report/${report.stt}` as any);
     }
   };
 
-  const userInitial = user_info?.manv ? user_info.manv.charAt(0).toUpperCase() : 'U';
+  const user_initial = user_info?.manv ? user_info.manv.charAt(0).toUpperCase() : 'U';
+
+  const render_item = ({ item, index }: { item: Report, index: number }) => {
+    const isFav = item.yeu_thich && String(item.yeu_thich) !== '0';
+    const colorTheme = REPORT_COLORS[index % REPORT_COLORS.length];
+    const iconName = REPORT_ICONS[index % REPORT_ICONS.length] as any;
+
+    return (
+      <TouchableOpacity 
+        style={styles.listItem}
+        onPress={() => handle_open_report(item)}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.avatarBox, { backgroundColor: colorTheme.bg }]}>
+          <Ionicons name={iconName} size={28} color={colorTheme.icon} />
+        </View>
+        <View style={styles.listContent}>
+          <Text style={styles.listTitle} numberOfLines={1}>{item.tenreport}</Text>
+        </View>
+        <View style={styles.listRight}>
+          <Ionicons 
+            name={isFav ? "star" : "star-outline"} 
+            size={16} 
+            color={isFav ? colors.warning : '#bdbdbd'} 
+          />
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.screen}>
-      {/* TopAppBar */}
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>{userInitial}</Text>
+      {/* Header (Zalo Style) */}
+      <View style={[styles.header, { paddingTop: insets.top, height: 56 + insets.top }]}>
+        <Ionicons name="search" size={24} color="#ffffff" style={styles.headerIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Tìm kiếm..."
+          placeholderTextColor="rgba(255,255,255,0.7)"
+          value={search_query}
+          onChangeText={set_search_query}
+        />
+        {search_query ? (
+          <TouchableOpacity onPress={() => set_search_query('')} style={styles.headerIconRight}>
+            <Ionicons name="close-circle" size={20} color="#ffffff" />
+          </TouchableOpacity>
+        ) : null}
+        
+        <View style={styles.userPill}>
+          <Ionicons name="person-circle" size={20} color="#ffffff" />
+          <Text style={styles.userPillText}>{user_info?.manv || 'USER'}</Text>
         </View>
-        <Text style={styles.headerTitle}>BIRA</Text>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="notifications-outline" size={24} color="#006a64" />
+        
+        <TouchableOpacity style={styles.headerIconRight} onPress={logout_user}>
+          <Ionicons name="log-out-outline" size={26} color="#ffffff" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00A79D']} />}
-      >
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color={colors.textCaption} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Tìm kiếm báo cáo, chỉ số..."
-            placeholderTextColor={colors.textCaption}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearIcon}>
-              <Ionicons name="close-circle" size={20} color={colors.textCaption} />
-            </TouchableOpacity>
-          ) : null}
-        </View>
+      {/* Tabs Row like Zalo */}
+      <View style={styles.tabRow}>
+        <TouchableOpacity 
+          style={[styles.tabButton, active_tab === 'all' && styles.tabButtonActive]} 
+          onPress={() => set_active_tab('all')}
+        >
+          <Text style={[styles.tabText, active_tab === 'all' && styles.tabTextActive]}>Tất cả</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tabButton, active_tab === 'favorites' && styles.tabButtonActive]} 
+          onPress={() => set_active_tab('favorites')}
+        >
+          <Text style={[styles.tabText, active_tab === 'favorites' && styles.tabTextActive]}>Yêu thích</Text>
+        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+      </View>
 
-        {/* Tabs */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'all' ? styles.tabButtonActive : null]}
-            onPress={() => setActiveTab('all')}
-          >
-            <Text style={[styles.tabText, activeTab === 'all' ? styles.tabTextActive : null]}>Tất cả</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'favorites' ? styles.tabButtonActive : null]}
-            onPress={() => setActiveTab('favorites')}
-          >
-            <Text style={[styles.tabText, activeTab === 'favorites' ? styles.tabTextActive : null]}>Yêu thích</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.dashedDivider} />
-
-        {/* Reports Grid */}
-        <View style={styles.gridContainer}>
-          {filteredReports.length > 0 ? (
-            filteredReports.map((report, index) => {
-              const isFav = report.yeu_thich && String(report.yeu_thich) !== '0';
-              const colorTheme = REPORT_COLORS[index % REPORT_COLORS.length];
-              const iconName = REPORT_ICONS[index % REPORT_ICONS.length] as any;
-
-              return (
-                <TouchableOpacity 
-                  key={report.stt}
-                  style={styles.card}
-                  onPress={() => handleOpenReport(report)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.cardHeader}>
-                    <View style={styles.cardTitleContainer}>
-                      <View style={[styles.iconBox, { backgroundColor: colorTheme.bg }]}>
-                        <Ionicons name={iconName} size={20} color={colorTheme.icon} />
-                      </View>
-                      <Text style={styles.cardTitle} numberOfLines={2}>{report.tenreport}</Text>
-                    </View>
-                    <TouchableOpacity style={styles.starButton}>
-                      <Ionicons 
-                        name={isFav ? "star" : "star-outline"} 
-                        size={22} 
-                        color={isFav ? colors.warning : colors.textCaption} 
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-          ) : (
-            <View style={globalStyles.emptyContainer}>
-              <Text style={globalStyles.emptyText}>Không tìm thấy báo cáo nào</Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+      {/* List */}
+      <FlatList
+        data={filtered_reports}
+        keyExtractor={item => item.stt}
+        renderItem={render_item}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={on_refresh} colors={[colors.primary]} />}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Không tìm thấy báo cáo nào</Text>
+          </View>
+        }
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#f7f9fb',
-  },
+  screen: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: colors.primary, // Merap color
     paddingHorizontal: spacing.md,
-    height: 64,
-    backgroundColor: '#f7f9fb',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 20,
-      },
-      android: {
-        elevation: 4,
-      },
-      web: {
-        boxShadow: '0px 4px 20px rgba(0,0,0,0.05)',
-      }
-    }),
-    zIndex: 50,
   },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(0, 167, 157, 0.2)',
-    backgroundColor: '#96f0e5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: '#006f67',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#006a64',
-    letterSpacing: -0.5,
-  },
-  iconButton: {
-    padding: spacing.xs,
-  },
-  scrollContent: {
-    padding: spacing.md,
-    paddingBottom: 100, // Leave space for bottom nav
-  },
-  searchContainer: {
+  headerIcon: { marginRight: spacing.md },
+  headerIconRight: { paddingHorizontal: spacing.sm, marginLeft: spacing.xs },
+  userPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    height: 52,
-    marginBottom: spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginLeft: spacing.sm,
   },
-  searchIcon: {
-    marginRight: spacing.sm,
-  },
-  clearIcon: {
-    padding: spacing.xs,
+  userPillText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
-    color: colors.textPrimary,
+    fontSize: 17,
+    color: '#ffffff',
     height: '100%',
   },
-  tabsContainer: {
+  
+  tabRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
   },
   tabButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 6,
-    borderRadius: radius.full,
-    marginRight: spacing.sm,
-    backgroundColor: '#eceef0',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    alignItems: 'center',
   },
   tabButtonActive: {
-    backgroundColor: '#96f0e5',
+    borderBottomWidth: 2,
+    borderBottomColor: '#000000',
   },
   tabText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#3c4947',
-    letterSpacing: 0.5,
+    fontSize: 15,
+    color: '#757575',
+    fontWeight: '500',
   },
   tabTextActive: {
-    color: '#006f67',
-  },
-  dashedDivider: {
-    height: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-    marginBottom: spacing.md,
-  },
-  gridContainer: {
-    flexDirection: width > 600 ? 'row' : 'column',
-    flexWrap: width > 600 ? 'wrap' : 'nowrap',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(226, 232, 240, 0.5)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 3,
-    width: width > 600 ? '48%' : '100%',
-    marginBottom: width > 600 ? 0 : spacing.sm,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cardTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  cardTitle: {
-    fontSize: 16,
+    color: '#000000',
     fontWeight: '600',
-    color: '#191c1e',
+  },
+  
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#ffffff',
+  },
+  avatarBox: {
+    width: 52, height: 52, borderRadius: 26,
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: 16,
+  },
+  listContent: {
     flex: 1,
+    justifyContent: 'center',
   },
-  starButton: {
-    padding: spacing.xs,
+  listTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1a1a1a',
+    marginBottom: 4,
   },
+  listSubtitle: {
+    fontSize: 14,
+    color: '#8e8e93',
+  },
+  listRight: {
+    marginLeft: 12,
+    alignItems: 'flex-end',
+    justifyContent: 'flex-start',
+    height: 40, // align star to top right
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
+    marginLeft: 84, // Align with text (16 + 52 + 16)
+  },
+  emptyContainer: {
+    padding: 40, alignItems: 'center'
+  },
+  emptyText: {
+    color: '#757575', fontSize: 15
+  }
 });

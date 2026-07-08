@@ -3,7 +3,7 @@
  * Port từ frontend1/src/context/FeedbackContext.js constants.
  */
 
-export const API_BASE_URL = 'https://bi.meraplion.com/local';
+export const API_BASE_URL = 'https://birest-6ey4kecoka-as.a.run.app/api';
 export const LOCALURL = 'https://bi.meraplion.com/local';
 export const BIRA_API_URL = 'https://bi.meraplion.com:18002/api';
 export const MARKDOWN_CONVERT_URL = 'https://bi.meraplion.com:18002/api/convert-to-markdown';

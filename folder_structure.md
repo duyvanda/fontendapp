@@ -1,17 +1,25 @@
+# 📂 Cấu trúc thư mục Dự án BIRA App
+
+Dưới đây là cấu trúc tổ chức mã nguồn của toàn bộ ứng dụng:
+
+```text
 src/
 ├── app/                             <-- Hệ thống chuyển trang (File-based Routing)
 │   ├── _layout.tsx                  <-- Root Layout (Bọc FeedbackProvider, ẩn Header gốc)
 │   ├── login.tsx                    <-- Màn hình Đăng nhập (Full Screen)
 │   │
 │   ├── (tabs)/                      <-- Nhóm Màn hình chính (Có Tab Bar dưới đáy)
-│   │   ├── _layout.tsx              <-- Định nghĩa 3 tabs chính dưới màn hình
-│   │   ├── index.tsx                <-- Màn hình Home (Dashboard)
-│   │   └── reports.tsx              <-- Màn hình danh sách Reports (Thay cho Portal/ReportList)
+│   │   ├── _layout.tsx              <-- Định nghĩa 3 tabs chính dưới màn hình (Home, BIRA, Apps)
+│   │   ├── index.tsx                <-- Màn hình Home (Dashboard, danh sách báo cáo)
+│   │   ├── bira.tsx                 <-- Tab phụ kích hoạt Trợ lý ảo
+│   │   └── apps.tsx                 <-- Tab Ứng dụng & Công cụ (Link ngoài)
 │   │
-│   └── report/                      <-- Nhóm màn hình xem báo cáo (Ngoài tabs để ẨN Tab Bar)
-│       ├── [id].tsx                 <-- Màn hình xem Report tĩnh (Tương đương /reportscreen/:id)
-│       ├── realtime-[id].tsx        <-- Màn hình xem Realtime (Tương đương /realtime/:id)
-│       └── ton-kho-toc-do-ban.tsx    <-- [NEW] File code riêng cho báo cáo "Tồn kho & Tốc độ bán"
+│   ├── report/                      <-- Nhóm màn hình xem báo cáo tĩnh (Ngoài tabs để ẨN Tab Bar)
+│   │   ├── [id].tsx                 <-- Màn hình xem Report tĩnh (Tương đương /reportscreen/:id)
+│   │   └── ton-kho-toc-do-ban.tsx   <-- [NEW] File code riêng cho báo cáo "Tồn kho & Tốc độ bán"
+│   │
+│   └── realtime/                    <-- Nhóm màn hình xem báo cáo Realtime
+│       └── [id].tsx                 <-- Màn hình xem Realtime (Có popup cấu hình tham số báo cáo)
 │
 ├── components/                      <-- Các Component tái sử dụng
 │   ├── CloudAssist/
@@ -33,3 +41,4 @@ src/
 │
 └── styles/                          <-- Theme và Styles chung
     └── global.ts                    <-- Màu sắc (colors), kiểu chữ chung của app
+```

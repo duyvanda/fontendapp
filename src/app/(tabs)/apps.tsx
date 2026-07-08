@@ -6,8 +6,8 @@ import CustomHeader from '@/components/CustomHeader';
 
 // Danh sách các ứng dụng
 const APP_ITEMS = [
-  { id: 'crm', icon: 'briefcase', label: 'CRM Home', url: 'https://crm.meraplion.com' },
-  { id: 'crmtp', icon: 'globe', label: 'CRM (TP)', url: 'https://qlcptp.meraplion.com' },
+  { id: 'crm', icon: 'briefcase', label: 'CRM Home', url: 'https://ds.meraplion.com/portal' },
+  { id: 'crmtp', icon: 'globe', label: 'CRM (TP)', url: 'https://ds.meraplion.com/portal' },
 ];
 
 export default function AppsScreen() {

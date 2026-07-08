@@ -14,27 +14,47 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useFeedback } from '@/context/FeedbackContext';
-import { globalStyles, colors, spacing, radius, typography } from '@/styles/global';
 import { getUserInfo } from '@/storage/auth';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, radius } from '@/styles/global';
 
 const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { login_user, user_info, login_text, login_loading } = useFeedback();
+  const {
+    user_info,
+    user_hr_info,
+    login_text,
+    login_loading,
+    reports,
+    filter_reports,
+    report_id,
+    report_param,
+    shared,
+    loading,
+    rp_screen,
+    login_user,
+    logout_user,
+    fetch_reports,
+    fetch_filter_reports,
+    fetch_filter_reports_rt,
+    clear_filter_report,
+    user_logger,
+    set_rp_screen,
+  } = useFeedback();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isEmailFocused, setIsEmailFocused] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, set_email] = useState('');
+  const [password, set_password] = useState('');
+  const [is_email_focused, set_is_email_focused] = useState(false);
+  const [is_password_focused, set_is_password_focused] = useState(false);
+  const [show_password, set_show_password] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const storedUser = await getUserInfo();
-      if (storedUser || user_info) {
+      const stored_user = await getUserInfo();
+      if (stored_user || user_info) {
         if (params.redirect) {
           // Handle redirect if needed
         } else {
@@ -44,12 +64,12 @@ export default function LoginScreen() {
     })();
   }, [user_info, router, params.redirect]);
 
-  const handleLogin = () => {
+  const handle_login = () => {
     if (!email || !password) return;
     login_user({ email: email.toUpperCase(), password });
   };
 
-  const handleResetPassword = () => {
+  const handle_reset_password = () => {
     Linking.openURL(
       'https://eoffice.meraplion.com/admincp/reset-password?redirect_url=https://eoffice.meraplion.com/workgate/callback'
     );
@@ -75,11 +95,11 @@ export default function LoginScreen() {
         <View style={styles.card}>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>TÊN ĐĂNG NHẬP</Text>
-            <View style={[styles.inputWrapper, isEmailFocused && styles.inputWrapperFocused]}>
+            <View style={[styles.inputWrapper, is_email_focused && styles.inputWrapperFocused]}>
               <Ionicons 
                 name="person-outline" 
                 size={20} 
-                color={isEmailFocused ? colors.primary : colors.textCaption} 
+                color={is_email_focused ? colors.primary : colors.textCaption} 
                 style={styles.inputIcon} 
               />
               <TextInput
@@ -87,9 +107,9 @@ export default function LoginScreen() {
                 placeholder="Nhập tên đăng nhập của bạn"
                 placeholderTextColor={colors.textCaption}
                 value={email}
-                onChangeText={setEmail}
-                onFocus={() => setIsEmailFocused(true)}
-                onBlur={() => setIsEmailFocused(false)}
+                onChangeText={set_email}
+                onFocus={() => set_is_email_focused(true)}
+                onBlur={() => set_is_email_focused(false)}
                 autoCapitalize="characters"
               />
             </View>
@@ -97,11 +117,11 @@ export default function LoginScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>MẬT KHẨU</Text>
-            <View style={[styles.inputWrapper, isPasswordFocused && styles.inputWrapperFocused]}>
+            <View style={[styles.inputWrapper, is_password_focused && styles.inputWrapperFocused]}>
               <Ionicons 
                 name="lock-closed-outline" 
                 size={20} 
-                color={isPasswordFocused ? colors.primary : colors.textCaption} 
+                color={is_password_focused ? colors.primary : colors.textCaption} 
                 style={styles.inputIcon} 
               />
               <TextInput
@@ -109,17 +129,17 @@ export default function LoginScreen() {
                 placeholder="••••••••"
                 placeholderTextColor={colors.textCaption}
                 value={password}
-                onChangeText={setPassword}
-                onFocus={() => setIsPasswordFocused(true)}
-                onBlur={() => setIsPasswordFocused(false)}
-                secureTextEntry={!showPassword}
+                onChangeText={set_password}
+                onFocus={() => set_is_password_focused(true)}
+                onBlur={() => set_is_password_focused(false)}
+                secureTextEntry={!show_password}
               />
               <TouchableOpacity 
-                onPress={() => setShowPassword(!showPassword)}
+                onPress={() => set_show_password(!show_password)}
                 style={styles.eyeIcon}
               >
                 <Ionicons 
-                  name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                  name={show_password ? "eye-off-outline" : "eye-outline"} 
                   size={20} 
                   color={colors.textCaption} 
                 />
@@ -128,7 +148,7 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={handleLogin}
+            onPress={handle_login}
             disabled={login_loading}
             activeOpacity={0.8}
             style={[{ marginTop: spacing.md }, styles.loginButton]}
@@ -156,14 +176,14 @@ export default function LoginScreen() {
           </Text>
           
           <Text style={styles.helpText}>
-            Mọi thắc mắc về tài khoản vui lòng liên hệ Anh Huy IT (0902995675 - Zalo)
+            Mọi thắc mắc về tài khoản vui lòng liên hệ Anh Huy IT
           </Text>
 
-          <TouchableOpacity onPress={handleResetPassword}>
+          {/* <TouchableOpacity onPress={handle_reset_password}>
             <Text style={styles.resetText}>
               Quên mật khẩu? Bấm vào đây để đặt lại
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Footer Visual Hint */}
