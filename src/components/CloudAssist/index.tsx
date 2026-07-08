@@ -35,7 +35,6 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
   
   const [attachedFiles, setAttachedFiles] = useState<{name: string, content: string}[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  
   const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice('back');
   const [showCamera, setShowCamera] = useState(false);
