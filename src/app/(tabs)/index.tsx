@@ -19,7 +19,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
-    user_info, reports, fetch_reports, clear_filter_report, logout_user
+    user_info, reports, fetch_reports, clear_filter_report, logout_user, toggle_favorite
   } = useFeedback();
 
   const [refreshing, set_refreshing] = useState(false);
@@ -72,13 +72,17 @@ export default function HomeScreen() {
         <View style={styles.listContent}>
           <Text style={styles.listTitle} numberOfLines={1}>{item.tenreport}</Text>
         </View>
-        <View style={styles.listRight}>
+        <TouchableOpacity 
+          style={styles.listRight} 
+          onPress={() => toggle_favorite(item)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Ionicons 
             name={isFav ? "star" : "star-outline"} 
-            size={16} 
+            size={22} 
             color={isFav ? colors.warning : '#bdbdbd'} 
           />
-        </View>
+        </TouchableOpacity>
       </TouchableOpacity>
     );
   };
@@ -117,12 +121,14 @@ export default function HomeScreen() {
           style={[styles.tabButton, active_tab === 'all' && styles.tabButtonActive]} 
           onPress={() => set_active_tab('all')}
         >
+          <Ionicons name="grid-outline" size={18} color={active_tab === 'all' ? '#000000' : '#757575'} style={{ marginRight: 6 }} />
           <Text style={[styles.tabText, active_tab === 'all' && styles.tabTextActive]}>Tất cả</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.tabButton, active_tab === 'favorites' && styles.tabButtonActive]} 
           onPress={() => set_active_tab('favorites')}
         >
+          <Ionicons name="star" size={18} color={active_tab === 'favorites' ? '#000000' : '#757575'} style={{ marginRight: 6 }} />
           <Text style={[styles.tabText, active_tab === 'favorites' && styles.tabTextActive]}>Yêu thích</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }} />
@@ -188,6 +194,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     alignItems: 'center',
+    flexDirection: 'row',
   },
   tabButtonActive: {
     borderBottomWidth: 2,

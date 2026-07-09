@@ -61,6 +61,7 @@ interface FeedbackContextValue {
   clear_filter_report: () => void;
   user_logger: (manv: string, id: string, isMB: boolean, dv_width: number) => void;
   set_rp_screen: (val: boolean) => void;
+  toggle_favorite: (report: Report) => Promise<void>;
 }
 
 // ─── Context init ──────────────────────────────────────────────────────────────
@@ -282,6 +283,34 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
+  const toggle_favorite = async (report: Report) => {
+    if (!user_info?.manv) return;
+    const is_fav = report.yeu_thich && String(report.yeu_thich) !== '0';
+    
+    // Optimistic update
+    set_reports(prev => prev.map(r => 
+      r.stt === report.stt ? { ...r, yeu_thich: is_fav ? '0' : '1' } : r
+    ));
+
+    try {
+      await fetch(`${LOCALURL}/post_data/insert_report_user_prefs_fav/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([{ 
+          manv: user_info.manv, 
+          report_id: report.stt, 
+          yeu_thich: is_fav ? '0' : '1' 
+        }]),
+      });
+    } catch (err) {
+      console.error('toggle_favorite error', err);
+      // Rollback on error
+      set_reports(prev => prev.map(r => 
+        r.stt === report.stt ? { ...r, yeu_thich: is_fav ? '1' : '0' } : r
+      ));
+    }
+  };
+
   return (
     <FeedbackContext.Provider
       value={{
@@ -302,6 +331,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         fetch_filter_reports,
         fetch_filter_reports_rt,
         clear_filter_report,
+        toggle_favorite,
         user_logger,
         set_rp_screen,
       }}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Modal, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { globalStyles, colors, spacing } from '@/styles/global';
 import CustomHeader from '@/components/CustomHeader';
 import ReportWebView from '@/components/ReportWebView';
@@ -16,6 +17,7 @@ const REPORT_PARAMS_CONFIG: Record<string, any[]> = {
 
 export default function RealtimeReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
   const { user_info, fetch_filter_reports_rt, shared, loading, report_id, report_param, filter_reports } = useFeedback();
   
   const [showParamModal, setShowParamModal] = useState(false);
@@ -62,7 +64,13 @@ export default function RealtimeReportScreen() {
       
       <Modal visible={showParamModal} transparent={true} animationType="slide">
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: colors.surface, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: spacing.lg }}>
+          <View style={{ 
+            backgroundColor: colors.surface, 
+            borderTopLeftRadius: 16, 
+            borderTopRightRadius: 16, 
+            padding: spacing.lg,
+            paddingBottom: Math.max(insets.bottom, spacing.lg)
+          }}>
             <Text style={[globalStyles.h2, { marginBottom: spacing.md }]}>📋 Nhập tham số báo cáo</Text>
             
             <ScrollView style={{ maxHeight: 400 }}>

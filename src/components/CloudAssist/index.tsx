@@ -488,6 +488,10 @@ export default function CloudAssist() {
             </TouchableOpacity>
           </View>
           
+          <Text style={{ textAlign: 'center', fontSize: 10, color: colors.textCaption, marginTop: 4, marginBottom: 8, paddingHorizontal: 16 }}>
+            BIRA là trí tuệ nhân tạo và có thể mắc lỗi. Vui lòng kiểm tra lại các thông tin quan trọng.
+          </Text>
+          
         </View>
       </KeyboardAvoidingView>
 

@@ -1,31 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import { useFeedback } from '@/context/FeedbackContext';
+import { getUserInfo } from '@/storage/auth';
+import { colors, radius, spacing } from '@/styles/global';
+import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Updates from 'expo-updates';
+import { useEffect, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Dimensions,
+  Keyboard,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Keyboard,
-  Platform,
-  ScrollView,
-  Linking,
-  StyleSheet,
-  Dimensions
+  View,
+  StatusBar
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useFeedback } from '@/context/FeedbackContext';
-import { getUserInfo } from '@/storage/auth';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radius } from '@/styles/global';
-import * as Updates from 'expo-updates';
-import Constants from 'expo-constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const {
     user_info,
     user_hr_info,
@@ -84,11 +87,13 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.screen}
     >
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      
       {/* Background Elements */}
       <View style={styles.bgCircle1} />
       <View style={styles.bgCircle2} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + 20, 80) }]} keyboardShouldPersistTaps="handled">
         {/* Logo Header */}
         <View style={styles.headerContainer}>
           <Text style={styles.logoTitle}>BI PORTAL</Text>
@@ -100,11 +105,11 @@ export default function LoginScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>TÊN ĐĂNG NHẬP</Text>
             <View style={[styles.inputWrapper, is_email_focused && styles.inputWrapperFocused]}>
-              <Ionicons 
-                name="person-outline" 
-                size={20} 
-                color={is_email_focused ? colors.primary : colors.textCaption} 
-                style={styles.inputIcon} 
+              <Ionicons
+                name="person-outline"
+                size={20}
+                color={is_email_focused ? colors.primary : colors.textCaption}
+                style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
@@ -122,11 +127,11 @@ export default function LoginScreen() {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>MẬT KHẨU</Text>
             <View style={[styles.inputWrapper, is_password_focused && styles.inputWrapperFocused]}>
-              <Ionicons 
-                name="lock-closed-outline" 
-                size={20} 
-                color={is_password_focused ? colors.primary : colors.textCaption} 
-                style={styles.inputIcon} 
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color={is_password_focused ? colors.primary : colors.textCaption}
+                style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
@@ -138,14 +143,14 @@ export default function LoginScreen() {
                 onBlur={() => set_is_password_focused(false)}
                 secureTextEntry={!show_password}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => set_show_password(!show_password)}
                 style={styles.eyeIcon}
               >
-                <Ionicons 
-                  name={show_password ? "eye-off-outline" : "eye-outline"} 
-                  size={20} 
-                  color={colors.textCaption} 
+                <Ionicons
+                  name={show_password ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color={colors.textCaption}
                 />
               </TouchableOpacity>
             </View>
@@ -173,14 +178,23 @@ export default function LoginScreen() {
             </Text>
           ) : null}
 
+          <TouchableOpacity onPress={() => router.push('/terms' as any)} style={{ marginTop: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
+            <Text style={{ textAlign: 'center', fontSize: 12, color: colors.textCaption, lineHeight: 18 }}>
+              Bằng việc đăng nhập, bạn đồng ý với{'\n'}
+              <Text style={{ color: colors.primary, textDecorationLine: 'underline', fontWeight: 'bold' }}>
+                Điều khoản sử dụng & Chính sách bảo mật
+              </Text>
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.dividerDashed} />
 
           <Text style={styles.helpText}>
-            Vui lòng đăng nhập bằng tài khoản DMS / ESALES / CLOUD / BITRIX / EOFFICE
+            Vui lòng đăng nhập bằng tài khoản DMS / BITRIX / EOFFICE
           </Text>
-          
-          <Text style={styles.helpText}>
-            Mọi thắc mắc về tài khoản vui lòng liên hệ Anh Huy IT
+
+          <Text style={[styles.helpText, { fontWeight: 'bold' }]}>
+            For Internal Use Only - Ứng dụng dành riêng cho nhân viên nội bộ
           </Text>
 
           {/* <TouchableOpacity onPress={handle_reset_password}>

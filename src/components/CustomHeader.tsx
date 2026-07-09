@@ -91,14 +91,6 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
             ellipsizeMode="tail"
           >{title}</Text>
         </View>
-
-          <TouchableOpacity
-              style={[globalStyles.row, { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 50, gap: 4 }]}
-              onPress={handle_logout}
-            >
-              <Ionicons name="log-out-outline" size={18} color={colors.textInverse} />
-              <Text style={{ color: colors.textInverse, fontSize: 12, fontWeight: '600' }}>Đăng xuất</Text>
-            </TouchableOpacity>
       </View>
     </View>
   );
