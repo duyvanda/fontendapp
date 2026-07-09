@@ -88,7 +88,7 @@ export default function LoginScreen() {
       <View style={styles.bgCircle1} />
       <View style={styles.bgCircle2} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Logo Header */}
         <View style={styles.headerContainer}>
           <Text style={styles.logoTitle}>BI PORTAL</Text>

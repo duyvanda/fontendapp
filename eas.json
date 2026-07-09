@@ -6,6 +6,9 @@
   "build": {
     "preview": {
       "channel": "preview",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      },
       "android": {
         "buildType": "apk"
       }

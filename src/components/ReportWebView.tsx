@@ -66,6 +66,19 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
           javaScriptEnabled={true}
           domStorageEnabled={true}
           renderLoading={() => <View />}
+          scalesPageToFit={false}
+          injectedJavaScriptBeforeContentLoaded={`
+            (function() {
+              var meta = document.querySelector('meta[name=viewport]');
+              if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = 'viewport';
+                document.head.appendChild(meta);
+              }
+              meta.content = 'width=1280, initial-scale=' + (window.screen.width / 1280);
+            })();
+            true;
+          `}
         />
       )}
 
