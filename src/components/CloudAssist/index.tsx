@@ -66,6 +66,14 @@ export default function CloudAssist() {
   
   const flat_list_ref = useRef<FlatList>(null);
 
+  // Auto-scroll khi có tin nhắn mới hoặc bot đang typing
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      flat_list_ref.current?.scrollToEnd({ animated: true });
+    }, 150);
+    return () => clearTimeout(timeout);
+  }, [messages, is_thinking]);
+
   const user_message_count = messages.filter(m => m.sender === 'user').length;
   const is_chat_disabled = user_message_count >= 10 || messages.some(m => m.sender === 'bot' && m.text.includes("STOP AGENT"));
 
@@ -264,7 +272,7 @@ export default function CloudAssist() {
     <View style={{ flex: 1 }}>
       <KeyboardAvoidingView 
         style={{ flex: 1, backgroundColor: colors.surface }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={{ flex: 1, backgroundColor: colors.surface }}>
           
@@ -295,7 +303,7 @@ export default function CloudAssist() {
             keyExtractor={item => item.id}
             renderItem={render_message}
             contentContainerStyle={biraStyles.messagesList}
-            onContentSizeChange={() => flat_list_ref.current?.scrollToEnd({ animated: true })}
+            onContentSizeChange={() => flat_list_ref.current?.scrollToEnd({ animated: false })}
             ListHeaderComponent={
               messages.length === 0 ? (
                 <View>
