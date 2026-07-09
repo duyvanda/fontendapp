@@ -65,12 +65,11 @@ export async function registerForPushNotificationsAsync(manv: string) {
       });
       const data = await res.json();
       if (data.status !== 'success') {
-        alert('Lỗi lưu Token Backend: ' + (data.error_message || JSON.stringify(data)));
+        console.error('Lỗi lưu Token Backend: ', data.error_message || data);
       }
 
     } catch (e: any) {
       console.error('Error registering for push notifications:', e);
-      alert('Lỗi lấy Push Token: ' + (e.message || JSON.stringify(e)));
     }
   } else {
     console.warn('Must use physical device for Push Notifications');
