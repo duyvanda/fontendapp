@@ -57,8 +57,9 @@ export const biraStyles = StyleSheet.create({
 
   // Messages Area
   messagesList: {
-    flex: 1,
+    flexGrow: 1,
     padding: spacing.md,
+    paddingBottom: spacing.xl,
   },
   messageWrapper: {
     marginBottom: spacing.md,

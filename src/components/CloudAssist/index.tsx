@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput, 
   FlatList, ActivityIndicator, KeyboardAvoidingView, Platform,
-  StyleSheet
+  StyleSheet, StatusBar, Alert, Modal, ScrollView
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
-import { Camera as VisionCamera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera';
+import { Camera as VisionCamera, useCameraDevice, useCameraPermission, usePhotoOutput } from 'react-native-vision-camera';
 import Markdown from 'react-native-markdown-display';
 import { useFeedback } from '@/context/FeedbackContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +27,7 @@ import { colors } from '@/styles/global';
 import { biraStyles } from './styles';
 
 export default function CloudAssist() {
+  const insets = useSafeAreaInsets();
   const {
     user_info,
     user_hr_info,
@@ -57,10 +59,12 @@ export default function CloudAssist() {
   
   const [attached_files, set_attached_files] = useState<{name: string, content: string}[]>([]);
   const [is_uploading, set_is_uploading] = useState(false);
+  const [preview_file, set_preview_file] = useState<{name: string, content: string} | null>(null);
   const { hasPermission: has_permission, requestPermission: request_permission } = useCameraPermission();
   const device = useCameraDevice('back');
   const [show_camera, set_show_camera] = useState(false);
   const camera_ref = useRef<any>(null);
+  const photoOutput = usePhotoOutput();
   
   const CameraComponent = VisionCamera as any;
   
@@ -117,21 +121,77 @@ export default function CloudAssist() {
     
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/*'],
+        type: [
+          'application/pdf',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-excel',
+          'text/csv',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'image/*',
+          'text/plain',
+        ],
         multiple: false
       });
       
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const file = result.assets[0];
-        // Note: In RN, uploading file to API requires FormData with uri, type, name.
-        // For simplicity in this port, we mock the behavior or you can implement actual fetch with FormData
-        alert("File attach feature requires full backend integration. Appending dummy content for demo.");
-        set_attached_files(prev => [...prev, { name: file.name, content: "Dummy extracted content" }]);
+        const filename_lower = file.name.toLowerCase();
+        const is_excel_or_pdf = filename_lower.endsWith('.xlsx') || filename_lower.endsWith('.xls') || filename_lower.endsWith('.pdf');
+        const MAX_SIZE = is_excel_or_pdf ? 500 * 1024 : 5 * 1024 * 1024;
+        const size_label = is_excel_or_pdf ? '500KB' : '5MB';
+
+        if (file.size && file.size > MAX_SIZE) {
+          Alert.alert('File quá lớn', `"${file.name}" vượt quá giới hạn ${size_label}`);
+          return;
+        }
+        if (attached_files.some(f => f.name === file.name)) {
+          Alert.alert('Trùng file', `"${file.name}" đã được đính kèm trước đó.`);
+          return;
+        }
+
+        set_is_uploading(true);
+        try {
+          const form_data = new FormData();
+          form_data.append('file', {
+            uri: file.uri,
+            type: file.mimeType || 'application/octet-stream',
+            name: file.name,
+          } as any);
+
+          const data = await new Promise<any>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', MARKDOWN_CONVERT_URL);
+            xhr.onreadystatechange = () => {
+              if (xhr.readyState !== 4) return;
+              if (xhr.status === 413) {
+                reject(new Error(`File "${file.name}" vượt quá giới hạn dung lượng Server.`));
+              } else if (xhr.status >= 200 && xhr.status < 300) {
+                try { resolve(JSON.parse(xhr.responseText)); }
+                catch { reject(new Error('Phản hồi không hợp lệ từ server')); }
+              } else {
+                try {
+                  const err = JSON.parse(xhr.responseText);
+                  reject(new Error(err.detail || `HTTP ${xhr.status}`));
+                } catch { reject(new Error(`HTTP ${xhr.status}`)); }
+              }
+            };
+            xhr.onerror = () => reject(new Error('Lỗi kết nối mạng'));
+            xhr.send(form_data);
+          });
+
+          set_attached_files(prev => [...prev, { name: file.name, content: data.content }]);
+        } catch (err: any) {
+          Alert.alert('Lỗi', `Không thể xử lý file "${file.name}": ${err.message}`);
+        } finally {
+          set_is_uploading(false);
+        }
       }
     } catch (error) {
-      console.error("Error picking file", error);
+      console.error('Error picking file', error);
     }
   };
+
 
   const remove_file = (index: number) => {
     set_attached_files(prev => prev.filter((_, i) => i !== index));
@@ -157,21 +217,44 @@ export default function CloudAssist() {
   };
   
   const handle_take_picture = async () => {
-    if (camera_ref.current) {
+    try {
       set_is_uploading(true);
+      const photo = await photoOutput.capturePhotoToFile({ flashMode: 'off' }, {});
       set_show_camera(false);
-      try {
-        const photo = await camera_ref.current.takePhoto({
-          qualityPrioritization: 'speed'
-        });
-        if (photo) {
-          set_attached_files(prev => [...prev, { name: `photo_${Date.now()}.jpg`, content: "Hình ảnh chụp từ Camera" }]);
-        }
-      } catch (e) {
-        console.error("Camera error", e);
-      } finally {
-        set_is_uploading(false);
-      }
+      if (!photo?.filePath) return;
+
+      const photo_name = `photo_${Date.now()}.jpg`;
+      const photo_uri = `file://${photo.filePath}`;
+
+      const form_data = new FormData();
+      form_data.append('file', {
+        uri: photo_uri,
+        type: 'image/jpeg',
+        name: photo_name,
+      } as any);
+
+      const data = await new Promise<any>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', MARKDOWN_CONVERT_URL);
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState !== 4) return;
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try { resolve(JSON.parse(xhr.responseText)); }
+            catch { reject(new Error('Phản hồi không hợp lệ')); }
+          } else {
+            reject(new Error(`HTTP ${xhr.status}`));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Lỗi kết nối mạng'));
+        xhr.send(form_data);
+      });
+
+      set_attached_files(prev => [...prev, { name: photo_name, content: data.content }]);
+    } catch (e: any) {
+      console.error('Camera error', e);
+      Alert.alert('Lỗi', `Không thể xử lý ảnh: ${e.message}`);
+    } finally {
+      set_is_uploading(false);
     }
   };
 
@@ -277,7 +360,8 @@ export default function CloudAssist() {
         <View style={{ flex: 1, backgroundColor: colors.surface }}>
           
           {/* Header */}
-          <View style={biraStyles.header}>
+          <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
+          <View style={[biraStyles.header, { paddingTop: insets.top + 8 }]}>
             <View style={biraStyles.headerTitleContainer}>
               <View style={biraStyles.headerIcon}>
                 <Ionicons name="chatbubbles" size={20} color={colors.primary} />
@@ -303,6 +387,7 @@ export default function CloudAssist() {
             keyExtractor={item => item.id}
             renderItem={render_message}
             contentContainerStyle={biraStyles.messagesList}
+            keyboardShouldPersistTaps="handled"
             onContentSizeChange={() => flat_list_ref.current?.scrollToEnd({ animated: false })}
             ListHeaderComponent={
               messages.length === 0 ? (
@@ -341,7 +426,9 @@ export default function CloudAssist() {
               {attached_files.map((f, idx) => (
                 <View key={idx} style={biraStyles.attachmentItem}>
                   <Ionicons name="document-attach" size={16} color={colors.textSecondary} />
-                  <Text style={biraStyles.attachmentName} numberOfLines={1}>{f.name}</Text>
+                  <TouchableOpacity onPress={() => set_preview_file(f)} style={{ flex: 1, paddingHorizontal: 4 }}>
+                    <Text style={[biraStyles.attachmentName, { color: colors.primary, textDecorationLine: 'underline' }]} numberOfLines={1}>{f.name}</Text>
+                  </TouchableOpacity>
                   <TouchableOpacity onPress={() => remove_file(idx)}>
                     <Ionicons name="close-circle" size={18} color={colors.textCaption} />
                   </TouchableOpacity>
@@ -411,7 +498,7 @@ export default function CloudAssist() {
             style={{ flex: 1 }} 
             device={device}
             isActive={true}
-            photo={true}
+            outputs={[photoOutput]}
             ref={camera_ref}
           />
           <View style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }, { flex: 1, backgroundColor: 'transparent', justifyContent: 'flex-end', padding: 32, alignItems: 'center' }]}>
@@ -424,6 +511,30 @@ export default function CloudAssist() {
           </View>
         </View>
       )}
+      {/* File Preview Modal */}
+      <Modal visible={preview_file !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => set_preview_file(null)}>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', marginTop: Platform.OS === 'ios' ? 40 : 0 }}>
+            <Ionicons name="document-text" size={24} color={colors.textSecondary} style={{ marginRight: 8 }} />
+            <Text style={{ flex: 1, fontSize: 16, fontWeight: '600', color: colors.textPrimary }} numberOfLines={1}>
+              Nội dung file: {preview_file?.name}
+            </Text>
+            <TouchableOpacity onPress={() => set_preview_file(null)} style={{ padding: 4 }}>
+              <Ionicons name="close" size={24} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={{ flex: 1, padding: 16 }}>
+            {preview_file?.content ? (
+              <Markdown style={{ body: { color: colors.textPrimary, fontSize: 15 } }}>
+                {preview_file.content}
+              </Markdown>
+            ) : (
+              <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 40 }}>Không có nội dung text nào.</Text>
+            )}
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
