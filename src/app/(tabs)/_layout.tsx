@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/styles/global';
-import CloudAssist from '@/components/CloudAssist';
+// import CloudAssist from '@/components/CloudAssist';
 
 export default function TabLayout() {
-  const [show_bira, set_show_bira] = useState(false);
+  // removed show_bira state
 
   return (
     <>
@@ -36,14 +36,6 @@ export default function TabLayout() {
         />
         <Tabs.Screen
           name="bira"
-          listeners={() => ({
-            tabPress: (e) => {
-              // Prevent default action (don't navigate to empty tab)
-              e.preventDefault();
-              // Show BIRA Modal
-              set_show_bira(true);
-            },
-          })}
           options={{
             title: 'BIRA',
             tabBarIcon: ({ color, size }) => (
@@ -61,8 +53,6 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-
-      <CloudAssist visible={show_bira} onClose={() => set_show_bira(false)} />
     </>
   );
 }

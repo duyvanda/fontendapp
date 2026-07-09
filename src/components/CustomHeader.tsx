@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 
 import { useRouter } from 'expo-router';
 import { useFeedback } from '@/context/FeedbackContext';
 import { Ionicons } from '@expo/vector-icons';
-import CloudAssist from '@/components/CloudAssist';
 import { 
   get_id, 
   generate_month_options, 
@@ -45,7 +44,7 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
   } = useFeedback();
 
   const [show_menu, set_show_menu] = useState(false);
-  const [show_bira, set_show_bira] = useState(false);
+  // removed show_bira state
 
   const handle_logout = () => {
     logout_user();
@@ -67,7 +66,7 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
           },
         ]}
       >
-        <View style={globalStyles.row}>
+        <View style={[globalStyles.row, { flex: 1, marginRight: spacing.sm }]}>
           {show_back ? (
             <TouchableOpacity 
               onPress={() => {
@@ -77,34 +76,30 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
                   router.replace('/');
                 }
               }} 
-              style={{ marginRight: spacing.md }}
+              style={{ marginRight: spacing.sm }}
             >
               <Ionicons name="arrow-back" size={24} color={colors.textInverse} />
             </TouchableOpacity>
           ) : null}
-          <Text style={[globalStyles.h3, { color: colors.textInverse }]}>{title}</Text>
+          {user_info && (
+            <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 50, marginRight: spacing.sm }}>
+              <Text style={{ color: colors.textInverse, fontWeight: 'bold', fontSize: 12 }}>{user_info.manv}</Text>
+            </View>
+          )}
+          <Text
+            style={[globalStyles.h3, { color: colors.textInverse, flex: 1 }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >{title}</Text>
         </View>
 
-        {user_info && (
-          <View style={globalStyles.row}>
-            {/* BIRA CloudAssist Button */}
-            {user_hr_info?.show_cloud_assist && (
-              <TouchableOpacity style={{ marginRight: spacing.md }} onPress={() => set_show_bira(true)}>
-                <Ionicons name="chatbubbles" size={24} color={colors.textInverse} />
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity
+          <TouchableOpacity
               style={[globalStyles.row, { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 50 }]}
-              onPress={() => set_show_menu(!show_menu)}
+              onPress={handle_logout}
             >
-              <Ionicons name="person-circle" size={20} color={colors.textInverse} style={{ marginRight: 6 }} />
-              <Text style={{ color: colors.textInverse, fontWeight: 'bold' }}>{user_info.manv}</Text>
+              <Ionicons name="log-out-outline" size={18} color={colors.textInverse} />
             </TouchableOpacity>
-          </View>
-        )}
       </View>
-      <CloudAssist visible={show_bira} onClose={() => set_show_bira(false)} />
     </View>
   );
 }

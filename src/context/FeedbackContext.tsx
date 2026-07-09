@@ -4,6 +4,7 @@
  * Thay thế: localStorage → AsyncStorage, window.* → Dimensions
  */
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { router } from 'expo-router';
 import { Dimensions } from 'react-native';
 
 import { LOCALURL, REPORTS_API_URL, API_BASE_URL } from '@/utils/api';
@@ -137,6 +138,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     set_reports([]);
     set_filter_reports(null);
     set_login_text('');
+    router.replace('/login');
   };
 
   // ── Reports: Fetch danh sách reports của user ──────────────────────────────

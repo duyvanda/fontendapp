@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ActivityIndicator, Platform } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Animated, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { globalStyles, colors } from '@/styles/global';
 
@@ -8,33 +8,130 @@ interface ReportWebViewProps {
 }
 
 export default function ReportWebView({ uri }: ReportWebViewProps) {
-  const [loading, setLoading] = useState(true);
+  const [webview_loaded, set_webview_loaded] = useState(false);
+  const overlay_opacity = useRef(new Animated.Value(1)).current;
+  const bar_width = useRef(new Animated.Value(0)).current;
+  const pulse_anim = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    // Animate progress bar slowly to 85% while waiting
+    Animated.timing(bar_width, {
+      toValue: 85,
+      duration: 8000,
+      useNativeDriver: false,
+    }).start();
+
+    // Shimmer/pulse loop
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse_anim, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulse_anim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+
+    return () => loop.stop();
+  }, []);
+
+  const handle_load_end = () => {
+    set_webview_loaded(true);
+    // Snap bar to 100% then fade overlay out
+    Animated.timing(bar_width, {
+      toValue: 100,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => {
+      Animated.timing(overlay_opacity, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   return (
     <View style={globalStyles.screen}>
-      {loading && (
-        <View style={[globalStyles.screen, { position: 'absolute', width: '100%', height: '100%', zIndex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.7)' }]}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      )}
+      {/* WebView renders immediately – always visible behind overlay */}
       {Platform.OS === 'web' ? (
-        <iframe 
-          src={uri} 
-          style={{ flex: 1, width: '100%', height: '100%', border: 'none' }} 
-          onLoad={() => setLoading(false)}
+        <iframe
+          src={uri}
+          style={{ flex: 1, width: '100%', height: '100%', border: 'none' } as any}
+          onLoad={handle_load_end}
         />
       ) : (
         <WebView
           source={{ uri }}
-          onLoadStart={() => setLoading(true)}
-          onLoadEnd={() => setLoading(false)}
-          style={{ flex: 1, backgroundColor: 'transparent' }}
-          startInLoadingState={true}
-          renderLoading={() => <View />} // Handled by outer ActivityIndicator
+          onLoadEnd={handle_load_end}
+          style={{ flex: 1 }}
           javaScriptEnabled={true}
           domStorageEnabled={true}
+          renderLoading={() => <View />}
         />
       )}
+
+      {/* Skeleton overlay – fades out when loaded */}
+      <Animated.View
+        pointerEvents="none"
+        style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: '#f5f5f5',
+          opacity: overlay_opacity,
+          zIndex: 10,
+        }}
+      >
+        {/* Progress bar at top */}
+        <View style={{ height: 3, backgroundColor: '#e0e0e0', width: '100%' }}>
+          <Animated.View
+            style={{
+              height: 3,
+              backgroundColor: colors.primary,
+              width: bar_width.interpolate({
+                inputRange: [0, 100],
+                outputRange: ['0%', '100%'],
+              }),
+            }}
+          />
+        </View>
+
+        {/* Skeleton shimmer blocks */}
+        <View style={{ padding: 16 }}>
+          {/* Title skeleton */}
+          <Animated.View
+            style={{ opacity: pulse_anim, height: 20, width: '60%', backgroundColor: '#ddd', borderRadius: 6 }}
+          />
+
+          {/* Filter chips row */}
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+            {[38, 28, 33, 22].map((w, i) => (
+              <Animated.View
+                key={i}
+                style={{ opacity: pulse_anim, height: 28, width: `${w}%` as any, backgroundColor: '#e0e0e0', borderRadius: 20 }}
+              />
+            ))}
+          </View>
+
+          {/* Big chart block */}
+          <Animated.View
+            style={{ opacity: pulse_anim, height: 180, backgroundColor: '#e8e8e8', borderRadius: 8, marginTop: 16 }}
+          />
+
+          {/* Two small pie/donut cards */}
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+            <Animated.View style={{ opacity: pulse_anim, flex: 1, height: 110, backgroundColor: '#e0e0e0', borderRadius: 8 }} />
+            <Animated.View style={{ opacity: pulse_anim, flex: 1, height: 110, backgroundColor: '#e0e0e0', borderRadius: 8 }} />
+          </View>
+
+          {/* Treemap/table block */}
+          <Animated.View
+            style={{ opacity: pulse_anim, height: 130, backgroundColor: '#e8e8e8', borderRadius: 8, marginTop: 12 }}
+          />
+
+          {/* Hint text */}
+          <View style={{ alignItems: 'center', marginTop: 20 }}>
+            <Text style={{ color: '#bbb', fontSize: 12 }}>Đang tải dữ liệu báo cáo...</Text>
+          </View>
+        </View>
+      </Animated.View>
     </View>
   );
 }

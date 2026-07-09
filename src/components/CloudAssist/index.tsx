@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  View, Text, TouchableOpacity, Modal, TextInput, 
+  View, Text, TouchableOpacity, TextInput, 
   FlatList, ActivityIndicator, KeyboardAvoidingView, Platform,
   StyleSheet
 } from 'react-native';
@@ -25,12 +25,7 @@ import {
 import { colors } from '@/styles/global';
 import { biraStyles } from './styles';
 
-interface CloudAssistProps {
-  visible: boolean;
-  onClose: () => void;
-}
-
-export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
+export default function CloudAssist() {
   const {
     user_info,
     user_hr_info,
@@ -77,7 +72,7 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
   // Init Session
   useEffect(() => {
     (async () => {
-      if (visible && !session_id) {
+      if (!session_id) {
         let stored_session = await getBiraSessionId();
         if (!stored_session) {
           stored_session = get_id(); // Use generated ID as session fallback if needed
@@ -90,7 +85,7 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
         }
       }
     })();
-  }, [visible, session_id]);
+  }, [session_id]);
 
   // Save Messages on change
   useEffect(() => {
@@ -266,12 +261,12 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+    <View style={{ flex: 1 }}>
       <KeyboardAvoidingView 
-        style={biraStyles.overlay} 
+        style={{ flex: 1, backgroundColor: colors.surface }} 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={biraStyles.modalContainer}>
+        <View style={{ flex: 1, backgroundColor: colors.surface }}>
           
           {/* Header */}
           <View style={biraStyles.header}>
@@ -286,13 +281,10 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {messages.length > 0 && (
-                <TouchableOpacity onPress={handle_new_chat} style={{ marginRight: 16 }}>
+                <TouchableOpacity onPress={handle_new_chat}>
                   <Ionicons name="refresh" size={24} color={colors.textCaption} />
                 </TouchableOpacity>
               )}
-              <TouchableOpacity onPress={onClose}>
-                <Ionicons name="close" size={28} color={colors.textPrimary} />
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -424,6 +416,6 @@ export default function CloudAssist({ visible, onClose }: CloudAssistProps) {
           </View>
         </View>
       )}
-    </Modal>
+    </View>
   );
 }

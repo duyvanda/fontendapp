@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   ScrollView,
   Linking,
@@ -17,6 +18,8 @@ import { useFeedback } from '@/context/FeedbackContext';
 import { getUserInfo } from '@/storage/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius } from '@/styles/global';
+import * as Updates from 'expo-updates';
+import Constants from 'expo-constants';
 
 const { width } = Dimensions.get('window');
 
@@ -66,6 +69,7 @@ export default function LoginScreen() {
 
   const handle_login = () => {
     if (!email || !password) return;
+    Keyboard.dismiss();
     login_user({ email: email.toUpperCase(), password });
   };
 
@@ -191,6 +195,19 @@ export default function LoginScreen() {
           <View style={[styles.hintLine, { backgroundColor: '#00A79D' }]} />
           <View style={[styles.hintLine, { backgroundColor: colors.border }]} />
           <View style={[styles.hintLine, { backgroundColor: colors.border }]} />
+        </View>
+        {/* Version Info */}
+        <View style={{ alignItems: 'center', paddingBottom: spacing.lg }}>
+          <Text style={{ color: colors.textCaption, fontSize: 11 }}>
+            v{Constants.expoConfig?.version ?? '1.0.0'}
+            {Updates.createdAt
+              ? `  •  ${Updates.createdAt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+              : '  •  (dev)'
+            }
+          </Text>
+          <Text style={{ color: colors.textCaption, fontSize: 10, marginTop: 2 }}>
+            ch: {Updates.channel ?? 'n/a'}  |  embedded: {String(Updates.isEmbeddedLaunch)}
+          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
