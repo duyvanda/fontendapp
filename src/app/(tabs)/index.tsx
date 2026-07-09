@@ -108,35 +108,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ) : null}
         
-        <View style={styles.userPill}>
-          <Ionicons name="person-circle" size={20} color="#ffffff" />
-          <Text style={styles.userPillText}>{user_info?.manv || 'USER'}</Text>
-        </View>
-        
-        <TouchableOpacity 
-          style={styles.headerIconRight} 
-          onPress={() => router.push('/(tabs)/notifications' as any)}
-        >
-          <Ionicons name="notifications-outline" size={26} color="#ffffff" />
-          {unread_count > 0 && (
-            <View style={{
-              position: 'absolute',
-              top: 0,
-              right: 6,
-              backgroundColor: colors.error,
-              borderRadius: 10,
-              minWidth: 16,
-              height: 16,
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingHorizontal: 4,
-            }}>
-              <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
-                {unread_count > 99 ? '99+' : unread_count}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+
         
         <TouchableOpacity style={styles.headerIconRight} onPress={logout_user}>
           <Ionicons name="log-out-outline" size={26} color="#ffffff" />

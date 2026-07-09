@@ -94,30 +94,7 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
             ellipsizeMode="tail"
           >{title}</Text>
         </View>
-        <TouchableOpacity 
-          onPress={() => router.push('/(tabs)/notifications' as any)}
-          style={{ position: 'relative', padding: spacing.xs }}
-        >
-          <Ionicons name="notifications-outline" size={24} color={colors.textInverse} />
-          {unread_count > 0 && (
-            <View style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              backgroundColor: colors.error,
-              borderRadius: 10,
-              minWidth: 16,
-              height: 16,
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingHorizontal: 4,
-            }}>
-              <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
-                {unread_count > 99 ? '99+' : unread_count}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+
       </View>
     </View>
   );

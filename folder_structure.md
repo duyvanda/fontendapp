@@ -12,7 +12,8 @@ src/
 │   │   ├── _layout.tsx              <-- Định nghĩa 3 tabs chính dưới màn hình (Home, BIRA, Apps)
 │   │   ├── index.tsx                <-- Màn hình Home (Dashboard, danh sách báo cáo)
 │   │   ├── bira.tsx                 <-- Tab phụ kích hoạt Trợ lý ảo
-│   │   └── apps.tsx                 <-- Tab Ứng dụng & Công cụ (Link ngoài)
+│   │   ├── apps.tsx                 <-- Tab Ứng dụng & Công cụ (Link ngoài)
+│   │   └── notifications.tsx        <-- [NEW] Tab Trung tâm Thông báo (Cảnh báo KPI)
 │   │
 │   ├── report/                      <-- Nhóm màn hình xem báo cáo tĩnh (Ngoài tabs để ẨN Tab Bar)
 │   │   ├── [id].tsx                 <-- Màn hình xem Report tĩnh (Tương đương /reportscreen/:id)
@@ -29,15 +30,18 @@ src/
 │   └── CustomHeader.tsx             <-- Header tự thiết kế cho màn hình báo cáo
 │
 ├── context/                         <-- Quản lý State toàn cục bằng Context API
-│   └── FeedbackContext.tsx          <-- Chứa logic fetch_filter_reports, user_info, logger...
+│   ├── FeedbackContext.tsx          <-- Chứa logic fetch_filter_reports, user_info, logger...
+│   └── NotificationContext.tsx      <-- [NEW] Quản lý State & API của thông báo (Push & Unread)
 │
 ├── storage/                         <-- Quản lý bộ nhớ tạm (Local Storage)
 │   ├── auth.ts                      <-- Lưu thông tin user_info đăng nhập
-│   └── chat.ts                      <-- Lưu tin nhắn của BIRA vào AsyncStorage
+│   ├── chat.ts                      <-- Lưu tin nhắn của BIRA vào AsyncStorage
+│   └── notification.ts              <-- [NEW] Lưu trữ Expo Push Token tạm thời
 │
 ├── utils/                           <-- Hàm bổ trợ tiện ích
 │   ├── api.ts                       <-- Cấu hình fetch API (cho chat, markdown, reports)
-│   └── string.ts                    <-- Xử lý chuỗi, định dạng ngày tháng
+│   ├── string.ts                    <-- Xử lý chuỗi, định dạng ngày tháng
+│   └── notifications.ts             <-- [NEW] Xử lý xin quyền & API đăng ký Expo Push Token
 │
 └── styles/                          <-- Theme và Styles chung
     └── global.ts                    <-- Màu sắc (colors), kiểu chữ chung của app
