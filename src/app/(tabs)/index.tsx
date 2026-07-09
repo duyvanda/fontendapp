@@ -107,9 +107,10 @@ export default function HomeScreen() {
             <Ionicons name="close-circle" size={20} color="#ffffff" />
           </TouchableOpacity>
         ) : null}
-        
-
-        
+        <View style={styles.userPill}>
+          <Ionicons name="person-circle" size={20} color="#ffffff" />
+          <Text style={styles.userPillText}>{user_info?.manv || 'USER'}</Text>
+        </View>
         <TouchableOpacity style={styles.headerIconRight} onPress={logout_user}>
           <Ionicons name="log-out-outline" size={26} color="#ffffff" />
         </TouchableOpacity>
