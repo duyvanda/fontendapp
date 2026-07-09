@@ -54,7 +54,7 @@ export async function registerForPushNotificationsAsync(manv: string) {
       await savePushToken(token);
       
       // Send token to backend
-      await fetch(`${LOCALURL}/post_data/expo_push_token_register/`, {
+      const res = await fetch(`${LOCALURL}/post_data/expo_push_token_register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([{
@@ -63,9 +63,14 @@ export async function registerForPushNotificationsAsync(manv: string) {
           platform: Platform.OS,
         }]),
       });
+      const data = await res.json();
+      if (data.status !== 'success') {
+        alert('Lỗi lưu Token Backend: ' + (data.error_message || JSON.stringify(data)));
+      }
 
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error registering for push notifications:', e);
+      alert('Lỗi lấy Push Token: ' + (e.message || JSON.stringify(e)));
     }
   } else {
     console.warn('Must use physical device for Push Notifications');
