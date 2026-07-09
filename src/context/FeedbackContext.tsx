@@ -101,8 +101,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         set_user_info(stored_user);
         if (stored_hr) set_user_hr_info(stored_hr);
         await fetch_reports(stored_user.manv);
-        // Also ensure token is registered/refreshed
-        registerForPushNotificationsAsync(stored_user.manv);
+        // Tạm thời tắt đăng ký Push Notification
+        // registerForPushNotificationsAsync(stored_user.manv);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,8 +125,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         await saveUserInfo(data);
         set_user_info(data);
         await fetch_reports(data.manv);
-        // Register push token
-        registerForPushNotificationsAsync(data.manv);
+        // Tạm thời tắt đăng ký Push Notification
+        // registerForPushNotificationsAsync(data.manv);
       }
     } catch (err) {
       set_login_text('Lỗi kết nối. Vui lòng thử lại.');
