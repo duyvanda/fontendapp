@@ -147,7 +147,15 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     set_reports([]);
     set_filter_reports(null);
     set_login_text('');
-    router.replace('/login');
+    
+    // Thêm delay nhỏ để React hoàn tất quá trình render UI (unmount các component có chứa user_info)
+    // trước khi Router thực hiện chuyển trang, giúp tránh lỗi văng app (crash).
+    setTimeout(() => {
+      if (router.canDismiss()) {
+        router.dismissAll();
+      }
+      router.replace('/login');
+    }, 150);
   };
 
   // ── Reports: Fetch danh sách reports của user ──────────────────────────────
