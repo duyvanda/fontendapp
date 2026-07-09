@@ -215,7 +215,15 @@ export default function LoginScreen() {
           <Text style={{ color: colors.textCaption, fontSize: 11 }}>
             v{Constants.expoConfig?.version ?? '1.0.0'}
             {Updates.createdAt
-              ? `  •  ${Updates.createdAt.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+              ? (() => {
+                  try {
+                    const d = new Date(Updates.createdAt);
+                    const pad = (n: number) => n.toString().padStart(2, '0');
+                    return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                  } catch (e) {
+                    return '  •  (live)';
+                  }
+                })()
               : '  •  (dev)'
             }
           </Text>
