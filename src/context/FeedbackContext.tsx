@@ -19,6 +19,7 @@ import {
 } from '@/storage/auth';
 import { API_BASE_URL, LOCALURL, REPORTS_API_URL } from '@/utils/api';
 import { get_version } from '@/utils/string';
+import { registerForPushNotificationsAsync, unregisterPushToken } from '@/utils/notifications';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -100,6 +101,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         set_user_info(stored_user);
         if (stored_hr) set_user_hr_info(stored_hr);
         await fetch_reports(stored_user.manv);
+        // Also ensure token is registered/refreshed
+        registerForPushNotificationsAsync(stored_user.manv);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,6 +125,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         await saveUserInfo(data);
         set_user_info(data);
         await fetch_reports(data.manv);
+        // Register push token
+        registerForPushNotificationsAsync(data.manv);
       }
     } catch (err) {
       set_login_text('Lỗi kết nối. Vui lòng thử lại.');
@@ -132,6 +137,10 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // ── Auth: Logout ───────────────────────────────────────────────────────────
   const logout_user = async () => {
+    if (user_info?.manv) {
+      // Don't await unregister so it doesn't block logout
+      unregisterPushToken(user_info.manv);
+    }
     await clearAllAuth();
     set_user_info(null);
     set_user_hr_info(null);

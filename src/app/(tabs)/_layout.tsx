@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/styles/global';
+import { useNotification } from '@/context/NotificationContext';
 // import CloudAssist from '@/components/CloudAssist';
 
 export default function TabLayout() {
   // removed show_bira state
+  const { unread_count } = useNotification();
 
   return (
     <>
@@ -41,6 +43,17 @@ export default function TabLayout() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="chatbubbles" size={size} color={colors.primary} /> // Keep it colored or active? Let's stick to standard color
             ),
+          }}
+        />
+        <Tabs.Screen
+          name="notifications"
+          options={{
+            title: 'Thông báo',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="notifications" size={size} color={color} />
+            ),
+            tabBarBadge: unread_count > 0 ? unread_count : undefined,
+            tabBarBadgeStyle: { backgroundColor: colors.error, fontSize: 10 },
           }}
         />
         <Tabs.Screen

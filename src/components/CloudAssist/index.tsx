@@ -517,8 +517,8 @@ export default function CloudAssist() {
       )}
       {/* File Preview Modal */}
       <Modal visible={preview_file !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => set_preview_file(null)}>
-        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', marginTop: Platform.OS === 'ios' ? 40 : 0 }}>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc', paddingTop: insets.top }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
             <Ionicons name="document-text" size={24} color={colors.textSecondary} style={{ marginRight: 8 }} />
             <Text style={{ flex: 1, fontSize: 16, fontWeight: '600', color: colors.textPrimary }} numberOfLines={1}>
               Nội dung file: {preview_file?.name}

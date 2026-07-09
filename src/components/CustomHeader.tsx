@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFeedback } from '@/context/FeedbackContext';
+import { useNotification } from '@/context/NotificationContext';
 import { Ionicons } from '@expo/vector-icons';
 import { 
   get_id, 
@@ -42,6 +43,8 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
     user_logger,
     set_rp_screen,
   } = useFeedback();
+  
+  const { unread_count } = useNotification();
 
   const [show_menu, set_show_menu] = useState(false);
   // removed show_bira state
@@ -52,7 +55,7 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
 
   return (
     <View style={{ backgroundColor: colors.primary, paddingTop: insets.top }}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primaryDark} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
       <View
         style={[
           globalStyles.rowBetween,
@@ -91,6 +94,30 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
             ellipsizeMode="tail"
           >{title}</Text>
         </View>
+        <TouchableOpacity 
+          onPress={() => router.push('/(tabs)/notifications' as any)}
+          style={{ position: 'relative', padding: spacing.xs }}
+        >
+          <Ionicons name="notifications-outline" size={24} color={colors.textInverse} />
+          {unread_count > 0 && (
+            <View style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              backgroundColor: colors.error,
+              borderRadius: 10,
+              minWidth: 16,
+              height: 16,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 4,
+            }}>
+              <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                {unread_count > 99 ? '99+' : unread_count}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   );

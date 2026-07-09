@@ -1,14 +1,19 @@
 import { Stack } from 'expo-router';
 import { FeedbackProvider } from '@/context/FeedbackContext';
+import { NotificationProvider } from '@/context/NotificationContext';
+import { StatusBar } from 'expo-status-bar';
 
 export default function RootLayout() {
   return (
     <FeedbackProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="login" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="report" />
-      </Stack>
+      <NotificationProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="login" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="report" />
+        </Stack>
+        <StatusBar style="light" translucent backgroundColor="transparent" />
+      </NotificationProvider>
     </FeedbackProvider>
   );
 }
