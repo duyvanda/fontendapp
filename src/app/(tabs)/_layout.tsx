@@ -41,7 +41,7 @@ export default function TabLayout() {
           options={{
             title: 'BIRA',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="chatbubbles" size={size} color={colors.primary} /> // Keep it colored or active? Let's stick to standard color
+              <Ionicons name="chatbubbles" size={size} color={color} />
             ),
           }}
         />
