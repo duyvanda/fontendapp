@@ -4,7 +4,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export interface UserInfo {
+export interface user_info_type {
   manv: string;
   email: string;
   token: string;
@@ -12,7 +12,7 @@ export interface UserInfo {
   phong_ban?: string;
 }
 
-export interface UserHrInfo {
+export interface user_hr_info_type {
   manv?: string;
   show_cloud_assist?: boolean;
   cloud_assist_questions?: Array<{ question: string }>;
@@ -28,62 +28,62 @@ const KEYS = {
 
 // ─── user_info ─────────────────────────────────────────────────────────────────
 
-export async function saveUserInfo(info: UserInfo): Promise<void> {
+export async function save_user_info(info: user_info_type): Promise<void> {
   await AsyncStorage.setItem(KEYS.USER_INFO, JSON.stringify(info));
 }
 
-export async function getUserInfo(): Promise<UserInfo | null> {
+export async function get_user_info(): Promise<user_info_type | null> {
   const raw = await AsyncStorage.getItem(KEYS.USER_INFO);
   return raw ? JSON.parse(raw) : null;
 }
 
-export async function removeUserInfo(): Promise<void> {
+export async function remove_user_info(): Promise<void> {
   await AsyncStorage.removeItem(KEYS.USER_INFO);
 }
 
 // ─── user_hr_info ──────────────────────────────────────────────────────────────
 
-export async function saveUserHrInfo(info: UserHrInfo): Promise<void> {
+export async function save_user_hr_info(info: user_hr_info_type): Promise<void> {
   await AsyncStorage.setItem(KEYS.USER_HR_INFO, JSON.stringify(info));
 }
 
-export async function getUserHrInfo(): Promise<UserHrInfo | null> {
+export async function get_user_hr_info(): Promise<user_hr_info_type | null> {
   const raw = await AsyncStorage.getItem(KEYS.USER_HR_INFO);
   return raw ? JSON.parse(raw) : null;
 }
 
-export async function removeUserHrInfo(): Promise<void> {
+export async function remove_user_hr_info(): Promise<void> {
   await AsyncStorage.removeItem(KEYS.USER_HR_INFO);
 }
 
 // ─── Reports list ──────────────────────────────────────────────────────────────
 
-export async function saveReportsList(reports: unknown[]): Promise<void> {
+export async function save_reports_list(reports: unknown[]): Promise<void> {
   await AsyncStorage.setItem(KEYS.USER_LST_REPORTS, JSON.stringify(reports));
 }
 
-export async function getReportsList(): Promise<unknown[]> {
+export async function get_reports_list(): Promise<unknown[]> {
   const raw = await AsyncStorage.getItem(KEYS.USER_LST_REPORTS);
   return raw ? JSON.parse(raw) : [];
 }
 
-export async function removeReportsList(): Promise<void> {
+export async function remove_reports_list(): Promise<void> {
   await AsyncStorage.removeItem(KEYS.USER_LST_REPORTS);
 }
 
 // ─── BIRA session ──────────────────────────────────────────────────────────────
 
-export async function getBiraSessionId(): Promise<string | null> {
+export async function get_bira_session_id(): Promise<string | null> {
   return AsyncStorage.getItem(KEYS.BIRA_SESSION_ID);
 }
 
-export async function saveBiraSessionId(id: string): Promise<void> {
+export async function save_bira_session_id(id: string): Promise<void> {
   await AsyncStorage.setItem(KEYS.BIRA_SESSION_ID, id);
 }
 
 // ─── Clear all ─────────────────────────────────────────────────────────────────
 
-export async function clearAllAuth(): Promise<void> {
+export async function clear_all_auth(): Promise<void> {
   await AsyncStorage.multiRemove([
     KEYS.USER_INFO,
     KEYS.USER_HR_INFO,

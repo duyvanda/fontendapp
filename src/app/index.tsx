@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { getUserInfo } from '@/storage/auth';
+import { get_user_info } from '@/storage/auth';
 import { useFeedback } from '@/context/FeedbackContext';
 import { colors } from '@/styles/global';
 
@@ -14,7 +14,7 @@ export default function Index() {
     let is_mounted = true;
     (async () => {
       try {
-        const stored_user = await getUserInfo();
+        const stored_user = await get_user_info();
         if (!is_mounted) return;
         
         if (stored_user || user_info) {

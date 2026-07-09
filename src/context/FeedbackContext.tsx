@@ -7,19 +7,19 @@ import { router } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import {
-  clearAllAuth,
-  getReportsList,
-  getUserHrInfo,
-  getUserInfo,
-  saveReportsList,
-  saveUserHrInfo,
-  saveUserInfo,
-  UserHrInfo,
-  UserInfo,
+  clear_all_auth,
+  get_reports_list,
+  get_user_hr_info,
+  get_user_info,
+  save_reports_list,
+  save_user_hr_info,
+  save_user_info,
+  user_hr_info_type,
+  user_info_type,
 } from '@/storage/auth';
 import { API_BASE_URL, LOCALURL, REPORTS_API_URL } from '@/utils/api';
 import { get_version } from '@/utils/string';
-import { registerForPushNotificationsAsync, unregisterPushToken } from '@/utils/notifications';
+//import { registerForPushNotificationsAsync, unregisterPushToken } from '@/utils/notifications';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -40,8 +40,8 @@ export interface Report {
 
 interface FeedbackContextValue {
   // Auth state
-  user_info: UserInfo | null;
-  user_hr_info: UserHrInfo | null;
+  user_info: user_info_type | null;
+  user_hr_info: user_hr_info_type | null;
   login_text: string;
   login_loading: boolean;
   // Report state
@@ -78,8 +78,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   // Auth state
-  const [user_info, set_user_info] = useState<UserInfo | null>(null);
-  const [user_hr_info, set_user_hr_info] = useState<UserHrInfo | null>(null);
+  const [user_info, set_user_info] = useState<user_info_type | null>(null);
+  const [user_hr_info, set_user_hr_info] = useState<user_hr_info_type | null>(null);
   const [login_text, set_login_text] = useState('');
   const [login_loading, set_login_loading] = useState(false);
 
@@ -95,8 +95,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   // ── Init: Load user từ AsyncStorage khi app khởi động ─────────────────────
   useEffect(() => {
     (async () => {
-      const stored_user = await getUserInfo();
-      const stored_hr = await getUserHrInfo();
+      const stored_user = await get_user_info();
+      const stored_hr = await get_user_hr_info();
       if (stored_user) {
         set_user_info(stored_user);
         if (stored_hr) set_user_hr_info(stored_hr);
@@ -122,7 +122,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!response.ok) {
         set_login_text(data.message || 'Đăng nhập thất bại');
       } else {
-        await saveUserInfo(data);
+        await save_user_info(data);
         set_user_info(data);
         await fetch_reports(data.manv);
         // Tạm thời tắt đăng ký Push Notification
@@ -137,25 +137,20 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // ── Auth: Logout ───────────────────────────────────────────────────────────
   const logout_user = async () => {
-    if (user_info?.manv) {
-      // Don't await unregister so it doesn't block logout
-      unregisterPushToken(user_info.manv);
-    }
-    await clearAllAuth();
+    // if (user_info?.manv) {
+    //   // Don't await unregister so it doesn't block logout
+    //   unregisterPushToken(user_info.manv);
+    // }
+    await clear_all_auth();
     set_user_info(null);
     set_user_hr_info(null);
     set_reports([]);
     set_filter_reports(null);
     set_login_text('');
-    
-    // Thêm delay nhỏ để React hoàn tất quá trình render UI (unmount các component có chứa user_info)
-    // trước khi Router thực hiện chuyển trang, giúp tránh lỗi văng app (crash).
-    setTimeout(() => {
-      if (router.canDismiss()) {
-        router.dismissAll();
-      }
-      router.replace('/login');
-    }, 150);
+
+    // Loại bỏ dismissAll() vì dismissAll trên root stack có thể gây ra lỗi màn hình trắng trong Expo Router.
+    // Thực hiện replace trực tiếp.
+    router.replace('/login');
   };
 
   // ── Reports: Fetch danh sách reports của user ──────────────────────────────
@@ -169,16 +164,16 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       const raw_reports: Report[] = data['rows_data'] || [];
       const lstreports = raw_reports.map((el) => ({ ...el, manv }));
       set_reports(lstreports);
-      await saveReportsList(lstreports);
+      await save_reports_list(lstreports);
 
       if (data['user_hr_info']) {
-        await saveUserHrInfo(data['user_hr_info']);
+        await save_user_hr_info(data['user_hr_info']);
         set_user_hr_info(data['user_hr_info']);
       }
     } catch (err) {
       console.error('fetch_reports error:', err);
       // Load from cache nếu offline
-      const cached = await getReportsList();
+      const cached = await get_reports_list();
       if (cached.length > 0) set_reports(cached as Report[]);
     }
   };

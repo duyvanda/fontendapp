@@ -10,7 +10,7 @@ import { Camera as VisionCamera, useCameraDevice, useCameraPermission, usePhotoO
 import Markdown from 'react-native-markdown-display';
 import { useFeedback } from '@/context/FeedbackContext';
 import { Ionicons } from '@expo/vector-icons';
-import { getBiraSessionId, saveBiraSessionId } from '@/storage/auth';
+import { get_bira_session_id, save_bira_session_id } from '@/storage/auth';
 import { 
   loadMessages, saveMessages,
   ChatMessage, createUserMessage, createBotMessage 
@@ -85,10 +85,10 @@ export default function CloudAssist() {
   useEffect(() => {
     (async () => {
       if (!session_id) {
-        let stored_session = await getBiraSessionId();
+        let stored_session = await get_bira_session_id();
         if (!stored_session) {
           stored_session = get_id(); // Use generated ID as session fallback if needed
-          await saveBiraSessionId(stored_session);
+          await save_bira_session_id(stored_session);
         }
         set_session_id(stored_session);
         const stored_msgs = await loadMessages(stored_session);
@@ -109,7 +109,7 @@ export default function CloudAssist() {
   const handle_new_chat = async () => {
     if (!session_id) return;
     const new_session = get_id();
-    await saveBiraSessionId(new_session);
+    await save_bira_session_id(new_session);
     set_session_id(new_session);
     set_messages([]);
     set_input('');

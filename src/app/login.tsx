@@ -1,5 +1,5 @@
 import { useFeedback } from '@/context/FeedbackContext';
-import { getUserInfo } from '@/storage/auth';
+import { get_user_info } from '@/storage/auth';
 import { colors, radius, spacing } from '@/styles/global';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
@@ -59,7 +59,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     (async () => {
-      const stored_user = await getUserInfo();
+      const stored_user = await get_user_info();
       if (stored_user || user_info) {
         if (params.redirect) {
           // Handle redirect if needed

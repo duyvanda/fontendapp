@@ -1,3 +1,4 @@
+# CHƯA APPLY ĐƯỢC NHE, MỚI CHỈ NHÌN THẤY TAB NOTI VÀ BẤM VÀO ĐÃ ĐỌC THÔI.
 # 🔄 Luồng Hoạt Động Của Hệ Thống Push Notification
 
 Tài liệu này mô tả chi tiết toàn bộ vòng đời của một Push Notification, từ khi người dùng mở app đến lúc nhận được thông báo biến động KPI.
