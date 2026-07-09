@@ -10,5 +10,10 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 # old project
 - D:\django_apps\rest\frontend1
 
+# backend
+- D:\django_apps\rest\frontend1\bi_local_rest
+    - local_views.py
+    - local_urls.py
+
 # folder structure
 - @folder_structure.md

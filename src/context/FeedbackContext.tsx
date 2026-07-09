@@ -3,23 +3,22 @@
  * Port từ frontend1/src/context/FeedbackContext.js
  * Thay thế: localStorage → AsyncStorage, window.* → Dimensions
  */
-import React, { createContext, useState, useEffect, useContext } from 'react';
 import { router } from 'expo-router';
-import { Dimensions } from 'react-native';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
-import { LOCALURL, REPORTS_API_URL, API_BASE_URL } from '@/utils/api';
-import { get_version } from '@/utils/string';
 import {
-  saveUserInfo,
-  getUserInfo,
-  saveUserHrInfo,
-  getUserHrInfo,
-  saveReportsList,
-  getReportsList,
   clearAllAuth,
-  UserInfo,
+  getReportsList,
+  getUserHrInfo,
+  getUserInfo,
+  saveReportsList,
+  saveUserHrInfo,
+  saveUserInfo,
   UserHrInfo,
+  UserInfo,
 } from '@/storage/auth';
+import { API_BASE_URL, LOCALURL, REPORTS_API_URL } from '@/utils/api';
+import { get_version } from '@/utils/string';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -145,7 +144,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   // ── Reports: Fetch danh sách reports của user ──────────────────────────────
   const fetch_reports = async (manv: string) => {
     try {
-      const response = await fetch(`${REPORTS_API_URL}?manv=${manv}`);
+      const response = await fetch(`${REPORTS_API_URL}?manv=${manv}&is_app=1`);
       const responseText = await response.text();
       // Replace http with https for any hardcoded backend URLs
       const replacedText = responseText.replace(/http:\/\/bi\.meraplion\.com/g, 'https://bi.meraplion.com');
@@ -286,9 +285,9 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   const toggle_favorite = async (report: Report) => {
     if (!user_info?.manv) return;
     const is_fav = report.yeu_thich && String(report.yeu_thich) !== '0';
-    
+
     // Optimistic update
-    set_reports(prev => prev.map(r => 
+    set_reports(prev => prev.map(r =>
       r.stt === report.stt ? { ...r, yeu_thich: is_fav ? '0' : '1' } : r
     ));
 
@@ -296,16 +295,16 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       await fetch(`${LOCALURL}/post_data/insert_report_user_prefs_fav/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ 
-          manv: user_info.manv, 
-          report_id: report.stt, 
-          yeu_thich: is_fav ? '0' : '1' 
+        body: JSON.stringify([{
+          manv: user_info.manv,
+          report_id: report.stt,
+          yeu_thich: is_fav ? '0' : '1'
         }]),
       });
     } catch (err) {
       console.error('toggle_favorite error', err);
       // Rollback on error
-      set_reports(prev => prev.map(r => 
+      set_reports(prev => prev.map(r =>
         r.stt === report.stt ? { ...r, yeu_thich: is_fav ? '1' : '0' } : r
       ));
     }
