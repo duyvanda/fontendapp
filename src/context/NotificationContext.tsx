@@ -40,9 +40,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!manv) return;
     setLoading(true);
     try {
+      console.log('[NotificationContext] Fetching notifications for manv:', manv);
       const response = await fetch(`${LOCALURL}/get_data/expo_get_notifications/?manv=${manv}`);
       const data = await response.json();
+      console.log('[NotificationContext] API Response data:', JSON.stringify(data));
       if (response.ok && data.status === 'ok') {
+        console.log('[NotificationContext] Setting notifications state with:', data.rows_data?.length || 0, 'items');
         setNotifications(data.rows_data || []);
       }
     } catch (error) {

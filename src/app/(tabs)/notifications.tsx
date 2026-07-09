@@ -30,6 +30,7 @@ export default function NotificationsScreen() {
 
   const loadData = useCallback(() => {
     if (user_info?.manv) {
+      console.log('[NotificationsScreen] loadData triggered for manv:', user_info.manv);
       fetch_notifications(user_info.manv);
     }
   }, [user_info?.manv, fetch_notifications]);
@@ -37,6 +38,8 @@ export default function NotificationsScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  console.log('[NotificationsScreen] Rendering notifications list state, length:', notifications?.length || 0);
 
   const handle_press = (item: AppNotification) => {
     if (!item.is_read) {
