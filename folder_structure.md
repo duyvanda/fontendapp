@@ -19,7 +19,9 @@ src/
 │   │
 │   ├── report/                      <-- Nhóm màn hình xem báo cáo tĩnh (Ngoài tabs để ẨN Tab Bar)
 │   │   ├── [id].tsx                 <-- Màn hình xem Report tĩnh (Tương đương /reportscreen/:id)
-│   │   └── ton-kho-toc-do-ban.tsx   <-- [NEW] File code riêng cho báo cáo "Tồn kho & Tốc độ bán"
+│   │   ├── ton-kho-toc-do-ban.tsx   <-- [NEW] File code riêng cho báo cáo "Tồn kho & Tốc độ bán"
+│   │   └── native/                  <-- [NEW] Nhóm màn hình báo cáo dạng Native
+│   │       └── [id].tsx             <-- [NEW] Wrapper render động các báo cáo Native qua NATIVE_REPORTS_MAP
 │   │
 │   └── realtime/                    <-- Nhóm màn hình xem báo cáo Realtime
 │       └── [id].tsx                 <-- Màn hình xem Realtime (Có popup cấu hình tham số báo cáo)
@@ -28,6 +30,10 @@ src/
 │   ├── CloudAssist/
 │   │   ├── index.tsx                <-- Trợ lý ảo AI BIRA (Dùng Modal/BottomSheet thay vì Offcanvas)
 │   │   └── styles.ts                <-- StyleSheet riêng cho trợ lý ảo
+│   ├── native_reports/              <-- [NEW] Thư mục chứa các báo cáo Native mượt mà tự code
+│   │   ├── CRMOverallDashboard_2001.tsx <-- Báo cáo CRM Overall Dashboard native
+│   │   ├── DeliveryPerformance_2002.tsx <-- Báo cáo Delivery Performance native
+│   │   └── index.ts                 <-- Bảng cấu hình Map ID (NATIVE_REPORTS_MAP) và export component
 │   ├── ReportWebView.tsx            <-- Component nhúng báo cáo (Thay thế cho <iframe> của Web)
 │   └── CustomHeader.tsx             <-- Header tự thiết kế cho màn hình báo cáo
 │
