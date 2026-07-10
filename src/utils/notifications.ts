@@ -1,23 +1,24 @@
 import { Platform } from 'react-native';
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
+// import * as Device from 'expo-device';
+// import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { LOCALURL } from './api';
 import { savePushToken, getPushToken, removePushToken } from '@/storage/notification';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Notifications.setNotificationHandler({
+//   handleNotification: async () => ({
+//     shouldShowAlert: true,
+//     shouldPlaySound: true,
+//     shouldSetBadge: true,
+//     shouldShowBanner: true,
+//     shouldShowList: true,
+//   }),
+// });
 
 export async function registerForPushNotificationsAsync(manv: string) {
   let token;
-
+  console.log('Push notifications temporarily disabled for App Store review.');
+  /*
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'default',
@@ -76,7 +77,7 @@ export async function registerForPushNotificationsAsync(manv: string) {
   } else {
     console.warn('Must use physical device for Push Notifications');
   }
-
+  */
   return token;
 }
 

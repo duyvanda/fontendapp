@@ -20,7 +20,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
-    user_info, reports, fetch_reports, clear_filter_report, logout_user, toggle_favorite
+    user_info, reports, fetch_reports, clear_filter_report, toggle_favorite
   } = useFeedback();
   
   const { unread_count } = useNotification();
@@ -107,12 +107,10 @@ export default function HomeScreen() {
             <Ionicons name="close-circle" size={20} color="#ffffff" />
           </TouchableOpacity>
         ) : null}
-        <View style={styles.userPill}>
+        <TouchableOpacity style={styles.userPill} onPress={() => router.push('/account' as any)}>
           <Ionicons name="person-circle" size={20} color="#ffffff" />
           <Text style={styles.userPillText}>{user_info?.manv || 'USER'}</Text>
-        </View>
-        <TouchableOpacity style={styles.headerIconRight} onPress={logout_user}>
-          <Ionicons name="log-out-outline" size={26} color="#ffffff" />
+          <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.7)" style={{ marginLeft: 2 }} />
         </TouchableOpacity>
       </View>
 

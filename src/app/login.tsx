@@ -190,11 +190,11 @@ export default function LoginScreen() {
           <View style={styles.dividerDashed} />
 
           <Text style={styles.helpText}>
-            Vui lòng đăng nhập bằng tài khoản DMS / BITRIX / EOFFICE
+            Đăng nhập bằng tài khoản doanh nghiệp được cấp
           </Text>
 
           <Text style={[styles.helpText, { fontWeight: 'bold' }]}>
-            For Internal Use Only - Ứng dụng dành riêng cho nhân viên nội bộ
+            Nền tảng phân tích dữ liệu dành cho doanh nghiệp và đối tác
           </Text>
 
           {/* <TouchableOpacity onPress={handle_reset_password}>

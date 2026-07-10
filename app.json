@@ -8,6 +8,7 @@
     "scheme": "bimera",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.duyvanda.biportal",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Ứng dụng cần quyền Camera để chụp ảnh đính kèm vào câu hỏi cho BIRA.",
@@ -26,15 +27,7 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.SCHEDULE_EXACT_ALARM",
-        "android.permission.POST_NOTIFICATIONS",
-        "android.permission.VIBRATE",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -52,31 +45,16 @@
           "backgroundColor": "#00A79D"
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/icon.png",
-          "color": "#00A79D",
-          "defaultChannel": "default"
-        }
-      ],
       "expo-secure-store",
       "expo-sharing",
       "@sentry/react-native",
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Ứng dụng cần quyền truy cập vị trí để hiển thị dữ liệu theo khu vực."
-        }
-      ],
       [
         "expo-image-picker",
         {
           "photosPermission": "Ứng dụng cần quyền truy cập thư viện ảnh để đính kèm hình ảnh.",
           "cameraPermission": "Ứng dụng cần quyền Camera để chụp ảnh đính kèm."
         }
-      ],
-      "expo-local-authentication"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

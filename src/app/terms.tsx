@@ -16,10 +16,10 @@ export default function TermsScreen() {
         <Text style={styles.title}>ĐIỀU KHOẢN SỬ DỤNG VÀ CHÍNH SÁCH BẢO MẬT</Text>
         <Text style={styles.date}>Cập nhật lần cuối: 09/07/2026</Text>
 
-        <Text style={styles.sectionTitle}>1. Mục đích ứng dụng (Internal Use Only)</Text>
+        <Text style={styles.sectionTitle}>1. Mục đích ứng dụng</Text>
         <Text style={styles.paragraph}>
-          BI Portal là ứng dụng lưu hành nội bộ dành riêng cho nhân viên, quản lý và đối tác được uỷ quyền của công ty. Ứng dụng cung cấp các báo cáo phân tích dữ liệu kinh doanh (Business Intelligence) và trợ lý ảo hỗ trợ công việc.
-          Tài khoản đăng nhập được cấp phát trực tiếp từ hệ thống nhân sự (DMS / BITRIX / EOFFICE). Hệ thống không hỗ trợ việc tự do đăng ký tài khoản cho người dùng bên ngoài.
+          BI Portal là nền tảng phân tích dữ liệu kinh doanh (Business Intelligence) dành cho doanh nghiệp, đối tác và nhà phân phối được uỷ quyền. Ứng dụng cung cấp các báo cáo phân tích dữ liệu và trợ lý AI thông minh (BIRA) hỗ trợ công việc.
+          Tài khoản đăng nhập được cấp phát bởi quản trị viên hệ thống theo quy trình phê duyệt của tổ chức.
         </Text>
 
         <Text style={styles.sectionTitle}>2. Quyền riêng tư và Thu thập dữ liệu</Text>
@@ -40,7 +40,7 @@ export default function TermsScreen() {
         <Text style={styles.bullet}>• Chúng tôi KHÔNG sử dụng dữ liệu chat và tài liệu nhạy cảm của công ty để huấn luyện (train) các mô hình AI công cộng bên thứ ba.</Text>
         <Text style={styles.bullet}>• <Text style={styles.bold}>Lưu ý quan trọng:</Text> BIRA là trí tuệ nhân tạo và có thể đưa ra các số liệu hoặc kết luận có sai sót. Vui lòng luôn kiểm tra chéo (cross-check) các thông tin quan trọng trước khi ra quyết định kinh doanh.</Text>
 
-        <Text style={styles.sectionTitle}>4. Trách nhiệm của nhân viên</Text>
+        <Text style={styles.sectionTitle}>4. Trách nhiệm của người dùng</Text>
         <Text style={styles.paragraph}>
           Bảo mật thông tin là ưu tiên hàng đầu. Bạn đồng ý:
         </Text>
@@ -50,11 +50,11 @@ export default function TermsScreen() {
 
         <Text style={styles.sectionTitle}>5. Chấm dứt quyền truy cập</Text>
         <Text style={styles.paragraph}>
-          Công ty có quyền thu hồi hoặc khoá tài khoản truy cập BI Portal của bạn ngay lập tức mà không cần báo trước nếu phát hiện có hành vi vi phạm chính sách bảo mật, hoặc khi bạn đã chính thức chấm dứt hợp đồng lao động/hợp tác với công ty.
+          Tổ chức cung cấp dịch vụ có quyền thu hồi hoặc khoá tài khoản truy cập BI Portal của bạn ngay lập tức mà không cần báo trước nếu phát hiện có hành vi vi phạm chính sách bảo mật, hoặc khi quan hệ hợp tác giữa các bên đã chấm dứt.
         </Text>
 
         <Text style={styles.paragraph}>
-          Bằng việc tiếp tục đăng nhập và sử dụng ứng dụng, bạn xác nhận đã đọc, hiểu và đồng ý toàn bộ các điều khoản nêu trên. Mọi thắc mắc về kỹ thuật hoặc tài khoản, vui lòng liên hệ trực tiếp Bộ phận IT.
+          Bằng việc tiếp tục đăng nhập và sử dụng ứng dụng, bạn xác nhận đã đọc, hiểu và đồng ý toàn bộ các điều khoản nêu trên. Mọi thắc mắc về kỹ thuật hoặc tài khoản, vui lòng liên hệ quản trị viên hệ thống của tổ chức bạn.
         </Text>
         <View style={{ height: 40 }} />
       </ScrollView>

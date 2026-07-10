@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { LOCALURL } from '@/utils/api';
 import { useFeedback } from './FeedbackContext';
-import * as Notifications from 'expo-notifications';
+// import * as Notifications from 'expo-notifications';
 import { AppState, AppStateStatus } from 'react-native';
 
 export interface AppNotification {
@@ -138,6 +138,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (!user_info?.manv) return;
     
+    // Push notifications temporarily disabled.
+    /*
     const notificationListener = Notifications.addNotificationReceivedListener(() => {
       // Refresh count when a new push is received
       refresh_unread_count(user_info.manv);
@@ -146,6 +148,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return () => {
       notificationListener.remove();
     };
+    */
   }, [user_info?.manv, refresh_unread_count]);
 
   return (

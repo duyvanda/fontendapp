@@ -59,7 +59,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="apps"
           options={{
-            title: 'Apps',
+            title: 'Tiện ích',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="apps" size={size} color={color} />
             ),

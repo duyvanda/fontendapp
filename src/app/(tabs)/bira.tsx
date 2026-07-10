@@ -13,10 +13,10 @@ export default function BiraTab() {
       <View style={globalStyles.screen}>
         <CustomHeader title="BIRA" />
         <View style={[globalStyles.emptyContainer, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={{ fontSize: 48, marginBottom: 12 }}>🚧</Text>
-          <Text style={[globalStyles.h2, { color: colors.textSecondary }]}>Đang hoàn thiện</Text>
-          <Text style={[globalStyles.emptyText, { marginTop: spacing.sm, textAlign: 'center' }]}>
-            Tính năng đang trong quá trình phát triển.{'\n'}Vui lòng quay lại sau.
+          <Text style={{ fontSize: 48, marginBottom: 12 }}>🤖</Text>
+          <Text style={[globalStyles.h2, { color: colors.textSecondary }]}>BIRA AI Assistant</Text>
+          <Text style={[globalStyles.emptyText, { marginTop: spacing.sm, textAlign: 'center', paddingHorizontal: 32 }]}>
+            Tính năng này chưa được kích hoạt cho tài khoản của bạn.{'\n'}Vui lòng liên hệ quản trị viên để được hỗ trợ.
           </Text>
         </View>
       </View>

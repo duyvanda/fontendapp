@@ -39,7 +39,7 @@ export default function NotificationsScreen() {
     loadData();
   }, [loadData]);
 
-  console.log('[NotificationsScreen] Rendering notifications list state, length:', notifications?.length || 0);
+
 
   const handle_press = (item: AppNotification) => {
     if (!item.is_read) {

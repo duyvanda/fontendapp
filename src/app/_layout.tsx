@@ -11,6 +11,8 @@ export default function RootLayout() {
           <Stack.Screen name="login" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="report" />
+          <Stack.Screen name="account" />
+          <Stack.Screen name="terms" />
         </Stack>
         {/* @ts-ignore */}
         <StatusBar style="light" backgroundColor="transparent" />
