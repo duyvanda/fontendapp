@@ -9,6 +9,7 @@ Tài liệu này ghi nhận toàn bộ các thư viện và quyền hạn native
 1. **Face ID / Sinh trắc học** (`expo-local-authentication`)
 2. **Push Notifications (Thông báo đẩy)** (`expo-notifications`)
 3. **Geo-location (Định vị)** (`expo-location`)
+4. **Sentry Error Tracking (Giám sát lỗi)** (`@sentry/react-native`)
 
 ---
 
@@ -130,6 +131,51 @@ Thêm các quyền truy cập GPS trên Android và mô tả hiển thị trên 
     ]
   }
 }
+```
+
+### 4. Kích hoạt lại Sentry (Giám sát lỗi / Crash Report)
+Nếu sau khi duyệt app thành công, bạn muốn kích hoạt lại hệ thống theo dõi crash và ghi log lỗi Sentry:
+
+#### Bước 4.1: Cài đặt lại thư viện
+```bash
+npx expo install @sentry/react-native
+```
+
+#### Bước 4.2: Cấu hình lại file `app.json`
+Thêm plugin Sentry vào danh sách plugins:
+```json
+{
+  "expo": {
+    "plugins": [
+      "@sentry/react-native"
+    ]
+  }
+}
+```
+
+#### Bước 4.3: Bổ sung cấu hình eas.json (Tùy chọn)
+Nếu bạn muốn tắt tính năng tự động tải sourcemaps lên Sentry khi build preview (giúp build nhanh hơn), hãy thêm biến môi trường sau vào profile tương ứng trong `eas.json`:
+```json
+{
+  "build": {
+    "preview": {
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    }
+  }
+}
+```
+
+#### Bước 4.4: Khởi tạo code (Sentry.init)
+Import và khởi tạo Sentry tại file entry chính của ứng dụng (ví dụ: `src/app/_layout.tsx`):
+```typescript
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: "YOUR_SENTRY_DSN_HERE",
+  debug: false,
+});
 ```
 
 ---
