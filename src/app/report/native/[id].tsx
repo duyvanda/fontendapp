@@ -11,7 +11,7 @@ export default function NativeReportScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { reports, toggle_favorite } = useFeedback();
+  const { reports, toggle_favorite, user_info } = useFeedback();
 
   // Tìm báo cáo tương ứng trong list
   const report = useMemo(() => {
@@ -86,6 +86,12 @@ export default function NativeReportScreen() {
             >
               <Ionicons name="arrow-back" size={24} color={colors.textInverse} />
             </TouchableOpacity>
+            
+            {user_info && (
+              <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 50, marginRight: spacing.sm }}>
+                <Text style={{ color: colors.textInverse, fontWeight: 'bold', fontSize: 12 }}>{user_info.manv}</Text>
+              </View>
+            )}
             
             <Text
               style={[globalStyles.h3, { color: colors.textInverse, flex: 1 }]}
