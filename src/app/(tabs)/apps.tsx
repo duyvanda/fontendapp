@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
 import CustomHeader from '@/components/CustomHeader';
-import { globalStyles, spacing, colors, radius } from '@/styles/global';
-import {
-  ScrollView, Text, TouchableOpacity, View, ActivityIndicator,
-  TextInput, Alert, StyleSheet, KeyboardAvoidingView, Platform,
-  Modal,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '@/context/FeedbackContext';
+import { colors, globalStyles, radius, spacing } from '@/styles/global';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity, View,
+} from 'react-native';
 
 type AppItem = {
   id: string;
@@ -155,11 +162,11 @@ export default function AppsScreen() {
     <TouchableOpacity
       key={app.id}
       style={[
-        globalStyles.card, 
-        { 
-          width: '47%', 
-          alignItems: 'center', 
-          paddingVertical: spacing.md, 
+        globalStyles.card,
+        {
+          width: '47%',
+          alignItems: 'center',
+          paddingVertical: spacing.md,
           paddingHorizontal: spacing.xs,
           borderRadius: 16,
           borderWidth: 1,
@@ -180,7 +187,7 @@ export default function AppsScreen() {
       }}>
         <Text style={{ fontSize: 22 }}>{app.icon}</Text>
       </View>
-      <Text 
+      <Text
         style={[globalStyles.bodySmall, { fontWeight: '700', textAlign: 'center', color: colors.textPrimary }]}
         numberOfLines={2}
       >
@@ -406,7 +413,7 @@ export default function AppsScreen() {
             <ScrollView contentContainerStyle={styles.modal_content} keyboardShouldPersistTaps="handled">
               <Text style={styles.tool_title}>📈 Đăng Ký KPI Doanh Nghiệp</Text>
               <Text style={styles.tool_desc}>Xác nhận chỉ tiêu cam kết của đối tác cho chu kỳ kinh doanh.</Text>
-              
+
               <View style={styles.form_group}>
                 <Text style={styles.form_label}>TÀI KHOẢN ĐĂNG KÝ</Text>
                 <View style={styles.read_only_box}>
