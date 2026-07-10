@@ -18,7 +18,7 @@ type AppItem = {
 };
 
 const STATIC_APP_ITEMS: AppItem[] = [
-  { id: 'crm', icon: '💼', label: 'CRM Dashboard', url: '', group: 'apps' },
+  { id: 'mkt', icon: '📊', label: 'Thông số MKT & Ads', url: '', group: 'apps' },
   { id: 'gift', icon: '🎁', label: 'Đăng Ký KPI', url: '', group: 'tools' },
   { id: 'listing_plan', icon: '📝', label: 'Listing Plan', url: '', group: 'tools' },
 ];
@@ -79,8 +79,8 @@ export default function AppsScreen() {
   const [plan_target, set_plan_target] = useState('');
 
   const handle_open_app = (app: AppItem) => {
-    if (app.id === 'crm') {
-      set_active_tool('crm');
+    if (app.id === 'mkt') {
+      set_active_tool('mkt');
       return;
     }
     if (app.id === 'gift') {
@@ -201,7 +201,7 @@ export default function AppsScreen() {
         <ScrollView contentContainerStyle={{ padding: spacing.md, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           {apps.length > 0 && (
             <>
-              <Text style={[globalStyles.sectionHeader, { color: colors.primary, letterSpacing: 1.5 }]}>🌐 LIÊN KẾT HỆ THỐNG</Text>
+              <Text style={[globalStyles.sectionHeader, { color: colors.primary, letterSpacing: 1.5 }]}>📣 MKT & QUẢNG CÁO</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.md }}>
                 {apps.map(render_app_card)}
               </View>
@@ -267,32 +267,32 @@ export default function AppsScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* ─── MODAL: B2B CLIENT DASHBOARD ─── */}
-      <Modal visible={active_tool === 'crm'} animationType="slide">
+      {/* ─── MODAL: MARKETING & ADS PERFORMANCE ─── */}
+      <Modal visible={active_tool === 'mkt'} animationType="slide">
         <KeyboardAvoidingView
           style={{ flex: 1, backgroundColor: '#f8fafc' }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <View style={[styles.modal_container, { flex: 1 }]}>
-            <CustomHeader title="Portal Dashboard" />
+            <CustomHeader title="Marketing & Quảng cáo" />
             <ScrollView contentContainerStyle={styles.modal_content} keyboardShouldPersistTaps="handled">
-              <Text style={styles.tool_title}>💼 B2B Partner Dashboard</Text>
-              <Text style={styles.tool_desc}>Quản lý giao dịch, công nợ và chỉ tiêu mua hàng dành cho Đối tác.</Text>
+              <Text style={styles.tool_title}>📣 Marketing & Ads Performance</Text>
+              <Text style={styles.tool_desc}>Giám sát ngân sách quảng cáo, hiệu suất chiến dịch và chỉ số tiếp cận đối tượng.</Text>
 
               {/* Stats Row */}
               <View style={styles.stats_row}>
                 <View style={styles.stat_card}>
-                  <Text style={styles.stat_num}>125M</Text>
-                  <Text style={styles.stat_label}>Doanh số tháng</Text>
+                  <Text style={styles.stat_num}>1.8M</Text>
+                  <Text style={styles.stat_label}>Lượt tiếp cận</Text>
                 </View>
                 <View style={styles.stat_card}>
-                  <Text style={styles.stat_num}>1,250</Text>
-                  <Text style={styles.stat_label}>Điểm tích lũy</Text>
+                  <Text style={styles.stat_num}>45.2K</Text>
+                  <Text style={styles.stat_label}>Lượt nhấp chuột</Text>
                 </View>
                 <View style={styles.stat_card}>
-                  <Text style={[styles.stat_num, { color: '#ef4444' }]}>15.4M</Text>
-                  <Text style={styles.stat_label}>Công nợ hiện tại</Text>
+                  <Text style={[styles.stat_num, { color: colors.primary }]}>18.5M</Text>
+                  <Text style={styles.stat_label}>Ngân sách đã tiêu</Text>
                 </View>
               </View>
 
@@ -307,7 +307,7 @@ export default function AppsScreen() {
               }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                   <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textPrimary }}>
-                    🎯 Tiến độ thực hiện chỉ tiêu doanh số
+                    🎯 Tiến độ đạt KPI chuyển đổi (Conversions)
                   </Text>
                   <Text style={{ fontSize: 13, fontWeight: '800', color: colors.primary }}>
                     83.3%
@@ -318,8 +318,8 @@ export default function AppsScreen() {
                   <View style={{ width: '83.3%', height: '100%', backgroundColor: colors.primary, borderRadius: radius.full }} />
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-                  <Text style={{ fontSize: 11, color: colors.textCaption }}>Đã đạt: 125,000,000đ</Text>
-                  <Text style={{ fontSize: 11, color: colors.textCaption }}>Chỉ tiêu: 150,000,000đ</Text>
+                  <Text style={{ fontSize: 11, color: colors.textCaption }}>Đã đạt: 833 conversions</Text>
+                  <Text style={{ fontSize: 11, color: colors.textCaption }}>Chỉ tiêu: 1,000 conversions</Text>
                 </View>
               </View>
 
@@ -337,10 +337,10 @@ export default function AppsScreen() {
 
               {/* Profile Info */}
               <View style={styles.form_group}>
-                <Text style={styles.form_label}>MÃ KHÁCH HÀNG / ĐỐI TÁC</Text>
+                <Text style={styles.form_label}>MÃ ĐỐI TÁC TRUYỀN THÔNG</Text>
                 <View style={styles.read_only_box}>
-                  <Ionicons name="business" size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
-                  <Text style={styles.read_only_text}>{user_info?.manv || 'GUEST_B2B'}</Text>
+                  <Ionicons name="megaphone" size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                  <Text style={styles.read_only_text}>{user_info?.manv || 'GUEST_MKT'}</Text>
                 </View>
               </View>
 
@@ -352,7 +352,7 @@ export default function AppsScreen() {
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="help-buoy" size={20} color="#ffffff" />
-                    <Text style={styles.action_btn_text}>Gửi yêu cầu hỗ trợ đối soát</Text>
+                    <Text style={styles.action_btn_text}>Gửi yêu cầu hỗ trợ chiến dịch</Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -363,14 +363,14 @@ export default function AppsScreen() {
                   <Text style={styles.form_label}>TIÊU ĐỀ YÊU CẦU</Text>
                   <TextInput
                     style={styles.form_input}
-                    placeholder="Ví dụ: Đối chiếu công nợ, Đặt thêm hàng gấp..."
+                    placeholder="Ví dụ: Tăng ngân sách Ads, Đối soát lead..."
                     value={support_title}
                     onChangeText={set_support_title}
                   />
                   <Text style={[styles.form_label, { marginTop: 10 }]}>CHI TIẾT YÊU CẦU HỖ TRỢ</Text>
                   <TextInput
                     style={[styles.form_input, { minHeight: 60 }]}
-                    placeholder="Nội dung chi tiết yêu cầu hỗ trợ..."
+                    placeholder="Nội dung chi tiết yêu cầu hỗ trợ chiến dịch..."
                     multiline
                     value={support_desc}
                     onChangeText={set_support_desc}
