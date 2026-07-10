@@ -9,8 +9,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const WEEKLY_DATA = {
   kpis: [
     { label: 'Doanh thu', value: '185.4M', kpi: 'Mục tiêu: 200M', percent: 92.7, color: colors.primary, icon: 'cash-outline' },
-    { label: 'Khách hàng mới', value: '42', kpi: 'Tăng 12% vs tuần trước', percent: 112, color: colors.success, icon: 'people-outline' },
-    { label: 'Tỉ lệ viếng thăm', value: '88%', kpi: 'Chỉ tiêu: 90%', percent: 97.7, color: colors.warning, icon: 'footsteps-outline' }
+    { label: 'Tổng số đơn', value: '42', kpi: 'Tăng 12% vs tuần trước', percent: 112, color: colors.success, icon: 'document-text-outline' },
+    { label: 'Mục tiêu doanh số', value: '88%', kpi: 'Chỉ tiêu: 90%', percent: 97.7, color: colors.warning, icon: 'trending-up-outline' }
   ],
   chart: [
     { label: 'Th 2', value: 24.5 },
@@ -31,8 +31,8 @@ const WEEKLY_DATA = {
 const MONTHLY_DATA = {
   kpis: [
     { label: 'Doanh thu', value: '812.9M', kpi: 'Mục tiêu: 850M', percent: 95.6, color: colors.primary, icon: 'cash-outline' },
-    { label: 'Khách hàng mới', value: '168', kpi: 'Tăng 18% vs tháng trước', percent: 118, color: colors.success, icon: 'people-outline' },
-    { label: 'Tỉ lệ viếng thăm', value: '92%', kpi: 'Chỉ tiêu: 90%', percent: 102.2, color: colors.warning, icon: 'footsteps-outline' }
+    { label: 'Tổng số đơn', value: '168', kpi: 'Tăng 18% vs tháng trước', percent: 118, color: colors.success, icon: 'document-text-outline' },
+    { label: 'Mục tiêu doanh số', value: '92%', kpi: 'Chỉ tiêu: 90%', percent: 102.2, color: colors.warning, icon: 'trending-up-outline' }
   ],
   chart: [
     { label: 'T1', value: 120 },
