@@ -103,9 +103,10 @@ no self-registration by design (B2B SaaS model).
 
 KEY SCREENS TO TEST:
 1. HOME: Search and browse assigned reports
-2. BIRA: AI chat assistant (tap the BIRA tab)
-3. NOTIFICATIONS: Smart business alerts
-4. ACCOUNT & DELETION: Tap on the User Pill (with username) 
+2. NATIVE REPORTS: On the Home screen, tap on "CRM Overall Dashboard" (stt: 2001) or "Delivery Performance" (stt: 2002) to view high-performance native charts.
+3. BIRA: AI chat assistant (tap the BIRA tab)
+4. NOTIFICATIONS: Smart business alerts
+5. ACCOUNT & DELETION: Tap on the User Pill (with username) 
    on the top right of the Home screen header to open the Account 
    screen. Here you can find the Account Deletion feature.
 ```

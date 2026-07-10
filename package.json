@@ -51,7 +51,9 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "ota:preview": "eas update --channel preview --environment preview --message \"OTA preview update\"",
+    "ota:production": "eas update --channel production --environment production --message \"OTA production update\""
   },
   "private": true,
   "expo": {

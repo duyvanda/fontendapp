@@ -48,9 +48,12 @@ export default function TermsScreen() {
         <Text style={styles.bullet}>• Không chụp ảnh màn hình các báo cáo kinh doanh nhạy cảm để phát tán ra bên ngoài hoặc sử dụng trên các mạng xã hội.</Text>
         <Text style={styles.bullet}>• Tuân thủ nghiêm ngặt mọi thoả thuận bảo mật thông tin (NDA) đã ký kết với công ty.</Text>
 
-        <Text style={styles.sectionTitle}>5. Chấm dứt quyền truy cập</Text>
+        <Text style={styles.sectionTitle}>5. Chấm dứt quyền truy cập và Quyền xoá tài khoản</Text>
         <Text style={styles.paragraph}>
           Tổ chức cung cấp dịch vụ có quyền thu hồi hoặc khoá tài khoản truy cập BI Portal của bạn ngay lập tức mà không cần báo trước nếu phát hiện có hành vi vi phạm chính sách bảo mật, hoặc khi quan hệ hợp tác giữa các bên đã chấm dứt.
+        </Text>
+        <Text style={styles.paragraph}>
+          <Text style={styles.bold}>Quyền yêu cầu xoá tài khoản:</Text> Theo quy định bảo mật, người dùng có quyền tự yêu cầu xoá tài khoản và toàn bộ dữ liệu cá nhân liên quan bất kỳ lúc nào. Bạn có thể sử dụng chức năng "Xoá tài khoản" trực tiếp tại mục cài đặt tài khoản bên trong ứng dụng. Sau khi xác nhận, toàn bộ thông tin đăng nhập và dữ liệu cá nhân của bạn sẽ được xoá sạch khỏi hệ thống.
         </Text>
 
         <Text style={styles.paragraph}>
