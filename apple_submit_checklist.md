@@ -105,8 +105,21 @@ KEY SCREENS TO TEST:
 1. HOME: Search and browse assigned reports
 2. BIRA: AI chat assistant (tap the BIRA tab)
 3. NOTIFICATIONS: Smart business alerts
-4. ACCOUNT: User profile, terms, and account deletion
+4. ACCOUNT & DELETION: Tap on the User Pill (with username) 
+   on the top right of the Home screen header to open the Account 
+   screen. Here you can find the Account Deletion feature.
 ```
+
+---
+
+## ⚠️ Lưu ý quan trọng về Bản quyền & Sở hữu (Guideline 5.2.1)
+
+Nếu bạn dùng tài khoản Developer cá nhân để upload app có chứa logo/thương hiệu của công ty (`Meraplion`, `BIRA`, v.v.), Apple có khả năng cao sẽ giữ lại (Hold) hoặc Reject với lý do **vi phạm bản quyền**.
+
+**Cách xử lý:**
+- Tốt nhất là đăng ký tài khoản Developer dưới dạng **Organization / Enterprise** của chính công ty.
+- Nếu bắt buộc dùng account cá nhân, hãy chuẩn bị sẵn giấy uỷ quyền sử dụng thương hiệu từ phía công ty để nộp khi Apple yêu cầu.
+
 
 ---
 

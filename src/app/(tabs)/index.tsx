@@ -10,6 +10,7 @@ import { useNotification } from '@/context/NotificationContext';
 import { Ionicons } from '@expo/vector-icons';
 import { remove_accents_with_case } from '@/utils/string';
 import { colors, spacing, radius } from '@/styles/global';
+import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
 
 const REPORT_ICONS = ['analytics', 'pie-chart', 'stats-chart', 'bar-chart', 'trending-up'];
 const REPORT_COLORS = [
@@ -49,7 +50,9 @@ export default function HomeScreen() {
 
   const handle_open_report = (report: Report) => {
     clear_filter_report();
-    if (report.link_report?.startsWith('/realtime')) {
+    if (Number(report.type) === 4 || report.stt in NATIVE_REPORTS_MAP) {
+      router.push(`/report/native/${report.stt}` as any);
+    } else if (report.link_report?.startsWith('/realtime')) {
       router.push(`/realtime/${report.stt}` as any);
     } else {
       router.push(`/report/${report.stt}` as any);
