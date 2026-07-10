@@ -4,6 +4,25 @@
 
 ---
 
+## ⚠️ LƯU Ý SỐNG CÒN ĐỂ ĐƯỢC DUYỆT APP (Đọc kỹ)
+
+### 1. Phân quyền Báo cáo Looker Studio cho Demo Account
+- **Vấn đề:** Reviewer dùng tài khoản demo `DEMO_APPLE` đăng nhập. Khi bấm xem các báo cáo nhúng (Looker Studio), nếu link bắt đăng nhập Google hoặc hiện thông báo "Không có quyền truy cập", Apple sẽ **reject ngay lập tức (Guideline 2.1)**.
+- **Giải pháp:** Cấu hình các báo cáo hiển thị cho tài khoản `DEMO_APPLE` trên PostgreSQL là các link báo cáo Looker **đã được set Public** (Anyone with the link can view) hoặc nhúng qua Service Account/Embed Token để người kiểm duyệt mở là xem được biểu đồ ngay lập tức mà không cần đăng nhập Google.
+
+### 2. Quay Video Demo dự phòng (Bảo hiểm 100%)
+- **Cách làm:** Quay một video màn hình (Screen Recording) đầy đủ luồng đi của app (Login -> Xem báo cáo nhúng & native -> Chat với BIRA AI -> Đăng ký KPI/Listing -> Vào Account -> Xóa tài khoản).
+- **Mục đích:** Host video lên Google Drive (Public) hoặc Youtube (Không công khai) và đính kèm link vào mục **Review Notes** trên App Store Connect kèm ghi chú: `"In case of any connectivity issues with private analytical servers, please refer to this screen recording demonstrating the core flow: [LINK]"`. Đây là bí quyết giúp app hybrid/nội bộ được duyệt cực nhanh.
+
+### 3. Tài khoản Developer cá nhân vs Doanh nghiệp (Guideline 5.2.1)
+- **Vấn đề:** Nếu submit bằng tài khoản Apple cá nhân nhưng app chứa logo/tên công ty `Merap`, Apple sẽ **Hold** app vì nghi ngờ vi phạm bản quyền thương hiệu.
+- **Giải pháp:** Submit bằng tài khoản Organization (Doanh nghiệp) của công ty là an toàn nhất.
+
+### 4. Ẩn chữ "Beta", "Test" trên giao diện
+- Apple cấm các từ liên quan đến thử nghiệm hiển thị trên UI chính của app Store. Hãy đảm bảo build production không hiển thị các chữ như "Beta version", "Test Mode".
+
+---
+
 ## 1. Chạy SQL trên PostgreSQL
 
 Chạy file `delete_account_sql.sql` trên database production.
