@@ -137,10 +137,11 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // ── Auth: Logout ───────────────────────────────────────────────────────────
   const logout_user = async () => {
+    // Chạy ngầm unregister push token (nếu có), không await để tránh block UI gây văng màn hình
     // if (user_info?.manv) {
-    //   // Don't await unregister so it doesn't block logout
     //   unregisterPushToken(user_info.manv);
     // }
+
     await clear_all_auth();
     set_user_info(null);
     set_user_hr_info(null);
@@ -148,8 +149,6 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     set_filter_reports(null);
     set_login_text('');
 
-    // Loại bỏ dismissAll() vì dismissAll trên root stack có thể gây ra lỗi màn hình trắng trong Expo Router.
-    // Thực hiện replace trực tiếp.
     router.replace('/login');
   };
 

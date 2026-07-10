@@ -27,7 +27,7 @@ export default function StaticReportScreen() {
     <View style={globalStyles.screen}>
       <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} show_back />
       
-      <Modal transparent={true} visible={loading} animationType="fade">
+      <Modal transparent={true} visible={loading} animationType="fade" statusBarTranslucent={true}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#6c757d', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6 }}>
             <ActivityIndicator color="#fff" size="small" style={{ marginRight: 8 }} />

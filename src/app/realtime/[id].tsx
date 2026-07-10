@@ -62,7 +62,7 @@ export default function RealtimeReportScreen() {
     <View style={globalStyles.screen}>
       <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} show_back />
       
-      <Modal visible={showParamModal} transparent={true} animationType="slide">
+      <Modal visible={showParamModal} transparent={true} animationType="slide" statusBarTranslucent={true}>
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
           <View style={{ 
             backgroundColor: colors.surface, 
@@ -106,7 +106,7 @@ export default function RealtimeReportScreen() {
         </View>
       </Modal>
 
-      <Modal transparent={true} visible={loading} animationType="fade">
+      <Modal transparent={true} visible={loading} animationType="fade" statusBarTranslucent={true}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#6c757d', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6 }}>
             <ActivityIndicator color="#fff" size="small" style={{ marginRight: 8 }} />

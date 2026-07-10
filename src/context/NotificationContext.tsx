@@ -144,7 +144,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener);
+      notificationListener.remove();
     };
   }, [user_info?.manv, refresh_unread_count]);
 

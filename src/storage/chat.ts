@@ -5,7 +5,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { get_id, inserted_at } from '@/utils/string';
 
-export interface ChatMessage {
+export interface chat_message_type {
   id: string;
   text: string;
   sender: 'user' | 'bot';
@@ -15,19 +15,19 @@ export interface ChatMessage {
 
 const SESSION_PREFIX = 'bira_messages_';
 
-export async function loadMessages(session_id: string): Promise<ChatMessage[]> {
+export async function load_messages(session_id: string): Promise<chat_message_type[]> {
   const raw = await AsyncStorage.getItem(`${SESSION_PREFIX}${session_id}`);
   if (!raw) return [];
   try {
-    return JSON.parse(raw) as ChatMessage[];
+    return JSON.parse(raw) as chat_message_type[];
   } catch {
     return [];
   }
 }
 
-export async function saveMessages(
+export async function save_messages(
   session_id: string,
-  messages: ChatMessage[],
+  messages: chat_message_type[],
 ): Promise<void> {
   await AsyncStorage.setItem(
     `${SESSION_PREFIX}${session_id}`,
@@ -35,11 +35,11 @@ export async function saveMessages(
   );
 }
 
-export async function clearMessages(session_id: string): Promise<void> {
+export async function clear_messages(session_id: string): Promise<void> {
   await AsyncStorage.removeItem(`${SESSION_PREFIX}${session_id}`);
 }
 
-export function createUserMessage(text: string): ChatMessage {
+export function create_user_message(text: string): chat_message_type {
   return {
     id: get_id(),
     text,
@@ -48,7 +48,7 @@ export function createUserMessage(text: string): ChatMessage {
   };
 }
 
-export function createBotMessage(text: string, is_error = false): ChatMessage {
+export function create_bot_message(text: string, is_error = false): chat_message_type {
   return {
     id: get_id(),
     text,

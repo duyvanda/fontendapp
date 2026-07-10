@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, Text, TouchableOpacity, TextInput, 
   FlatList, ActivityIndicator, KeyboardAvoidingView, Platform,
-  StyleSheet, StatusBar, Alert, Modal, ScrollView
+  StyleSheet, Alert, Modal, ScrollView
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useSegments } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import { Camera as VisionCamera, useCameraDevice, useCameraPermission, usePhotoOutput } from 'react-native-vision-camera';
@@ -12,8 +14,8 @@ import { useFeedback } from '@/context/FeedbackContext';
 import { Ionicons } from '@expo/vector-icons';
 import { get_bira_session_id, save_bira_session_id } from '@/storage/auth';
 import { 
-  loadMessages, saveMessages,
-  ChatMessage, createUserMessage, createBotMessage 
+  load_messages, save_messages,
+  chat_message_type, create_user_message, create_bot_message 
 } from '@/storage/chat';
 import { BIRA_API_URL, MARKDOWN_CONVERT_URL } from '@/utils/api';
 import { 
@@ -53,7 +55,7 @@ export default function CloudAssist() {
   const manv = user_info?.manv || 'Unknown';
   
   const [session_id, set_session_id] = useState<string>('');
-  const [messages, set_messages] = useState<ChatMessage[]>([]);
+  const [messages, set_messages] = useState<chat_message_type[]>([]);
   const [input, set_input] = useState('');
   const [is_thinking, set_is_thinking] = useState(false);
   
@@ -68,6 +70,8 @@ export default function CloudAssist() {
   
   const CameraComponent = VisionCamera as any;
   
+  const segments = useSegments();
+  const isFocused = segments[1] === 'bira';
   const flat_list_ref = useRef<FlatList>(null);
 
   // Auto-scroll khi có tin nhắn mới hoặc bot đang typing
@@ -91,7 +95,7 @@ export default function CloudAssist() {
           await save_bira_session_id(stored_session);
         }
         set_session_id(stored_session);
-        const stored_msgs = await loadMessages(stored_session);
+        const stored_msgs = await load_messages(stored_session);
         if (stored_msgs.length > 0) {
           set_messages(stored_msgs);
         }
@@ -102,7 +106,7 @@ export default function CloudAssist() {
   // Save Messages on change
   useEffect(() => {
     if (session_id && messages.length > 0) {
-      saveMessages(session_id, messages);
+      save_messages(session_id, messages);
     }
   }, [messages, session_id]);
 
@@ -270,7 +274,7 @@ export default function CloudAssist() {
       if (!display_text) display_text = `📎 [Đã gửi tài liệu: ${file_names}]`;
     }
 
-    const user_msg = createUserMessage(display_text);
+    const user_msg = create_user_message(display_text);
     set_messages(prev => [...prev, user_msg]);
     set_input('');
     set_is_thinking(true);
@@ -318,9 +322,9 @@ export default function CloudAssist() {
         bot_response = events.errorMessage;
       }
 
-      set_messages(prev => [...prev, createBotMessage(bot_response)]);
+      set_messages(prev => [...prev, create_bot_message(bot_response)]);
     } catch (error: any) {
-      set_messages(prev => [...prev, createBotMessage(`**Lỗi:** ${error.message || "Kết nối thất bại"}`, true)]);
+      set_messages(prev => [...prev, create_bot_message(`**Lỗi:** ${error.message || "Kết nối thất bại"}`, true)]);
     } finally {
       set_is_thinking(false);
       set_attached_files([]);
@@ -328,7 +332,7 @@ export default function CloudAssist() {
     }
   };
 
-  const render_message = ({ item }: { item: ChatMessage }) => {
+  const render_message = ({ item }: { item: chat_message_type }) => {
     const is_user = item.sender === 'user';
     const date = new Date(item.timestamp);
     const time_str = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
@@ -360,7 +364,7 @@ export default function CloudAssist() {
         <View style={{ flex: 1, backgroundColor: colors.surface }}>
           
           {/* Header */}
-          <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
+          {isFocused && <StatusBar style="dark" />}
           <View style={[biraStyles.header, { paddingTop: insets.top + 8 }]}>
             <View style={biraStyles.headerTitleContainer}>
               <View style={biraStyles.headerIcon}>
@@ -516,7 +520,14 @@ export default function CloudAssist() {
         </View>
       )}
       {/* File Preview Modal */}
-      <Modal visible={preview_file !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => set_preview_file(null)}>
+      <Modal 
+        visible={preview_file !== null} 
+        animationType="slide" 
+        presentationStyle="pageSheet" 
+        onRequestClose={() => set_preview_file(null)}
+        statusBarTranslucent={true}
+      >
+        <StatusBar style="dark" />
         <View style={{ flex: 1, backgroundColor: '#f8fafc', paddingTop: insets.top }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
             <Ionicons name="document-text" size={24} color={colors.textSecondary} style={{ marginRight: 8 }} />

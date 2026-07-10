@@ -12,7 +12,8 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="report" />
         </Stack>
-        <StatusBar style="light" translucent backgroundColor="transparent" />
+        {/* @ts-ignore */}
+        <StatusBar style="light" backgroundColor="transparent" />
       </NotificationProvider>
     </FeedbackProvider>
   );
