@@ -134,7 +134,7 @@ KEY SCREENS TO TEST:
 
 ## ⚠️ Lưu ý quan trọng về Bản quyền & Sở hữu (Guideline 5.2.1)
 
-Nếu bạn dùng tài khoản Developer cá nhân để upload app có chứa logo/thương hiệu của công ty (`Meraplion`, `BIRA`, v.v.), Apple có khả năng cao sẽ giữ lại (Hold) hoặc Reject với lý do **vi phạm bản quyền**.
+Nếu bạn dùng tài khoản Developer cá nhân để upload app có chứa logo/thương hiệu riêng của công ty (`Meraplion`, `Merap`, v.v. - không bao gồm thuật ngữ công nghệ chung như `BI` hay `BIRA`), Apple có khả năng cao sẽ giữ lại (Hold) hoặc Reject với lý do **vi phạm bản quyền**.
 
 **Cách xử lý:**
 - Tốt nhất là đăng ký tài khoản Developer dưới dạng **Organization / Enterprise** của chính công ty.
