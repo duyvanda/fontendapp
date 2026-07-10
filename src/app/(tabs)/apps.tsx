@@ -1,20 +1,13 @@
+import React, { useState } from 'react';
 import CustomHeader from '@/components/CustomHeader';
-import { useFeedback } from '@/context/FeedbackContext';
-import { colors, globalStyles, radius, spacing } from '@/styles/global';
-import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { globalStyles, spacing, colors, radius, shadows } from '@/styles/global';
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
+  ScrollView, Text, TouchableOpacity, View, ActivityIndicator,
+  TextInput, Alert, StyleSheet, KeyboardAvoidingView, Platform,
   Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity, View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFeedback } from '@/context/FeedbackContext';
 
 type AppItem = {
   id: string;
@@ -25,7 +18,6 @@ type AppItem = {
 };
 
 const STATIC_APP_ITEMS: AppItem[] = [
-  { id: 'mkt', icon: '📊', label: 'Thông số MKT & Ads', url: '', group: 'apps' },
   { id: 'gift', icon: '🎁', label: 'Đăng Ký KPI', url: '', group: 'tools' },
   { id: 'listing_plan', icon: '📝', label: 'Listing Plan', url: '', group: 'tools' },
 ];
@@ -52,12 +44,6 @@ const PRODUCTS = [
   'Vitamin C Zinc bổ sung',
 ];
 
-const MOCK_ORDERS = [
-  { id: 'DH-2026-004', time: '14:30', total: '12,500,000đ', status: 'Đang giao' },
-  { id: 'DH-2026-003', time: 'Hôm qua', total: '45,200,000đ', status: 'Đã giao' },
-  { id: 'DH-2026-002', time: '08/07', total: '18,900,000đ', status: 'Đã giao' },
-];
-
 export default function AppsScreen() {
   const { user_info } = useFeedback();
 
@@ -68,12 +54,6 @@ export default function AppsScreen() {
   const [feedback_text, set_feedback_text] = useState('');
   const [submitting, set_submitting] = useState(false);
   const [submitted, set_submitted] = useState(false);
-
-  /* B2B CRM Dashboard State */
-  const [orders, set_orders] = useState(MOCK_ORDERS);
-  const [show_support_form, set_show_support_form] = useState(false);
-  const [support_title, set_support_title] = useState('');
-  const [support_desc, set_support_desc] = useState('');
 
   /* KPI Form State */
   const [kpi_month, set_kpi_month] = useState(MONTHS[0]);
@@ -86,10 +66,6 @@ export default function AppsScreen() {
   const [plan_target, set_plan_target] = useState('');
 
   const handle_open_app = (app: AppItem) => {
-    if (app.id === 'mkt') {
-      set_active_tool('mkt');
-      return;
-    }
     if (app.id === 'gift') {
       set_active_tool('kpi');
       return;
@@ -140,22 +116,6 @@ export default function AppsScreen() {
     }, 800);
   };
 
-  const handle_submit_support = () => {
-    if (!support_title.trim() || !support_desc.trim()) {
-      Alert.alert('Thông báo', 'Vui lòng điền đầy đủ tiêu đề và nội dung.');
-      return;
-    }
-    set_submitting(true);
-    setTimeout(() => {
-      set_submitting(false);
-      Alert.alert('Thành công', 'Yêu cầu hỗ trợ đã được gửi đến ban quản trị.');
-      set_show_support_form(false);
-      set_support_title('');
-      set_support_desc('');
-    }, 800);
-  };
-
-  const apps = STATIC_APP_ITEMS.filter(a => a.group === 'apps');
   const tools = STATIC_APP_ITEMS.filter(a => a.group === 'tools');
 
   const render_app_card = (app: AppItem) => (
@@ -206,18 +166,9 @@ export default function AppsScreen() {
         keyboardVerticalOffset={90}
       >
         <ScrollView contentContainerStyle={{ padding: spacing.md, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-          {apps.length > 0 && (
-            <>
-              <Text style={[globalStyles.sectionHeader, { color: colors.primary, letterSpacing: 1.5 }]}>📣 MKT & QUẢNG CÁO</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.md }}>
-                {apps.map(render_app_card)}
-              </View>
-            </>
-          )}
-
           {tools.length > 0 && (
             <>
-              <Text style={[globalStyles.sectionHeader, { marginTop: spacing.lg, color: colors.primary, letterSpacing: 1.5 }]}>🛠️ CÔNG CỤ HỖ TRỢ</Text>
+              <Text style={[globalStyles.sectionHeader, { color: colors.primary, letterSpacing: 1.5 }]}>🛠️ CÔNG CỤ HỖ TRỢ</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.md }}>
                 {tools.map(render_app_card)}
               </View>
@@ -274,133 +225,6 @@ export default function AppsScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* ─── MODAL: MARKETING & ADS PERFORMANCE ─── */}
-      <Modal visible={active_tool === 'mkt'} animationType="slide">
-        <KeyboardAvoidingView
-          style={{ flex: 1, backgroundColor: '#f8fafc' }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
-          <View style={[styles.modal_container, { flex: 1 }]}>
-            <CustomHeader title="Marketing & Quảng cáo" />
-            <ScrollView contentContainerStyle={styles.modal_content} keyboardShouldPersistTaps="handled">
-              <Text style={styles.tool_title}>📣 Marketing & Ads Performance</Text>
-              <Text style={styles.tool_desc}>Giám sát ngân sách quảng cáo, hiệu suất chiến dịch và chỉ số tiếp cận đối tượng.</Text>
-
-              {/* Stats Row */}
-              <View style={styles.stats_row}>
-                <View style={styles.stat_card}>
-                  <Text style={styles.stat_num}>1.8M</Text>
-                  <Text style={styles.stat_label}>Lượt tiếp cận</Text>
-                </View>
-                <View style={styles.stat_card}>
-                  <Text style={styles.stat_num}>45.2K</Text>
-                  <Text style={styles.stat_label}>Lượt nhấp chuột</Text>
-                </View>
-                <View style={styles.stat_card}>
-                  <Text style={[styles.stat_num, { color: colors.primary }]}>18.5M</Text>
-                  <Text style={styles.stat_label}>Ngân sách đã tiêu</Text>
-                </View>
-              </View>
-
-              {/* KPI Progress Bar */}
-              <View style={{
-                backgroundColor: '#ffffff',
-                borderRadius: radius.lg,
-                borderWidth: 1,
-                borderColor: colors.border,
-                padding: spacing.md,
-                marginBottom: spacing.md,
-              }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textPrimary }}>
-                    🎯 Tiến độ đạt KPI chuyển đổi (Conversions)
-                  </Text>
-                  <Text style={{ fontSize: 13, fontWeight: '800', color: colors.primary }}>
-                    83.3%
-                  </Text>
-                </View>
-                {/* Progress track */}
-                <View style={{ height: 10, backgroundColor: '#e2e8f0', borderRadius: radius.full, overflow: 'hidden' }}>
-                  <View style={{ width: '83.3%', height: '100%', backgroundColor: colors.primary, borderRadius: radius.full }} />
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-                  <Text style={{ fontSize: 11, color: colors.textCaption }}>Đã đạt: 833 conversions</Text>
-                  <Text style={{ fontSize: 11, color: colors.textCaption }}>Chỉ tiêu: 1,000 conversions</Text>
-                </View>
-              </View>
-
-              {/* Last Updated Timestamp */}
-              <Text style={{
-                fontSize: 12,
-                color: colors.textCaption,
-                fontStyle: 'italic',
-                textAlign: 'right',
-                marginBottom: spacing.lg,
-                marginTop: -spacing.xs,
-              }}>
-                *Số liệu cập nhật tính đến cuối ngày hôm qua
-              </Text>
-
-              {/* Profile Info */}
-              <View style={styles.form_group}>
-                <Text style={styles.form_label}>MÃ ĐỐI TÁC TRUYỀN THÔNG</Text>
-                <View style={styles.read_only_box}>
-                  <Ionicons name="megaphone" size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
-                  <Text style={styles.read_only_text}>{user_info?.manv || 'GUEST_MKT'}</Text>
-                </View>
-              </View>
-
-              {/* Support Request Button */}
-              {!show_support_form && (
-                <TouchableOpacity
-                  style={[styles.action_btn, { backgroundColor: colors.primary, marginTop: spacing.md }]}
-                  onPress={() => set_show_support_form(true)}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="help-buoy" size={20} color="#ffffff" />
-                    <Text style={styles.action_btn_text}>Gửi yêu cầu hỗ trợ chiến dịch</Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-
-              {/* Support Form Modal/Inline */}
-              {show_support_form && (
-                <View style={[styles.feedback_section, { marginTop: spacing.md, marginBottom: spacing.md }]}>
-                  <Text style={styles.form_label}>TIÊU ĐỀ YÊU CẦU</Text>
-                  <TextInput
-                    style={styles.form_input}
-                    placeholder="Ví dụ: Tăng ngân sách Ads, Đối soát lead..."
-                    value={support_title}
-                    onChangeText={set_support_title}
-                  />
-                  <Text style={[styles.form_label, { marginTop: 10 }]}>CHI TIẾT YÊU CẦU HỖ TRỢ</Text>
-                  <TextInput
-                    style={[styles.form_input, { minHeight: 60 }]}
-                    placeholder="Nội dung chi tiết yêu cầu hỗ trợ chiến dịch..."
-                    multiline
-                    value={support_desc}
-                    onChangeText={set_support_desc}
-                  />
-                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
-                    <TouchableOpacity style={[styles.action_btn, { flex: 1, marginTop: 0 }]} onPress={handle_submit_support}>
-                      <Text style={styles.action_btn_text}>Gửi Yêu Cầu</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.action_btn, { flex: 1, backgroundColor: '#94a3b8', marginTop: 0 }]} onPress={() => set_show_support_form(false)}>
-                      <Text style={styles.action_btn_text}>Hủy</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-
-              <TouchableOpacity style={styles.close_modal_btn} onPress={() => { set_active_tool(null); set_show_support_form(false); }}>
-                <Text style={styles.close_modal_text}>Đóng</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
       {/* ─── MODAL: ĐĂNG KÝ KPI ─── */}
       <Modal visible={active_tool === 'kpi'} animationType="slide">
         <KeyboardAvoidingView
@@ -413,7 +237,7 @@ export default function AppsScreen() {
             <ScrollView contentContainerStyle={styles.modal_content} keyboardShouldPersistTaps="handled">
               <Text style={styles.tool_title}>📈 Đăng Ký KPI Doanh Nghiệp</Text>
               <Text style={styles.tool_desc}>Xác nhận chỉ tiêu cam kết của đối tác cho chu kỳ kinh doanh.</Text>
-
+              
               <View style={styles.form_group}>
                 <Text style={styles.form_label}>TÀI KHOẢN ĐĂNG KÝ</Text>
                 <View style={styles.read_only_box}>
@@ -461,10 +285,10 @@ export default function AppsScreen() {
               </View>
 
               <View style={styles.form_group}>
-                <Text style={styles.form_label}>CHỈ TIÊU MỤC TIÊU</Text>
+                <Text style={styles.form_label}>CHỈ SỐ CAM KẾT / TARGET</Text>
                 <TextInput
                   style={styles.form_input}
-                  placeholder="Nhập giá trị cam kết (Ví dụ: Doanh số mong muốn)"
+                  placeholder="Nhập giá trị số..."
                   keyboardType="numeric"
                   value={kpi_target_value}
                   onChangeText={set_kpi_target_value}
@@ -472,7 +296,7 @@ export default function AppsScreen() {
               </View>
 
               <TouchableOpacity style={styles.action_btn} onPress={handle_submit_kpi} disabled={submitting}>
-                {submitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.action_btn_text}>Gửi KPI Đăng Ký</Text>}
+                {submitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.action_btn_text}>Đăng Ký Cam Kết</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.close_modal_btn} onPress={() => set_active_tool(null)}>
@@ -493,11 +317,19 @@ export default function AppsScreen() {
           <View style={[styles.modal_container, { flex: 1 }]}>
             <CustomHeader title="Listing Plan" />
             <ScrollView contentContainerStyle={styles.modal_content} keyboardShouldPersistTaps="handled">
-              <Text style={styles.tool_title}>📊 Kế Hoạch Listing Sản Phẩm</Text>
-              <Text style={styles.tool_desc}>Đăng ký kế hoạch phân phối và listing sản phẩm mới.</Text>
+              <Text style={styles.tool_title}>📝 Kế Hoạch Đưa Sản Phẩm Mới (Listing)</Text>
+              <Text style={styles.tool_desc}>Đề xuất mục tiêu phân phối và đưa hàng mới vào hệ thống điểm bán.</Text>
 
               <View style={styles.form_group}>
-                <Text style={styles.form_label}>CHỌN THÁNG TRIỂN KHAI</Text>
+                <Text style={styles.form_label}>TÀI KHOẢN ĐỀ XUẤT</Text>
+                <View style={styles.read_only_box}>
+                  <Ionicons name="person-circle" size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
+                  <Text style={styles.read_only_text}>{user_info?.manv || 'Chưa đăng nhập'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.form_group}>
+                <Text style={styles.form_label}>THÁNG ĐỀ XUẤT ÁP DỤNG</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips_container}>
                   {MONTHS.map(m => (
                     <TouchableOpacity
@@ -607,43 +439,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 14,
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg,
   },
   feedback_btn_disabled: {
-    opacity: 0.5,
+    backgroundColor: '#94a3b8',
   },
   feedback_btn_text: {
     color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
   feedback_success: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     marginTop: spacing.sm,
   },
   feedback_success_text: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.success,
     marginLeft: 6,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-
-  /* ── Modal Styling ── */
   modal_container: {
-    flex: 1,
     backgroundColor: '#f8fafc',
   },
   modal_content: {
-    padding: spacing.lg,
+    padding: spacing.md,
+    paddingBottom: 40,
   },
   tool_title: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   tool_desc: {
     fontSize: 14,
@@ -651,31 +481,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     lineHeight: 20,
   },
-  action_btn: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
-  },
-  action_btn_text: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  close_modal_btn: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  close_modal_text: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-
-  /* Form controls */
   form_group: {
     marginBottom: spacing.md,
   },
@@ -683,8 +488,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: colors.textSecondary,
-    marginBottom: 8,
-    letterSpacing: 0.5,
+    marginBottom: spacing.xs + 2,
+    letterSpacing: 1,
   },
   form_input: {
     backgroundColor: '#ffffff',
@@ -695,12 +500,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textPrimary,
   },
+  action_btn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: spacing.md,
+    ...shadows.teal,
+  },
+  action_btn_text: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  close_modal_btn: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  close_modal_text: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   read_only_box: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f1f5f9',
-    borderColor: colors.border,
     borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.md,
   },
@@ -709,47 +537,42 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '600',
   },
-
-  /* Horizontal month chips */
   chips_container: {
-    gap: spacing.sm,
     paddingVertical: 4,
+    gap: 8,
   },
   chip: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radius.full,
-    backgroundColor: '#e2e8f0',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  chip_active: {
-    backgroundColor: colors.primary,
-  },
-  chip_text: {
-    fontSize: 14,
-    color: colors.textPrimary,
-    fontWeight: '500',
-  },
-  chip_text_active: {
-    color: '#ffffff',
-    fontWeight: '600',
-  },
-
-  /* Grid list for KPI types */
-  kpi_grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: spacing.md,
-  },
-  kpi_card: {
-    width: '47%',
+    paddingVertical: 8,
+    borderRadius: radius.pill,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+  },
+  chip_active: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chip_text: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  chip_text_active: {
+    color: '#ffffff',
+  },
+  kpi_grid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  kpi_card: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.sm + 4,
     alignItems: 'center',
   },
   kpi_card_active: {
@@ -757,125 +580,36 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   kpi_card_text: {
-    fontSize: 13,
-    color: colors.textPrimary,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   kpi_card_text_active: {
     color: '#ffffff',
   },
-
-  /* Products list selection */
   product_list: {
-    backgroundColor: '#ffffff',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
+    gap: 8,
   },
   product_item: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
   },
   product_item_active: {
     backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   product_item_text: {
     fontSize: 14,
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   product_item_text_active: {
     color: '#ffffff',
-    fontWeight: '600',
-  },
-
-  /* CRM Specific Styles */
-  stats_row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  stat_card: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    elevation: 1,
-  },
-  stat_num: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.primary,
-    marginBottom: 2,
-  },
-  stat_label: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  log_box: {
-    backgroundColor: '#ffffff',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  result_header: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  checkin_mini_btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  checkin_mini_btn_text: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  visit_item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  visit_time_box: {
-    backgroundColor: '#f1f5f9',
-    borderRadius: radius.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginRight: 10,
-  },
-  visit_time: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textSecondary,
-  },
-  visit_name: {
-    flex: 1,
-    fontSize: 13,
-    color: colors.textPrimary,
-  },
-  status_badge: {
-    borderRadius: radius.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  status_badge_text: {
-    fontSize: 11,
-    fontWeight: '700',
   },
 });
