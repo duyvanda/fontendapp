@@ -198,8 +198,8 @@ export default function LoginScreen() {
                 onSubmitEditing={() => password_input_ref.current?.focus()}
                 blurOnSubmit={false}
                 keyboardType="email-address"
-                autoComplete="username"
-                textContentType="username"
+                autoComplete="off"
+                textContentType="none"
               />
             </View>
           </View>
@@ -255,7 +255,7 @@ export default function LoginScreen() {
             disabled={login_loading}
             activeOpacity={0.8}
             style={[
-              { marginTop: spacing.md },
+              { marginTop: spacing.sm },
               styles.loginButton,
               login_loading && styles.loginButtonDisabled
             ]}
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: spacing.xl,
+    paddingHorizontal: spacing.lg,
     paddingTop: 40,
   },
   headerContainer: {
