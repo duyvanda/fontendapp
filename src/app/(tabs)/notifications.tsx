@@ -81,6 +81,7 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.screen}>
+      {/* Header phẳng, hiện đại */}
       <View style={[styles.header, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <Text style={styles.headerTitle}>Thông báo</Text>
         {notifications.some(n => !n.is_read) && (
@@ -97,8 +98,11 @@ export default function NotificationsScreen() {
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={loadData} colors={[colors.primary]} />
         }
-        contentContainerStyle={notifications.length === 0 ? styles.listEmpty : styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        contentContainerStyle={
+          notifications.length === 0 
+            ? styles.listEmpty 
+            : [styles.listContent, { paddingBottom: Math.max(insets.bottom + 16, spacing.lg) }]
+        }
         ListEmptyComponent={
           <View style={globalStyles.emptyContainer}>
             <Ionicons name="notifications-off-outline" size={48} color={colors.textCaption} />
@@ -111,26 +115,29 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#ffffff' },
+  screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.primary,
+    backgroundColor: '#ffffff',
     paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    fontWeight: '600',
+    color: colors.textPrimary,
   },
   headerAction: {
-    color: '#ffffff',
+    color: colors.primary,
     fontSize: 14,
-    opacity: 0.9,
+    fontWeight: '600',
   },
   listContent: {
-    paddingBottom: 20,
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   listEmpty: {
     flexGrow: 1,
@@ -139,9 +146,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: spacing.md,
     backgroundColor: '#ffffff',
+    borderRadius: 12,
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 6,
+    elevation: 1,
   },
   itemUnread: {
     backgroundColor: '#f4fbfb', // Very light primary shade
+    borderColor: 'rgba(0, 167, 157, 0.15)',
   },
   iconBox: {
     width: 48,
@@ -181,9 +198,4 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginLeft: spacing.sm,
   },
-  separator: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginLeft: 48 + spacing.md * 2, // Align with text
-  }
 });
