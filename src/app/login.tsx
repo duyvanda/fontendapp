@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   logoSubtitle: {
-    fontSize: 15,
+    fontSize: 16,
     color: colors.textSecondary,
   },
   card: {
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   label: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.textSecondary,
     letterSpacing: 0.5,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.textPrimary,
     height: '100%',
   },
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     marginRight: spacing.sm,
   },
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.error,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '500',
     flex: 1,
   },
@@ -476,14 +476,14 @@ const styles = StyleSheet.create({
     marginVertical: spacing.md,
   },
   helpText: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.sm,
     lineHeight: 18,
   },
   resetText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#006a64',
     fontWeight: '600',
     textAlign: 'center',
