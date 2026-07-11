@@ -99,11 +99,9 @@ export default function LoginScreen() {
     login_user({ email: email.toUpperCase(), password, tenant_id: clean_tenant });
   };
 
-  // const handle_reset_password = () => {
-  //   Linking.openURL(
-  //     'https://eoffice.meraplion.com/admincp/reset-password?redirect_url=https://eoffice.meraplion.com/workgate/callback'
-  //   );
-  // };
+  const is_tenant_error = local_error.toLowerCase().includes('tổ chức');
+  const is_email_error = local_error.toLowerCase().includes('tên đăng nhập') || !!login_text;
+  const is_password_error = local_error.toLowerCase().includes('mật khẩu') || !!login_text;
 
   return (
     <KeyboardAvoidingView
@@ -119,9 +117,6 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + 10, 40) }]} keyboardShouldPersistTaps="handled">
         {/* Logo Header */}
         <View style={styles.headerContainer}>
-          <View style={styles.logoIconContainer}>
-            <Ionicons name="analytics-outline" size={42} color={colors.primary} />
-          </View>
           <Text style={styles.logoTitle}>BI PORTAL</Text>
           <Text style={styles.logoSubtitle}>Multi-Tenant Business Intelligence Portal</Text>
         </View>
@@ -132,11 +127,15 @@ export default function LoginScreen() {
             <Text style={styles.label}>
               Mã tổ chức <Text style={{ color: colors.error }}>*</Text>
             </Text>
-            <View style={[styles.inputWrapper, is_tenant_focused && styles.inputWrapperFocused]}>
+            <View style={[
+              styles.inputWrapper,
+              is_tenant_focused && styles.inputWrapperFocused,
+              is_tenant_error && styles.inputWrapperError
+            ]}>
               <Ionicons
                 name="business-outline"
                 size={20}
-                color={is_tenant_focused ? colors.primary : colors.textCaption}
+                color={is_tenant_error ? colors.error : (is_tenant_focused ? colors.primary : colors.textCaption)}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -163,11 +162,15 @@ export default function LoginScreen() {
             <Text style={styles.label}>
               Tên đăng nhập <Text style={{ color: colors.error }}>*</Text>
             </Text>
-            <View style={[styles.inputWrapper, is_email_focused && styles.inputWrapperFocused]}>
+            <View style={[
+              styles.inputWrapper,
+              is_email_focused && styles.inputWrapperFocused,
+              is_email_error && styles.inputWrapperError
+            ]}>
               <Ionicons
                 name="person-outline"
                 size={20}
-                color={is_email_focused ? colors.primary : colors.textCaption}
+                color={is_email_error ? colors.error : (is_email_focused ? colors.primary : colors.textCaption)}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -197,11 +200,15 @@ export default function LoginScreen() {
             <Text style={styles.label}>
               Mật khẩu <Text style={{ color: colors.error }}>*</Text>
             </Text>
-            <View style={[styles.inputWrapper, is_password_focused && styles.inputWrapperFocused]}>
+            <View style={[
+              styles.inputWrapper,
+              is_password_focused && styles.inputWrapperFocused,
+              is_password_error && styles.inputWrapperError
+            ]}>
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color={is_password_focused ? colors.primary : colors.textCaption}
+                color={is_password_error ? colors.error : (is_password_focused ? colors.primary : colors.textCaption)}
                 style={styles.inputIcon}
               />
               <TextInput
@@ -342,17 +349,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  logoIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(0, 167, 157, 0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 167, 157, 0.15)',
-  },
+
   logoTitle: {
     fontSize: 28,
     fontWeight: '700',
@@ -386,7 +383,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.textSecondary,
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: spacing.sm,
   },
@@ -394,7 +390,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f7f9fb',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
@@ -403,6 +399,10 @@ const styles = StyleSheet.create({
   inputWrapperFocused: {
     borderColor: colors.primary,
     backgroundColor: '#ffffff',
+  },
+  inputWrapperError: {
+    borderColor: colors.error,
+    backgroundColor: '#fff5f5',
   },
   inputIcon: {
     marginRight: spacing.sm,
