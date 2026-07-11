@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary, // Merap color
+    backgroundColor: colors.primary, // Primary color
     paddingHorizontal: spacing.md,
   },
   headerIcon: { marginRight: spacing.md },

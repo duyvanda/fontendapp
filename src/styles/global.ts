@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-// ─── Merap Color System ────────────────────────────────────────────────────────
+// ─── App Color System ────────────────────────────────────────────────────────
 export const colors = {
   // Primary — Teal gradient
   primary: '#00A79D',

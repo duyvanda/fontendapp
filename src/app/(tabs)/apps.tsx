@@ -39,7 +39,7 @@ const KPI_TYPES = [
 
 const PRODUCTS = [
   'Kháng sinh Amoxicillin 500mg',
-  'Siro Ho thảo dược Merap',
+  'Siro Ho thảo dược',
   'Xịt mũi Sea Alga',
   'Vitamin C Zinc bổ sung',
 ];

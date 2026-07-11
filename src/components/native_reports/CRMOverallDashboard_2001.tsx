@@ -22,7 +22,7 @@ const WEEKLY_DATA = {
   ],
   products: [
     { name: 'Kháng sinh Amoxicillin 500mg', sales: '82.4M', ratio: 0.44 },
-    { name: 'Siro Ho thảo dược Merap', sales: '55.1M', ratio: 0.30 },
+    { name: 'Siro Ho thảo dược', sales: '55.1M', ratio: 0.30 },
     { name: 'Xịt mũi Sea Alga', sales: '31.2M', ratio: 0.17 },
     { name: 'Vitamin C Zinc', sales: '16.7M', ratio: 0.09 }
   ]
@@ -44,7 +44,7 @@ const MONTHLY_DATA = {
   ],
   products: [
     { name: 'Kháng sinh Amoxicillin 500mg', sales: '357.6M', ratio: 0.44 },
-    { name: 'Siro Ho thảo dược Merap', sales: '243.8M', ratio: 0.30 },
+    { name: 'Siro Ho thảo dược', sales: '243.8M', ratio: 0.30 },
     { name: 'Xịt mũi Sea Alga', sales: '138.2M', ratio: 0.17 },
     { name: 'Vitamin C Zinc', sales: '73.3M', ratio: 0.09 }
   ]

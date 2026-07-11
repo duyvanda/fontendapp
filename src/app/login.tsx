@@ -11,15 +11,14 @@ import {
   Dimensions,
   Keyboard,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  StatusBar
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -76,11 +75,11 @@ export default function LoginScreen() {
     login_user({ email: email.toUpperCase(), password });
   };
 
-  const handle_reset_password = () => {
-    Linking.openURL(
-      'https://eoffice.meraplion.com/admincp/reset-password?redirect_url=https://eoffice.meraplion.com/workgate/callback'
-    );
-  };
+  // const handle_reset_password = () => {
+  //   Linking.openURL(
+  //     'https://eoffice.meraplion.com/admincp/reset-password?redirect_url=https://eoffice.meraplion.com/workgate/callback'
+  //   );
+  // };
 
   return (
     <KeyboardAvoidingView
@@ -88,7 +87,7 @@ export default function LoginScreen() {
       style={styles.screen}
     >
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-      
+
       {/* Background Elements */}
       <View style={styles.bgCircle1} />
       <View style={styles.bgCircle2} />
@@ -216,14 +215,14 @@ export default function LoginScreen() {
             v{Constants.expoConfig?.version ?? '1.0.0'}
             {Updates.createdAt
               ? (() => {
-                  try {
-                    const d = new Date(Updates.createdAt);
-                    const pad = (n: number) => n.toString().padStart(2, '0');
-                    return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                  } catch (e) {
-                    return '  •  (live)';
-                  }
-                })()
+                try {
+                  const d = new Date(Updates.createdAt);
+                  const pad = (n: number) => n.toString().padStart(2, '0');
+                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                } catch (e) {
+                  return '  •  (live)';
+                }
+              })()
               : '  •  (dev)'
             }
           </Text>
