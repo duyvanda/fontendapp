@@ -110,11 +110,19 @@ export default function LoginScreen() {
     >
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* Background Elements */}
       <View style={styles.bgCircle1} />
       <View style={styles.bgCircle2} />
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + 10, 40) }]} keyboardShouldPersistTaps="handled">
+      <ScrollView 
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { 
+            paddingTop: Math.max(insets.top + 10, 40),
+            paddingBottom: Math.max(insets.bottom + 16, spacing.lg)
+          }
+        ]} 
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Logo Header */}
         <View style={styles.headerContainer}>
           <Text style={styles.logoTitle}>BI PORTAL</Text>
@@ -290,8 +298,9 @@ export default function LoginScreen() {
             Nền tảng phân tích dữ liệu dành cho doanh nghiệp và đối tác
           </Text>
         </View>
+
         {/* Version Info */}
-        <View style={{ alignItems: 'center', paddingBottom: spacing.md }}>
+        <View style={{ alignItems: 'center', marginTop: spacing.xl }}>
           <Text style={{ color: colors.textCaption, fontSize: 11 }}>
             v{Constants.expoConfig?.version ?? '1.0.0'}
             {Updates.createdAt
