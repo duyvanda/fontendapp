@@ -14,7 +14,7 @@ import * as Updates from 'expo-updates';
 export default function AccountScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user_info, logout_user } = useFeedback();
+  const { user_info, user_hr_info, logout_user } = useFeedback();
   const [deleting, set_deleting] = useState(false);
 
   const handle_delete_account = () => {
@@ -66,29 +66,41 @@ export default function AccountScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* Header */}
+      {/* Header phẳng, hiện đại */}
       <View style={[styles.header, { paddingTop: insets.top, height: 56 + insets.top }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.back_btn}>
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.header_title}>Tài khoản</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={[
+          styles.content, 
+          { paddingBottom: Math.max(insets.bottom + 16, spacing.lg) }
+        ]}
+      >
         {/* User Info Card */}
         <View style={styles.user_card}>
           <View style={styles.avatar}>
             <Ionicons name="person" size={36} color={colors.primary} />
           </View>
-          <Text style={styles.user_name}>{user_info?.manv || 'N/A'}</Text>
-          <Text style={styles.user_sub}>Tài khoản doanh nghiệp</Text>
+          <Text style={styles.user_name}>{user_hr_info?.hoten || 'Người dùng BI Portal'}</Text>
+          <Text style={styles.user_sub}>
+            {user_info?.manv || 'N/A'}{user_hr_info?.ten_chucdanh ? `  •  ${user_hr_info.ten_chucdanh}` : '  •  Tài khoản doanh nghiệp'}
+          </Text>
+          {user_hr_info?.ten_bophan ? (
+            <Text style={styles.user_dept}>{user_hr_info.ten_bophan}</Text>
+          ) : null}
         </View>
 
         {/* Menu Items */}
         <View style={styles.menu_section}>
           <TouchableOpacity style={styles.menu_item} onPress={() => router.push('/terms' as any)}>
-            <Ionicons name="document-text-outline" size={22} color={colors.textPrimary} />
+            <View style={[styles.menu_icon_bg, { backgroundColor: colors.primaryLight }]}>
+              <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+            </View>
             <Text style={styles.menu_text}>Điều khoản & Chính sách</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.textCaption} />
           </TouchableOpacity>
@@ -96,7 +108,9 @@ export default function AccountScreen() {
           <View style={styles.menu_divider} />
 
           <TouchableOpacity style={styles.menu_item} onPress={handle_logout}>
-            <Ionicons name="log-out-outline" size={22} color={colors.textPrimary} />
+            <View style={[styles.menu_icon_bg, { backgroundColor: '#fff7ed' }]}>
+              <Ionicons name="log-out-outline" size={20} color="#f97316" />
+            </View>
             <Text style={styles.menu_text}>Đăng xuất</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.textCaption} />
           </TouchableOpacity>
@@ -121,7 +135,7 @@ export default function AccountScreen() {
             )}
           </TouchableOpacity>
           <Text style={styles.danger_hint}>
-            Hành động này không thể hoàn tác. Mọi dữ liệu cá nhân sẽ bị xóa vĩnh viễn.
+            Hành động này không thể hoàn tác. Mọi dữ liệu cá nhân sẽ bị xóa vĩnh viễn khỏi hệ thống.
           </Text>
         </View>
 
@@ -131,7 +145,7 @@ export default function AccountScreen() {
             BI Portal v{Constants.expoConfig?.version ?? '1.0.0'}
           </Text>
           <Text style={styles.version_text}>
-            {Updates.channel ?? 'dev'}
+            ch: {Updates.channel ?? 'n/a'}
           </Text>
         </View>
       </ScrollView>
@@ -140,12 +154,14 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f5f5f5' },
+  screen: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: '#ffffff',
     paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   back_btn: { width: 40, alignItems: 'flex-start' },
   header_title: {
@@ -153,20 +169,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
-  content: { padding: spacing.md, paddingBottom: 40 },
+  content: { padding: spacing.lg },
   user_card: {
     backgroundColor: '#ffffff',
     borderRadius: radius.lg,
     padding: spacing.xl,
     alignItems: 'center',
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 12,
+    elevation: 2,
   },
   avatar: {
     width: 72,
@@ -176,6 +194,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 167, 157, 0.1)',
   },
   user_name: {
     fontSize: 20,
@@ -186,46 +206,70 @@ const styles = StyleSheet.create({
   user_sub: {
     fontSize: 14,
     color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  user_dept: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
+    backgroundColor: colors.background,
+    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   menu_section: {
     backgroundColor: '#ffffff',
     borderRadius: radius.lg,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 8,
     elevation: 2,
   },
   menu_item: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    paddingVertical: 16,
+    paddingVertical: 14,
+  },
+  menu_icon_bg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   menu_text: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: '500',
     color: colors.textPrimary,
-    marginLeft: spacing.md,
+    marginLeft: spacing.sm + 4,
   },
   menu_divider: {
     height: 1,
-    backgroundColor: '#f0f0f0',
-    marginLeft: 52,
+    backgroundColor: colors.border,
+    marginLeft: 68,
   },
   danger_section: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.errorLight,
     borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: '#fca5a5',
   },
   danger_label: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#ef4444',
+    color: colors.error,
     letterSpacing: 1,
     marginBottom: spacing.md,
   },
@@ -233,7 +277,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ef4444',
+    backgroundColor: colors.error,
     borderRadius: radius.md,
     paddingVertical: 14,
     paddingHorizontal: spacing.md,
@@ -245,7 +289,7 @@ const styles = StyleSheet.create({
   },
   danger_hint: {
     fontSize: 13,
-    color: colors.textCaption,
+    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.sm,
     lineHeight: 18,
