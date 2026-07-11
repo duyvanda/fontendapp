@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -30,24 +30,24 @@ export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const {
     user_info,
-    user_hr_info,
+    // user_hr_info,
     login_text,
     login_loading,
-    reports,
-    filter_reports,
-    report_id,
-    report_param,
-    shared,
-    loading,
-    rp_screen,
+    // reports,
+    // filter_reports,
+    // report_id,
+    // report_param,
+    // shared,
+    // loading,
+    // rp_screen,
     login_user,
-    logout_user,
-    fetch_reports,
-    fetch_filter_reports,
-    fetch_filter_reports_rt,
-    clear_filter_report,
-    user_logger,
-    set_rp_screen,
+    // logout_user,
+    // fetch_reports,
+    // fetch_filter_reports,
+    // fetch_filter_reports_rt,
+    // clear_filter_report,
+    // user_logger,
+    // set_rp_screen,
   } = useFeedback();
 
   const [tenant_id, set_tenant_id] = useState('');
@@ -58,6 +58,10 @@ export default function LoginScreen() {
   const [is_password_focused, set_is_password_focused] = useState(false);
   const [show_password, set_show_password] = useState(false);
   const [local_error, set_local_error] = useState('');
+
+  const tenant_input_ref = useRef<TextInput>(null);
+  const email_input_ref = useRef<TextInput>(null);
+  const password_input_ref = useRef<TextInput>(null);
 
   useEffect(() => {
     (async () => {
@@ -84,7 +88,14 @@ export default function LoginScreen() {
       set_local_error('Mã tổ chức không tồn tại');
       return;
     }
-    if (!email || !password) return;
+    if (!email.trim()) {
+      set_local_error('Vui lòng nhập tên đăng nhập');
+      return;
+    }
+    if (!password) {
+      set_local_error('Vui lòng nhập mật khẩu');
+      return;
+    }
     login_user({ email: email.toUpperCase(), password, tenant_id: clean_tenant });
   };
 
@@ -108,6 +119,9 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + 10, 40) }]} keyboardShouldPersistTaps="handled">
         {/* Logo Header */}
         <View style={styles.headerContainer}>
+          <View style={styles.logoIconContainer}>
+            <Ionicons name="analytics-outline" size={42} color={colors.primary} />
+          </View>
           <Text style={styles.logoTitle}>BI PORTAL</Text>
           <Text style={styles.logoSubtitle}>Multi-Tenant Business Intelligence Portal</Text>
         </View>
@@ -116,7 +130,7 @@ export default function LoginScreen() {
         <View style={styles.card}>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
-              MÃ TỔ CHỨC <Text style={{ color: colors.error }}>*</Text>
+              Mã tổ chức <Text style={{ color: colors.error }}>*</Text>
             </Text>
             <View style={[styles.inputWrapper, is_tenant_focused && styles.inputWrapperFocused]}>
               <Ionicons
@@ -126,6 +140,7 @@ export default function LoginScreen() {
                 style={styles.inputIcon}
               />
               <TextInput
+                ref={tenant_input_ref}
                 style={styles.input}
                 placeholder="Ví dụ: demo"
                 placeholderTextColor={colors.textCaption}
@@ -137,13 +152,16 @@ export default function LoginScreen() {
                 onFocus={() => set_is_tenant_focused(true)}
                 onBlur={() => set_is_tenant_focused(false)}
                 autoCapitalize="none"
+                returnKeyType="next"
+                onSubmitEditing={() => email_input_ref.current?.focus()}
+                blurOnSubmit={false}
               />
             </View>
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
-              TÊN ĐĂNG NHẬP <Text style={{ color: colors.error }}>*</Text>
+              Tên đăng nhập <Text style={{ color: colors.error }}>*</Text>
             </Text>
             <View style={[styles.inputWrapper, is_email_focused && styles.inputWrapperFocused]}>
               <Ionicons
@@ -153,6 +171,7 @@ export default function LoginScreen() {
                 style={styles.inputIcon}
               />
               <TextInput
+                ref={email_input_ref}
                 style={styles.input}
                 placeholder="Nhập tên đăng nhập của bạn"
                 placeholderTextColor={colors.textCaption}
@@ -164,13 +183,19 @@ export default function LoginScreen() {
                 onFocus={() => set_is_email_focused(true)}
                 onBlur={() => set_is_email_focused(false)}
                 autoCapitalize="characters"
+                returnKeyType="next"
+                onSubmitEditing={() => password_input_ref.current?.focus()}
+                blurOnSubmit={false}
+                keyboardType="email-address"
+                autoComplete="username"
+                textContentType="username"
               />
             </View>
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
-              MẬT KHẨU <Text style={{ color: colors.error }}>*</Text>
+              Mật khẩu <Text style={{ color: colors.error }}>*</Text>
             </Text>
             <View style={[styles.inputWrapper, is_password_focused && styles.inputWrapperFocused]}>
               <Ionicons
@@ -180,6 +205,7 @@ export default function LoginScreen() {
                 style={styles.inputIcon}
               />
               <TextInput
+                ref={password_input_ref}
                 style={styles.input}
                 placeholder="••••••••"
                 placeholderTextColor={colors.textCaption}
@@ -191,6 +217,10 @@ export default function LoginScreen() {
                 onFocus={() => set_is_password_focused(true)}
                 onBlur={() => set_is_password_focused(false)}
                 secureTextEntry={!show_password}
+                returnKeyType="done"
+                onSubmitEditing={handle_login}
+                autoComplete="password"
+                textContentType="password"
               />
               <TouchableOpacity
                 onPress={() => set_show_password(!show_password)}
@@ -209,10 +239,14 @@ export default function LoginScreen() {
             onPress={handle_login}
             disabled={login_loading}
             activeOpacity={0.8}
-            style={[{ marginTop: spacing.md }, styles.loginButton]}
+            style={[
+              { marginTop: spacing.md },
+              styles.loginButton,
+              login_loading && styles.loginButtonDisabled
+            ]}
           >
             {login_loading ? (
-              <ActivityIndicator color={colors.textInverse} />
+              <ActivityIndicator color={colors.textInverse} size="small" />
             ) : (
               <View style={styles.loginButtonContent}>
                 <Text style={styles.loginButtonText}>Đăng nhập</Text>
@@ -222,9 +256,12 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           {local_error || login_text ? (
-            <Text style={styles.errorText}>
-              {local_error || login_text}
-            </Text>
+            <View style={styles.errorContainer}>
+              <Ionicons name="alert-circle" size={20} color={colors.error} style={{ marginRight: spacing.sm }} />
+              <Text style={styles.errorText}>
+                {local_error || login_text}
+              </Text>
+            </View>
           ) : null}
 
           <TouchableOpacity onPress={() => router.push('/terms' as any)} style={{ marginTop: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
@@ -245,19 +282,6 @@ export default function LoginScreen() {
           <Text style={[styles.helpText, { fontWeight: 'bold' }]}>
             Nền tảng phân tích dữ liệu dành cho doanh nghiệp và đối tác
           </Text>
-
-          {/* <TouchableOpacity onPress={handle_reset_password}>
-            <Text style={styles.resetText}>
-              Quên mật khẩu? Bấm vào đây để đặt lại
-            </Text>
-          </TouchableOpacity> */}
-        </View>
-
-        {/* Footer Visual Hint */}
-        <View style={styles.footerHint}>
-          <View style={[styles.hintLine, { backgroundColor: '#00A79D' }]} />
-          <View style={[styles.hintLine, { backgroundColor: colors.border }]} />
-          <View style={[styles.hintLine, { backgroundColor: colors.border }]} />
         </View>
         {/* Version Info */}
         <View style={{ alignItems: 'center', paddingBottom: spacing.md }}>
@@ -317,6 +341,17 @@ const styles = StyleSheet.create({
   headerContainer: {
     alignItems: 'center',
     marginBottom: spacing.lg,
+  },
+  logoIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(0, 167, 157, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 167, 157, 0.15)',
   },
   logoTitle: {
     fontSize: 28,
@@ -393,6 +428,10 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
+  loginButtonDisabled: {
+    opacity: 0.6,
+    backgroundColor: '#00766E',
+  },
   loginButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -404,11 +443,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginRight: spacing.sm,
   },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.errorLight,
+    borderColor: '#fca5a5',
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.sm + 2,
+    marginTop: spacing.md,
+  },
   errorText: {
     color: colors.error,
-    marginTop: spacing.md,
-    textAlign: 'center',
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
   },
   dividerDashed: {
     height: 1,
@@ -430,17 +479,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginTop: spacing.sm,
-  },
-  footerHint: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.md,
-    marginTop: spacing.md,
-    opacity: 0.4,
-  },
-  hintLine: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
   },
 });
