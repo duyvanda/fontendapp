@@ -14,6 +14,9 @@ export interface user_info_type {
 
 export interface user_hr_info_type {
   manv?: string;
+  hoten?: string;
+  ten_chucdanh?: string;
+  ten_bophan?: string;
   show_cloud_assist?: boolean;
   cloud_assist_questions?: Array<{ question: string }>;
   [key: string]: unknown;
