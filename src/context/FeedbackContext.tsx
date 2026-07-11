@@ -53,7 +53,7 @@ interface FeedbackContextValue {
   loading: boolean;
   rp_screen: boolean;
   // Actions
-  login_user: (data: { email: string; password: string }) => Promise<void>;
+  login_user: (data: { email: string; password: string; tenant_id?: string }) => Promise<void>;
   logout_user: () => Promise<void>;
   fetch_reports: (manv: string) => Promise<void>;
   fetch_filter_reports: (stt: string, isMB: boolean) => void;
@@ -109,7 +109,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   // ── Auth: Login ────────────────────────────────────────────────────────────
-  const login_user = async (logindata: { email: string; password: string }) => {
+  const login_user = async (logindata: { email: string; password: string; tenant_id?: string }) => {
     set_login_loading(true);
     set_login_text('');
     try {

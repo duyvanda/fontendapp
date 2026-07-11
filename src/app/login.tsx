@@ -50,11 +50,14 @@ export default function LoginScreen() {
     set_rp_screen,
   } = useFeedback();
 
+  const [tenant_id, set_tenant_id] = useState('');
   const [email, set_email] = useState('');
   const [password, set_password] = useState('');
+  const [is_tenant_focused, set_is_tenant_focused] = useState(false);
   const [is_email_focused, set_is_email_focused] = useState(false);
   const [is_password_focused, set_is_password_focused] = useState(false);
   const [show_password, set_show_password] = useState(false);
+  const [local_error, set_local_error] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -70,9 +73,19 @@ export default function LoginScreen() {
   }, [user_info, router, params.redirect]);
 
   const handle_login = () => {
-    if (!email || !password) return;
     Keyboard.dismiss();
-    login_user({ email: email.toUpperCase(), password });
+    set_local_error('');
+    const clean_tenant = tenant_id.trim().toLowerCase();
+    if (!clean_tenant) {
+      set_local_error('Vui lòng nhập mã tổ chức');
+      return;
+    }
+    if (clean_tenant !== 'merap' && clean_tenant !== 'demo') {
+      set_local_error('Mã tổ chức không tồn tại');
+      return;
+    }
+    if (!email || !password) return;
+    login_user({ email: email.toUpperCase(), password, tenant_id: clean_tenant });
   };
 
   // const handle_reset_password = () => {
@@ -92,17 +105,46 @@ export default function LoginScreen() {
       <View style={styles.bgCircle1} />
       <View style={styles.bgCircle2} />
 
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + 20, 80) }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + 10, 40) }]} keyboardShouldPersistTaps="handled">
         {/* Logo Header */}
         <View style={styles.headerContainer}>
           <Text style={styles.logoTitle}>BI PORTAL</Text>
-          <Text style={styles.logoSubtitle}>Business Intelligence Portal</Text>
+          <Text style={styles.logoSubtitle}>Multi-Tenant Business Intelligence Portal</Text>
         </View>
 
         {/* Login Card */}
         <View style={styles.card}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>TÊN ĐĂNG NHẬP</Text>
+            <Text style={styles.label}>
+              MÃ TỔ CHỨC <Text style={{ color: colors.error }}>*</Text>
+            </Text>
+            <View style={[styles.inputWrapper, is_tenant_focused && styles.inputWrapperFocused]}>
+              <Ionicons
+                name="business-outline"
+                size={20}
+                color={is_tenant_focused ? colors.primary : colors.textCaption}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Ví dụ: demo"
+                placeholderTextColor={colors.textCaption}
+                value={tenant_id}
+                onChangeText={(text) => {
+                  set_tenant_id(text);
+                  set_local_error('');
+                }}
+                onFocus={() => set_is_tenant_focused(true)}
+                onBlur={() => set_is_tenant_focused(false)}
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>
+              TÊN ĐĂNG NHẬP <Text style={{ color: colors.error }}>*</Text>
+            </Text>
             <View style={[styles.inputWrapper, is_email_focused && styles.inputWrapperFocused]}>
               <Ionicons
                 name="person-outline"
@@ -115,7 +157,10 @@ export default function LoginScreen() {
                 placeholder="Nhập tên đăng nhập của bạn"
                 placeholderTextColor={colors.textCaption}
                 value={email}
-                onChangeText={set_email}
+                onChangeText={(text) => {
+                  set_email(text);
+                  set_local_error('');
+                }}
                 onFocus={() => set_is_email_focused(true)}
                 onBlur={() => set_is_email_focused(false)}
                 autoCapitalize="characters"
@@ -124,7 +169,9 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>MẬT KHẨU</Text>
+            <Text style={styles.label}>
+              MẬT KHẨU <Text style={{ color: colors.error }}>*</Text>
+            </Text>
             <View style={[styles.inputWrapper, is_password_focused && styles.inputWrapperFocused]}>
               <Ionicons
                 name="lock-closed-outline"
@@ -137,7 +184,10 @@ export default function LoginScreen() {
                 placeholder="••••••••"
                 placeholderTextColor={colors.textCaption}
                 value={password}
-                onChangeText={set_password}
+                onChangeText={(text) => {
+                  set_password(text);
+                  set_local_error('');
+                }}
                 onFocus={() => set_is_password_focused(true)}
                 onBlur={() => set_is_password_focused(false)}
                 secureTextEntry={!show_password}
@@ -171,13 +221,13 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          {login_text ? (
+          {local_error || login_text ? (
             <Text style={styles.errorText}>
-              {login_text}
+              {local_error || login_text}
             </Text>
           ) : null}
 
-          <TouchableOpacity onPress={() => router.push('/terms' as any)} style={{ marginTop: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
+          <TouchableOpacity onPress={() => router.push('/terms' as any)} style={{ marginTop: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
             <Text style={{ textAlign: 'center', fontSize: 12, color: colors.textCaption, lineHeight: 18 }}>
               Bằng việc đăng nhập, bạn đồng ý với{'\n'}
               <Text style={{ color: colors.primary, textDecorationLine: 'underline', fontWeight: 'bold' }}>
@@ -210,7 +260,7 @@ export default function LoginScreen() {
           <View style={[styles.hintLine, { backgroundColor: colors.border }]} />
         </View>
         {/* Version Info */}
-        <View style={{ alignItems: 'center', paddingBottom: spacing.lg }}>
+        <View style={{ alignItems: 'center', paddingBottom: spacing.md }}>
           <Text style={{ color: colors.textCaption, fontSize: 11 }}>
             v{Constants.expoConfig?.version ?? '1.0.0'}
             {Updates.createdAt
@@ -262,11 +312,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: spacing.xl,
-    paddingTop: 80,
+    paddingTop: 40,
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.lg,
   },
   logoTitle: {
     fontSize: 28,
@@ -282,7 +332,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: radius.xl,
-    padding: spacing.xl,
+    padding: spacing.lg,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
@@ -295,7 +345,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   inputContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   label: {
     fontSize: 12,
@@ -365,7 +415,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderStyle: 'dashed',
-    marginVertical: spacing.xl,
+    marginVertical: spacing.md,
   },
   helpText: {
     fontSize: 13,
@@ -385,7 +435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: spacing.md,
-    marginTop: spacing.xxl,
+    marginTop: spacing.md,
     opacity: 0.4,
   },
   hintLine: {

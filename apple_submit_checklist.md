@@ -47,7 +47,7 @@ Nội dung copy từ `src/app/terms.tsx` là đủ — không cần design đẹ
 
 ## 3. Đảm bảo demo account cho Apple reviewer
 
-- Tạo 1 tài khoản test, ví dụ: `DEMO_APPLE` / `Demo@123`
+- Tạo tài khoản test với Mã tổ chức (Organization Code): `demo`, Tên đăng nhập: `DEMO_APPLE`, Mật khẩu: `Demo@123`
 - Phải có `show_cloud_assist = true` để BIRA hoạt động
 - Phải có ít nhất vài báo cáo được phân quyền
 - Phải có ít nhất 1-2 thông báo trong tab Notifications
@@ -110,24 +110,42 @@ Accounts are provisioned by organization administrators.
 ### 6.4 Review Notes
 ```
 DEMO ACCOUNT:
+- Organization Code: demo
 - Username: DEMO_APPLE
 - Password: Demo@123
 
 ABOUT THIS APP:
-BI Portal is a B2B analytics platform for pharmaceutical 
-distributors and business partners. 
+BI Portal is a B2B analytics platform serving multiple independent 
+business partners and distributors, each with their own provisioned 
+account and permissioned data — similar to standard B2B SaaS platforms 
+(e.g., CRM or analytics tools).
 
-Accounts are provisioned by organization administrators — 
-no self-registration by design (B2B SaaS model).
+Accounts are provisioned by administrators — self-registration is 
+intentionally disabled, as accounts are tied to verified business 
+relationships (B2B SaaS model, not a consumer app).
 
 KEY SCREENS TO TEST:
-1. HOME: Search and browse assigned reports
-2. NATIVE REPORTS: On the Home screen, tap on "CRM Overall Dashboard" (stt: 2001) or "Delivery Performance" (stt: 2002) to view high-performance native charts.
-3. BIRA: AI chat assistant (tap the BIRA tab)
-4. NOTIFICATIONS: Smart business alerts
-5. ACCOUNT & DELETION: Tap on the User Pill (with username) 
-   on the top right of the Home screen header to open the Account 
-   screen. Here you can find the Account Deletion feature.
+1. HOME: Search and browse assigned reports.
+2. NATIVE REPORTS (recommended to test first): On the Home screen, tap 
+   "CRM Overall Dashboard" or "Delivery Performance" to view fully 
+   native, high-performance charts and interactions.
+3. BIRA: AI chat assistant (tap the BIRA tab). Supports natural-language 
+   queries about business metrics, and can attach photos/documents via 
+   the camera and photo library (used for attaching business documents 
+   to chat, not for social/media sharing).
+4. NOTIFICATIONS: Smart business alerts (KPI drops, deadlines, anomalies).
+5. ACCOUNT & DELETION: Tap the User Pill (top right of Home header) to 
+   open Account settings, where the Account Deletion feature is located.
+
+NOTE ON EMBEDDED REPORTS:
+Some legacy/specialized reports are displayed via an embedded analytics 
+view (industry-standard for BI dashboards handling large, frequently 
+updated datasets), in addition to the fully native reports listed above. 
+All embedded content is accessible to the demo account without requiring 
+a separate login.
+
+In case of any connectivity issues with private analytical servers, 
+please refer to this screen recording demonstrating the core flow: [LINK]
 ```
 
 ---
