@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '@/context/FeedbackContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type AppItem = {
   id: string;
@@ -46,6 +47,7 @@ const PRODUCTS = [
 
 export default function AppsScreen() {
   const { user_info } = useFeedback();
+  const insets = useSafeAreaInsets();
 
   /* ── Modals state ── */
   const [active_tool, set_active_tool] = useState<string | null>(null);
@@ -165,7 +167,13 @@ export default function AppsScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={90}
       >
-        <ScrollView contentContainerStyle={{ padding: spacing.md, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        <ScrollView 
+          contentContainerStyle={{ 
+            padding: spacing.md, 
+            paddingBottom: Math.max(insets.bottom + 16, 40) 
+          }} 
+          keyboardShouldPersistTaps="handled"
+        >
           {tools.length > 0 && (
             <>
               <Text style={[globalStyles.sectionHeader, { color: colors.primary, letterSpacing: 1.5 }]}>🛠️ CÔNG CỤ HỖ TRỢ</Text>
@@ -180,6 +188,9 @@ export default function AppsScreen() {
               Không có ứng dụng nào.
             </Text>
           )}
+
+          {/* Đường kẻ đứt chia khối */}
+          <View style={styles.dividerDashed} />
 
           {/* ── Feedback Form ── */}
           <View style={styles.feedback_section}>
@@ -233,8 +244,21 @@ export default function AppsScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <View style={[styles.modal_container, { flex: 1 }]}>
-            <CustomHeader title="Đăng ký KPI" />
-            <ScrollView contentContainerStyle={styles.modal_content} keyboardShouldPersistTaps="handled">
+            {/* Flat Modal Header với nút Đóng nhanh dạng chữ X */}
+            <View style={[styles.modal_header, { paddingTop: insets.top, height: 56 + insets.top }]}>
+              <Text style={styles.modal_header_title}>Đăng ký KPI</Text>
+              <TouchableOpacity onPress={() => set_active_tool(null)} style={styles.modal_close_btn}>
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView 
+              contentContainerStyle={[
+                styles.modal_content, 
+                { paddingBottom: Math.max(insets.bottom + 20, 40) }
+              ]} 
+              keyboardShouldPersistTaps="handled"
+            >
               <Text style={styles.tool_title}>📈 Đăng Ký KPI Doanh Nghiệp</Text>
               <Text style={styles.tool_desc}>Xác nhận chỉ tiêu cam kết của đối tác cho chu kỳ kinh doanh.</Text>
               
@@ -298,10 +322,6 @@ export default function AppsScreen() {
               <TouchableOpacity style={styles.action_btn} onPress={handle_submit_kpi} disabled={submitting}>
                 {submitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.action_btn_text}>Đăng Ký Cam Kết</Text>}
               </TouchableOpacity>
-
-              <TouchableOpacity style={styles.close_modal_btn} onPress={() => set_active_tool(null)}>
-                <Text style={styles.close_modal_text}>Đóng</Text>
-              </TouchableOpacity>
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -315,8 +335,21 @@ export default function AppsScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <View style={[styles.modal_container, { flex: 1 }]}>
-            <CustomHeader title="Listing Plan" />
-            <ScrollView contentContainerStyle={styles.modal_content} keyboardShouldPersistTaps="handled">
+            {/* Flat Modal Header với nút Đóng nhanh dạng chữ X */}
+            <View style={[styles.modal_header, { paddingTop: insets.top, height: 56 + insets.top }]}>
+              <Text style={styles.modal_header_title}>Listing Plan</Text>
+              <TouchableOpacity onPress={() => set_active_tool(null)} style={styles.modal_close_btn}>
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView 
+              contentContainerStyle={[
+                styles.modal_content, 
+                { paddingBottom: Math.max(insets.bottom + 20, 40) }
+              ]} 
+              keyboardShouldPersistTaps="handled"
+            >
               <Text style={styles.tool_title}>📝 Kế Hoạch Đưa Sản Phẩm Mới (Listing)</Text>
               <Text style={styles.tool_desc}>Đề xuất mục tiêu phân phối và đưa hàng mới vào hệ thống điểm bán.</Text>
 
@@ -380,10 +413,6 @@ export default function AppsScreen() {
               <TouchableOpacity style={styles.action_btn} onPress={handle_submit_plan} disabled={submitting}>
                 {submitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.action_btn_text}>Gửi Đề Xuất</Text>}
               </TouchableOpacity>
-
-              <TouchableOpacity style={styles.close_modal_btn} onPress={() => set_active_tool(null)}>
-                <Text style={styles.close_modal_text}>Đóng</Text>
-              </TouchableOpacity>
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -394,7 +423,6 @@ export default function AppsScreen() {
 
 const styles = StyleSheet.create({
   feedback_section: {
-    marginTop: spacing.xl,
     backgroundColor: '#ffffff',
     borderRadius: radius.lg,
     padding: spacing.md,
@@ -429,7 +457,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.md,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.textPrimary,
     minHeight: 100,
     marginBottom: spacing.md,
@@ -440,11 +468,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.primary,
     borderRadius: radius.pill,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: 14,
     paddingHorizontal: spacing.lg,
+    ...shadows.teal,
   },
   feedback_btn_disabled: {
-    backgroundColor: '#94a3b8',
+    opacity: 0.6,
   },
   feedback_btn_text: {
     color: '#ffffff',
@@ -467,13 +496,35 @@ const styles = StyleSheet.create({
   },
   modal_content: {
     padding: spacing.md,
-    paddingBottom: 40,
+  },
+  modal_header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  modal_header_title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    flex: 1,
+    textAlign: 'center',
+    marginLeft: 36, // Offset close button width to keep title perfectly centered
+  },
+  modal_close_btn: {
+    width: 36,
+    height: 36,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   tool_title: {
     fontSize: 20,
     fontWeight: '800',
     color: colors.textPrimary,
-    marginBottom: 6,
+    marginVertical: spacing.md,
   },
   tool_desc: {
     fontSize: 14,
@@ -485,7 +536,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   form_label: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
     color: colors.textSecondary,
     marginBottom: spacing.xs + 2,
@@ -497,7 +548,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
     padding: spacing.md,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.textPrimary,
   },
   action_btn: {
@@ -512,16 +563,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '700',
-  },
-  close_modal_btn: {
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  close_modal_text: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
   },
   read_only_box: {
     flexDirection: 'row',
@@ -611,5 +652,12 @@ const styles = StyleSheet.create({
   },
   product_item_text_active: {
     color: '#ffffff',
+  },
+  dividerDashed: {
+    height: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    marginVertical: spacing.lg,
   },
 });
