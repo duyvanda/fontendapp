@@ -1,3 +1,12 @@
+/**
+ * Màn hình Khởi tạo & Định tuyến tự động (Splash Router / Gatekeeper)
+ * - Tác dụng:
+ *   1. Chạy đầu tiên khi mở ứng dụng.
+ *   2. Đọc bộ nhớ tạm để kiểm tra trạng thái đăng nhập của người dùng.
+ *   3. Nếu đã đăng nhập -> chuyển vào trang chủ /(tabs) kèm hiệu ứng fade-out 300ms.
+ *   4. Nếu chưa đăng nhập -> chuyển ra màn hình đăng nhập /login.
+ *   5. Cơ chế Timeout fallback tự đưa về /login sau 5 giây nếu gặp lỗi treo.
+ */
 import { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, Animated, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
