@@ -279,7 +279,7 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          <TouchableOpacity onPress={() => router.push('/terms' as any)} style={{ marginTop: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
+          <TouchableOpacity onPress={() => router.push('/terms' as any)} style={{ marginTop: spacing.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }}>
             <Text style={{ textAlign: 'center', fontSize: 12, color: colors.textCaption, lineHeight: 18 }}>
               Bằng việc đăng nhập, bạn đồng ý với{'\n'}
               <Text style={{ color: colors.primary, textDecorationLine: 'underline', fontWeight: 'bold' }}>
