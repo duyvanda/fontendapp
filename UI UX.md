@@ -1,6 +1,21 @@
-# 🎨 Hướng dẫn & Tiêu chuẩn Thiết kế UI/UX trên Mobile
+# 🎨 Hướng dẫn & Tiêu chuẩn Thiết kế UI/UX (Merap Style)
 
-Tài liệu này tổng hợp các tiêu chuẩn thiết kế kiểu chữ (Typography), khoảng cách (Spacing), các quy tắc trải nghiệm người dùng (UX) trên thiết bị di động, và các mẫu Prompt chuẩn để bạn sử dụng khi làm việc với AI coding assistant sau này.
+Tài liệu này tổng hợp các quy chuẩn thiết kế thương hiệu Merap, tiêu chuẩn thiết kế kiểu chữ (Typography), khoảng cách (Spacing), các quy tắc trải nghiệm người dùng (UX) trên thiết bị di động, và các mẫu Prompt chuẩn để bạn sử dụng khi làm việc với AI coding assistant sau này.
+
+---
+
+## 0. Quy chuẩn Design (Merap Style)
+- **Màu chủ đạo:** Xanh Teal (`#00A79D` và `#00766E`).
+- **Nút bấm:** Bo tròn hoàn toàn (pill shape), dùng màu Gradient, có hiệu ứng đổ bóng xịn xò.
+- **Khối thẻ (Cards):** Nền trắng, bo góc to (12px - 16px), đặt trên viền nền xám nhạt (`#f8fafc` hoặc `#f8f9fa`) để nổi bật.
+- **Các tiểu tiết:** Đường kẻ đứt (dashed) chia khối, chữ in hoa kèm khoảng cách chữ (letter-spacing) cho tiêu đề.
+- **Typography:** Sử dụng font sans-serif hiện đại (Inter/Roboto), phân cấp rõ ràng (heading, body, caption), ưu tiên dễ đọc trên mobile. 
+- **Color system:** Ngoài màu chính, bổ sung màu trung tính (text, border) và màu ngữ nghĩa (success, warning, error) để dùng nhất quán. 
+- **Spacing:** Áp dụng hệ 8px (8 / 16 / 24 / 32) để đảm bảo khoảng cách đồng đều giữa các thành phần. 
+- **Component states:** Các nút và phần tử tương tác có đầy đủ trạng thái (hover, active, disabled). 
+- **Shadow & Depth:** Định nghĩa mức đổ bóng rõ ràng cho card, hover và modal để tạo chiều sâu. 
+- **Motion:** Sử dụng animation nhẹ (0.2–0.3s) cho hover và transition để tăng trải nghiệm. 
+- **Responsive:** Thiết kế mobile-first, hiển thị tốt trên cả mobile, tablet và desktop.
 
 ---
 
