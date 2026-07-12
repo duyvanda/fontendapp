@@ -210,23 +210,16 @@ export default function HomeScreen() {
           <Ionicons name={iconName} size={28} color={colorTheme.icon} />
         </View>
         <View style={styles.listContent}>
-          <View style={styles.reportRow}>
-            <Text style={styles.listTitle} numberOfLines={1}>{item.tenreport}</Text>
-            {tags.length > 0 && (
-              <View style={styles.tagBadgeContainer}>
-                {tags.slice(0, 2).map(t => (
-                  <View key={t} style={styles.tagBadge}>
-                    <Text style={styles.tagBadgeText}>{t}</Text>
-                  </View>
-                ))}
-                {tags.length > 2 && (
-                  <View style={styles.tagBadge}>
-                    <Text style={styles.tagBadgeText}>+{tags.length - 2}</Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </View>
+          <Text style={styles.listTitle} numberOfLines={1}>{item.tenreport}</Text>
+          {tags.length > 0 && (
+            <View style={styles.tagBadgeContainer}>
+              {tags.map(t => (
+                <View key={t} style={styles.tagBadge}>
+                  <Text style={styles.tagBadgeText} numberOfLines={1} ellipsizeMode="tail">{t}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
         <View style={styles.listItemActions}>
           <TouchableOpacity 
@@ -588,14 +581,15 @@ const styles = StyleSheet.create({
   tagBadgeContainer: {
     flexDirection: 'row',
     gap: 4,
-    marginLeft: 8,
-    flexShrink: 0,
+    marginTop: 6,
+    flexWrap: 'wrap',
   },
   tagBadge: {
     backgroundColor: 'rgba(0, 167, 157, 0.08)',
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
+    maxWidth: 120,
   },
   tagBadgeText: {
     color: '#00766E',
