@@ -86,12 +86,19 @@ export default function AccountScreen() {
           <View style={styles.avatar}>
             <Ionicons name="person" size={36} color={colors.primary} />
           </View>
-          <Text style={styles.user_name}>{user_hr_info?.hoten || 'Người dùng BI Portal'}</Text>
-          <Text style={styles.user_sub}>
-            {user_info?.manv || 'N/A'}{user_hr_info?.ten_chucdanh ? `  •  ${user_hr_info.ten_chucdanh}` : '  •  Tài khoản doanh nghiệp'}
+          <Text style={styles.user_name}>
+            {user_hr_info?.hovatenfullname || user_hr_info?.hoten || 'Người dùng BI Portal'}
           </Text>
-          {user_hr_info?.ten_bophan ? (
-            <Text style={styles.user_dept}>{user_hr_info.ten_bophan}</Text>
+          <Text style={styles.user_sub}>
+            {user_info?.manv || 'N/A'}
+            {user_hr_info?.chucdanhengtitle || user_hr_info?.ten_chucdanh 
+              ? `  •  ${user_hr_info.chucdanhengtitle || user_hr_info.ten_chucdanh}` 
+              : '  •  Tài khoản doanh nghiệp'}
+          </Text>
+          {(user_hr_info?.phongdeptsummary || user_hr_info?.ten_bophan) ? (
+            <Text style={styles.user_dept}>
+              {user_hr_info.phongdeptsummary || user_hr_info.ten_bophan}
+            </Text>
           ) : null}
         </View>
 

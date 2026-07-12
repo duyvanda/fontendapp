@@ -56,7 +56,6 @@ export default function LoginScreen() {
   const [is_tenant_focused, set_is_tenant_focused] = useState(false);
   const [is_email_focused, set_is_email_focused] = useState(false);
   const [is_password_focused, set_is_password_focused] = useState(false);
-  const [show_password, set_show_password] = useState(false);
   const [local_error, set_local_error] = useState('');
 
   const tenant_input_ref = useRef<TextInput>(null);
@@ -231,22 +230,12 @@ export default function LoginScreen() {
                 }}
                 onFocus={() => set_is_password_focused(true)}
                 onBlur={() => set_is_password_focused(false)}
-                secureTextEntry={!show_password}
+                secureTextEntry={true}
                 returnKeyType="done"
                 onSubmitEditing={handle_login}
                 autoComplete="password"
                 textContentType="password"
               />
-              <TouchableOpacity
-                onPress={() => set_show_password(!show_password)}
-                style={styles.eyeIcon}
-              >
-                <Ionicons
-                  name={show_password ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color={colors.textCaption}
-                />
-              </TouchableOpacity>
             </View>
           </View>
 

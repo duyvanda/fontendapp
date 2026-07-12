@@ -1,31 +1,37 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, Text, TouchableOpacity, TextInput, 
-  FlatList, ActivityIndicator, KeyboardAvoidingView, Platform,
-  StyleSheet, Alert, Modal, ScrollView
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { useSegments } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as DocumentPicker from 'expo-document-picker';
-import { Camera as VisionCamera, useCameraDevice, useCameraPermission, usePhotoOutput } from 'react-native-vision-camera';
-import Markdown from 'react-native-markdown-display';
 import { useFeedback } from '@/context/FeedbackContext';
-import { Ionicons } from '@expo/vector-icons';
 import { get_bira_session_id, save_bira_session_id } from '@/storage/auth';
-import { 
-  load_messages, save_messages,
-  chat_message_type, create_user_message, create_bot_message 
+import {
+  chat_message_type,
+  create_bot_message,
+  create_user_message,
+  load_messages, save_messages
 } from '@/storage/chat';
-import { BIRA_API_URL, MARKDOWN_CONVERT_URL } from '@/utils/api';
-import { 
-  get_id, 
-  generate_month_options, 
-  inserted_at, 
-  remove_accents_with_case, 
-  format_date_ymd 
-} from '@/utils/string';
 import { colors } from '@/styles/global';
+import { BIRA_API_URL, MARKDOWN_CONVERT_URL } from '@/utils/api';
+import {
+  get_id
+} from '@/utils/string';
+import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
+import { useSegments } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import Markdown from 'react-native-markdown-display';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Camera as VisionCamera, useCameraDevice, useCameraPermission, usePhotoOutput } from 'react-native-vision-camera';
 import { biraStyles } from './styles';
 
 export default function CloudAssist() {
@@ -53,23 +59,23 @@ export default function CloudAssist() {
   } = useFeedback();
 
   const manv = user_info?.manv || 'Unknown';
-  
+
   const [session_id, set_session_id] = useState<string>('');
   const [messages, set_messages] = useState<chat_message_type[]>([]);
   const [input, set_input] = useState('');
   const [is_thinking, set_is_thinking] = useState(false);
-  
-  const [attached_files, set_attached_files] = useState<{name: string, content: string}[]>([]);
+
+  const [attached_files, set_attached_files] = useState<{ name: string, content: string }[]>([]);
   const [is_uploading, set_is_uploading] = useState(false);
-  const [preview_file, set_preview_file] = useState<{name: string, content: string} | null>(null);
+  const [preview_file, set_preview_file] = useState<{ name: string, content: string } | null>(null);
   const { hasPermission: has_permission, requestPermission: request_permission } = useCameraPermission();
   const device = useCameraDevice('back');
   const [show_camera, set_show_camera] = useState(false);
   const camera_ref = useRef<any>(null);
   const photoOutput = usePhotoOutput();
-  
+
   const CameraComponent = VisionCamera as any;
-  
+
   const segments = useSegments();
   const isFocused = segments[1] === 'bira';
   const flat_list_ref = useRef<FlatList>(null);
@@ -122,7 +128,7 @@ export default function CloudAssist() {
 
   const handle_pick_file = async () => {
     if (is_chat_disabled || is_uploading || attached_files.length >= 2) return;
-    
+
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: [
@@ -137,7 +143,7 @@ export default function CloudAssist() {
         ],
         multiple: false
       });
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const file = result.assets[0];
         const filename_lower = file.name.toLowerCase();
@@ -203,7 +209,7 @@ export default function CloudAssist() {
 
   const handle_open_camera = async () => {
     if (is_chat_disabled || is_uploading || attached_files.length >= 2) return;
-    
+
     if (!has_permission) {
       const granted = await request_permission();
       if (!granted) {
@@ -211,15 +217,15 @@ export default function CloudAssist() {
         return;
       }
     }
-    
+
     if (!device) {
       alert("Không tìm thấy camera trên thiết bị");
       return;
     }
-    
+
     set_show_camera(true);
   };
-  
+
   const handle_take_picture = async () => {
     try {
       set_is_uploading(true);
@@ -264,7 +270,7 @@ export default function CloudAssist() {
 
   const handle_send = async (suggested_text?: string) => {
     if (is_chat_disabled || is_thinking) return;
-    
+
     const query = suggested_text || input;
     if (!query.trim() && attached_files.length === 0) return;
 
@@ -283,7 +289,7 @@ export default function CloudAssist() {
     const msg_parts = [];
     if (query.trim()) msg_parts.push(`[Câu hỏi của user]: ${query.trim()}`);
     else if (attached_files.length > 0) msg_parts.push(`[Câu hỏi của user]: Đọc nội dung tài liệu.`);
-    
+
     attached_files.forEach(f => {
       msg_parts.push(`[Tài liệu đính kèm (${f.name})]: ${f.content}`);
     });
@@ -306,10 +312,10 @@ export default function CloudAssist() {
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
+
       const events = await response.json();
       let bot_response = "Không tìm thấy phản hồi từ Agent.";
-      
+
       if (Array.isArray(events)) {
         for (let i = events.length - 1; i >= 0; i--) {
           const event = events[i];
@@ -357,12 +363,12 @@ export default function CloudAssist() {
 
   return (
     <View style={{ flex: 1 }}>
-      <KeyboardAvoidingView 
-        style={{ flex: 1, backgroundColor: colors.surface }} 
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: colors.surface }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={{ flex: 1, backgroundColor: colors.surface }}>
-          
+
           {/* Header */}
           {isFocused && <StatusBar style="dark" />}
           <View style={[biraStyles.header, { paddingTop: insets.top + 8 }]}>
@@ -377,7 +383,7 @@ export default function CloudAssist() {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {messages.length > 0 && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={handle_new_chat}
                   style={{
                     flexDirection: 'row',
@@ -412,7 +418,7 @@ export default function CloudAssist() {
                     Hi, I'm <Text style={{ color: colors.primary, fontWeight: '700' }}>BIRA</Text> (BI Reporting Agent).
                   </Text>
                   <Text style={{ fontSize: 14, color: colors.textSecondary, marginBottom: 16 }}>Chat với báo cáo của bạn.</Text>
-                  
+
                   <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.textCaption, marginBottom: 8 }}>TÔI SẼ GIÚP NHANH:</Text>
                   <View style={biraStyles.suggestionsContainer}>
                     {user_hr_info?.cloud_assist_questions?.map((q, idx) => (
@@ -464,13 +470,13 @@ export default function CloudAssist() {
             {is_chat_disabled ? (
               <View style={{ width: '100%' }}>
                 {/* Red Warning Banner */}
-                <View style={{ 
-                  flexDirection: 'row', 
-                  alignItems: 'center', 
-                  backgroundColor: 'rgba(255, 71, 87, 0.08)', 
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(255, 71, 87, 0.08)',
                   paddingVertical: 10,
-                  paddingHorizontal: 16, 
-                  borderRadius: 12, 
+                  paddingHorizontal: 16,
+                  borderRadius: 12,
                   marginBottom: 12,
                   borderWidth: 1,
                   borderColor: 'rgba(255, 71, 87, 0.2)'
@@ -482,7 +488,7 @@ export default function CloudAssist() {
                 </View>
 
                 {/* Big reset button */}
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={handle_new_chat}
                   style={{
                     height: 48,
@@ -506,22 +512,22 @@ export default function CloudAssist() {
             ) : (
               <>
                 <View style={biraStyles.inputWrapper}>
-                  <TouchableOpacity 
-                    style={biraStyles.attachButton} 
+                  <TouchableOpacity
+                    style={biraStyles.attachButton}
                     onPress={handle_pick_file}
                     disabled={is_chat_disabled || attached_files.length >= 2 || is_thinking}
                   >
                     <Ionicons name="attach" size={24} color={colors.textSecondary} />
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    style={[biraStyles.attachButton, { marginLeft: -8 }]} 
+
+                  <TouchableOpacity
+                    style={[biraStyles.attachButton, { marginLeft: -8 }]}
                     onPress={handle_open_camera}
                     disabled={is_chat_disabled || attached_files.length >= 2 || is_thinking}
                   >
                     <Ionicons name="camera" size={24} color={colors.textSecondary} />
                   </TouchableOpacity>
-                  
+
                   <TextInput
                     style={biraStyles.textInput}
                     placeholder="Nhập câu hỏi..."
@@ -539,7 +545,7 @@ export default function CloudAssist() {
                   </View>
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[biraStyles.sendButton, (!input.trim() && attached_files.length === 0) || is_thinking ? biraStyles.sendButtonDisabled : null]}
                   onPress={() => handle_send()}
                   disabled={(!input.trim() && attached_files.length === 0) || is_thinking}
@@ -549,19 +555,19 @@ export default function CloudAssist() {
               </>
             )}
           </View>
-          
+
           <Text style={{ textAlign: 'center', fontSize: 10, color: colors.textCaption, marginTop: 4, marginBottom: 8, paddingHorizontal: 16 }}>
-            BIRA là trí tuệ nhân tạo và có thể mắc lỗi. Vui lòng kiểm tra lại các thông tin quan trọng.
+            BIRA là AI và có thể mắc lỗi. Vui lòng kiểm tra lại các thông tin quan trọng.
           </Text>
-          
+
         </View>
       </KeyboardAvoidingView>
 
       {/* Fullscreen Camera Overlay */}
       {show_camera && device && (
         <View style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }, { zIndex: 9999, backgroundColor: 'black' }]}>
-          <CameraComponent 
-            style={{ flex: 1 }} 
+          <CameraComponent
+            style={{ flex: 1 }}
             device={device}
             isActive={true}
             outputs={[photoOutput]}
@@ -578,10 +584,10 @@ export default function CloudAssist() {
         </View>
       )}
       {/* File Preview Modal */}
-      <Modal 
-        visible={preview_file !== null} 
-        animationType="slide" 
-        presentationStyle="pageSheet" 
+      <Modal
+        visible={preview_file !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
         onRequestClose={() => set_preview_file(null)}
         statusBarTranslucent={true}
       >
