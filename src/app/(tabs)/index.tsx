@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View, Text, FlatList, RefreshControl, TextInput,
-  TouchableOpacity, StyleSheet, Modal
+  TouchableOpacity, StyleSheet, Modal, Image
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -204,6 +204,8 @@ export default function HomeScreen() {
       <TouchableOpacity 
         style={styles.listItem}
         onPress={() => handle_open_report(item)}
+        onLongPress={() => handle_open_tag_modal(item)}
+        delayLongPress={400}
         activeOpacity={0.7}
       >
         <View style={[styles.avatarBox, { backgroundColor: colorTheme.bg }]}>
@@ -231,17 +233,6 @@ export default function HomeScreen() {
               name={isFav ? "star" : "star-outline"} 
               size={22} 
               color={isFav ? colors.warning : '#bdbdbd'} 
-            />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.listActionBtn} 
-            onPress={() => handle_open_tag_modal(item)}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons 
-              name="ellipsis-horizontal" 
-              size={20} 
-              color="#757575" 
             />
           </TouchableOpacity>
         </View>
@@ -386,18 +377,30 @@ export default function HomeScreen() {
 
       {/* List */}
       {active_tab === 'tags' ? (
-        <FlatList
-          data={filtered_tags}
-          keyExtractor={item => item}
-          renderItem={render_folder_item}
-          ListHeaderComponent={render_tags_toolbar}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Không tìm thấy nhóm tag nào</Text>
-            </View>
-          }
-          contentContainerStyle={{ paddingBottom: 100 }}
-        />
+        all_tags.length === 0 ? (
+          <View style={styles.guideContainer}>
+            <Text style={styles.guideText}>Chưa có nhóm tag nào</Text>
+            <Text style={styles.guideSubText}>Nhấn và giữ (Long press) vào dòng báo cáo để thêm tags.</Text>
+            <Image
+              source={{ uri: 'https://bi.meraplion.com/DMS/media/tags.jpg' }}
+              style={styles.guideImage}
+              resizeMode="contain"
+            />
+          </View>
+        ) : (
+          <FlatList
+            data={filtered_tags}
+            keyExtractor={item => item}
+            renderItem={render_folder_item}
+            ListHeaderComponent={render_tags_toolbar}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Không tìm thấy nhóm tag nào</Text>
+              </View>
+            }
+            contentContainerStyle={{ paddingBottom: 100 }}
+          />
+        )
       ) : (
         <FlatList
           data={filtered_reports}
@@ -866,5 +869,33 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '700',
+  },
+  guideContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#f8fafc',
+  },
+  guideText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  guideSubText: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  guideImage: {
+    width: '100%',
+    height: 220,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
 });
