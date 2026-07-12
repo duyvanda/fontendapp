@@ -377,8 +377,20 @@ export default function CloudAssist() {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {messages.length > 0 && (
-                <TouchableOpacity onPress={handle_new_chat}>
-                  <Ionicons name="refresh" size={24} color={colors.textCaption} />
+                <TouchableOpacity 
+                  onPress={handle_new_chat}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: colors.primarySubtle,
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
+                    borderRadius: 16,
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="refresh" size={16} color={colors.primary} style={{ marginRight: 4 }} />
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>Chat mới</Text>
                 </TouchableOpacity>
               )}
             </View>
