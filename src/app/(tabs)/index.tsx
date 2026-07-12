@@ -28,8 +28,7 @@ export default function HomeScreen() {
 
   // Tag feature states
   const [expanded_folders, set_expanded_folders] = useState<Set<string>>(new Set());
-  const [has_initialized_folders, set_has_initialized_folders] = useState(false);
-  const [tag_sort, set_tag_sort] = useState<'az' | 'za' | 'count'>('az');
+  const [tag_sort, set_tag_sort] = useState<'az' | 'za'>('az');
 
   // Tag Modal states
   const [selected_report, set_selected_report] = useState<Report | null>(null);
@@ -58,13 +57,12 @@ export default function HomeScreen() {
     return { grouped_reports: grouped, all_tags: tagsList };
   }, [reports]);
 
-  // Expand folders by default when they are loaded for the first time
+  // Expand folders by default when switching to tags tab or when tags load/change
   useEffect(() => {
-    if (all_tags.length > 0 && !has_initialized_folders) {
+    if (active_tab === 'tags' && all_tags.length > 0) {
       set_expanded_folders(new Set(all_tags));
-      set_has_initialized_folders(true);
     }
-  }, [all_tags, has_initialized_folders]);
+  }, [active_tab, all_tags]);
 
   // Filters main reports list & puts favorited ones on top
   const filtered_reports = useMemo(() => {
@@ -105,16 +103,11 @@ export default function HomeScreen() {
       });
     }
 
-    // Sort tag folders
     list.sort((a, b) => {
       if (tag_sort === 'az') {
         return a.localeCompare(b, 'vi');
       } else if (tag_sort === 'za') {
         return b.localeCompare(a, 'vi');
-      } else if (tag_sort === 'count') {
-        const aCount = (grouped_reports[a] || []).length;
-        const bCount = (grouped_reports[b] || []).length;
-        return bCount - aCount;
       }
       return 0;
     });
@@ -290,8 +283,7 @@ export default function HomeScreen() {
     const all_expanded = all_tags.length > 0 && all_tags.every(t => expanded_folders.has(t));
     const sort_options = [
       { v: 'az', label: 'A→Z' },
-      { v: 'za', label: 'Z→A' },
-      { v: 'count', label: 'Số lượng' }
+      { v: 'za', label: 'Z→A' }
     ] as const;
 
     return (
