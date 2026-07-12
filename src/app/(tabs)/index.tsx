@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View, Text, FlatList, RefreshControl, TextInput,
-  TouchableOpacity, StyleSheet, Modal, Image
+  TouchableOpacity, StyleSheet, Modal, Image, Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -143,6 +143,11 @@ export default function HomeScreen() {
     const trimmed = new_tag_text.trim().toUpperCase();
     if (!trimmed || !selected_report) return;
     if (modal_tags.includes(trimmed)) return;
+
+    if (modal_tags.length >= 3) {
+      Alert.alert("Thông báo", "Chỉ được thêm tối đa 3 tags cho mỗi báo cáo.");
+      return;
+    }
 
     const updated = [...modal_tags, trimmed];
     set_modal_tags(updated);
@@ -370,7 +375,7 @@ export default function HomeScreen() {
           onPress={() => set_active_tab('tags')}
         >
           <Ionicons name="folder-open-outline" size={18} color={active_tab === 'tags' ? '#000000' : '#757575'} style={{ marginRight: 6 }} />
-          <Text style={[styles.tabText, active_tab === 'tags' && styles.tabTextActive]}>Nhóm Tags</Text>
+          <Text style={[styles.tabText, active_tab === 'tags' && styles.tabTextActive]}>Tags</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }} />
       </View>
@@ -429,7 +434,7 @@ export default function HomeScreen() {
             {/* Header */}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle} numberOfLines={1}>
-                Tags: {selected_report?.tenreport}
+                {selected_report?.tenreport}
               </Text>
               <TouchableOpacity onPress={() => set_selected_report(null)} style={{ padding: 4 }}>
                 <Ionicons name="close" size={24} color="#757575" />
