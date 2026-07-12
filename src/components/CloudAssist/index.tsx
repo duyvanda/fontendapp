@@ -460,48 +460,94 @@ export default function CloudAssist() {
           )}
 
           {/* Input Area */}
-          <View style={biraStyles.inputContainer}>
-            <View style={biraStyles.inputWrapper}>
-              <TouchableOpacity 
-                style={biraStyles.attachButton} 
-                onPress={handle_pick_file}
-                disabled={is_chat_disabled || attached_files.length >= 2 || is_thinking}
-              >
-                <Ionicons name="attach" size={24} color={colors.textSecondary} />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[biraStyles.attachButton, { marginLeft: -8 }]} 
-                onPress={handle_open_camera}
-                disabled={is_chat_disabled || attached_files.length >= 2 || is_thinking}
-              >
-                <Ionicons name="camera" size={24} color={colors.textSecondary} />
-              </TouchableOpacity>
-              
-              <TextInput
-                style={biraStyles.textInput}
-                placeholder={is_chat_disabled ? "Vui lòng Reset để tiếp tục" : "Nhập câu hỏi..."}
-                value={input}
-                onChangeText={set_input}
-                multiline
-                maxLength={500}
-                editable={!is_chat_disabled && !is_thinking}
-              />
+          <View style={[biraStyles.inputContainer, is_chat_disabled && { flexDirection: 'column', alignItems: 'stretch' }]}>
+            {is_chat_disabled ? (
+              <View style={{ width: '100%' }}>
+                {/* Red Warning Banner */}
+                <View style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  backgroundColor: 'rgba(255, 71, 87, 0.08)', 
+                  paddingVertical: 10,
+                  paddingHorizontal: 16, 
+                  borderRadius: 12, 
+                  marginBottom: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 71, 87, 0.2)'
+                }}>
+                  <Ionicons name="alert-circle" size={20} color="#ff4757" style={{ marginRight: 8 }} />
+                  <Text style={{ flex: 1, fontSize: 13, color: '#ff4757', fontWeight: '600', lineHeight: 18 }}>
+                    Đã đạt giới hạn 10/10 câu hỏi hoặc cuộc hội thoại đã kết thúc. Vui lòng bắt đầu cuộc chat mới để tiếp tục.
+                  </Text>
+                </View>
 
-              <View style={[biraStyles.limitBadge, user_message_count >= 10 ? biraStyles.limitBadgeDanger : user_message_count >= 8 ? biraStyles.limitBadgeWarning : null]}>
-                <Text style={[biraStyles.limitText, user_message_count >= 10 && biraStyles.limitTextDanger]}>
-                  {user_message_count}/10
-                </Text>
+                {/* Big reset button */}
+                <TouchableOpacity 
+                  onPress={handle_new_chat}
+                  style={{
+                    height: 48,
+                    backgroundColor: colors.primary,
+                    borderRadius: 24, // pill shape
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: colors.primary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 6,
+                    elevation: 4, // Android shadow
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="refresh-circle" size={22} color="#ffffff" style={{ marginRight: 6 }} />
+                  <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: '700' }}>Bắt đầu phiên chat mới</Text>
+                </TouchableOpacity>
               </View>
-            </View>
+            ) : (
+              <>
+                <View style={biraStyles.inputWrapper}>
+                  <TouchableOpacity 
+                    style={biraStyles.attachButton} 
+                    onPress={handle_pick_file}
+                    disabled={is_chat_disabled || attached_files.length >= 2 || is_thinking}
+                  >
+                    <Ionicons name="attach" size={24} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[biraStyles.attachButton, { marginLeft: -8 }]} 
+                    onPress={handle_open_camera}
+                    disabled={is_chat_disabled || attached_files.length >= 2 || is_thinking}
+                  >
+                    <Ionicons name="camera" size={24} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                  
+                  <TextInput
+                    style={biraStyles.textInput}
+                    placeholder="Nhập câu hỏi..."
+                    value={input}
+                    onChangeText={set_input}
+                    multiline
+                    maxLength={500}
+                    editable={!is_thinking}
+                  />
 
-            <TouchableOpacity 
-              style={[biraStyles.sendButton, (!input.trim() && attached_files.length === 0) || is_chat_disabled || is_thinking ? biraStyles.sendButtonDisabled : null]}
-              onPress={() => handle_send()}
-              disabled={(!input.trim() && attached_files.length === 0) || is_chat_disabled || is_thinking}
-            >
-              <Ionicons name="send" size={20} color={colors.textInverse} style={{ marginLeft: 4 }} />
-            </TouchableOpacity>
+                  <View style={[biraStyles.limitBadge, user_message_count >= 8 ? biraStyles.limitBadgeWarning : null]}>
+                    <Text style={biraStyles.limitText}>
+                      {user_message_count}/10
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={[biraStyles.sendButton, (!input.trim() && attached_files.length === 0) || is_thinking ? biraStyles.sendButtonDisabled : null]}
+                  onPress={() => handle_send()}
+                  disabled={(!input.trim() && attached_files.length === 0) || is_thinking}
+                >
+                  <Ionicons name="send" size={20} color={colors.textInverse} style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
+              </>
+            )}
           </View>
           
           <Text style={{ textAlign: 'center', fontSize: 10, color: colors.textCaption, marginTop: 4, marginBottom: 8, paddingHorizontal: 16 }}>
