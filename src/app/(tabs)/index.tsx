@@ -1,15 +1,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   View, Text, FlatList, RefreshControl, TextInput,
-  TouchableOpacity, StyleSheet, Platform
+  TouchableOpacity, StyleSheet
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedback, Report } from '@/context/FeedbackContext';
-import { useNotification } from '@/context/NotificationContext';
 import { Ionicons } from '@expo/vector-icons';
 import { remove_accents_with_case } from '@/utils/string';
-import { colors, spacing, radius } from '@/styles/global';
+import { colors, spacing } from '@/styles/global';
 import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
 
 const REPORT_ICONS = ['analytics', 'pie-chart', 'stats-chart', 'bar-chart', 'trending-up'];
@@ -23,9 +22,6 @@ export default function HomeScreen() {
   const {
     user_info, reports, fetch_reports, clear_filter_report, toggle_favorite
   } = useFeedback();
-  
-  const { unread_count } = useNotification();
-
   const [refreshing, set_refreshing] = useState(false);
   const [search_query, set_search_query] = useState('');
   const [active_tab, set_active_tab] = useState<'all' | 'favorites'>('all');
@@ -58,8 +54,6 @@ export default function HomeScreen() {
       router.push(`/report/${report.stt}` as any);
     }
   };
-
-  const user_initial = user_info?.manv ? user_info.manv.charAt(0).toUpperCase() : 'U';
 
   const render_item = ({ item, index }: { item: Report, index: number }) => {
     const isFav = item.yeu_thich && String(item.yeu_thich) !== '0';
