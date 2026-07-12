@@ -35,7 +35,7 @@ export interface Report {
   link_report: string;
   manv: string;
   yeu_thich?: string;
-  tags?: string | string[];
+  tags?: string[];
 }
 
 interface FeedbackContextValue {
@@ -62,6 +62,7 @@ interface FeedbackContextValue {
   user_logger: (manv: string, id: string, isMB: boolean, dv_width: number) => void;
   set_rp_screen: (val: boolean) => void;
   toggle_favorite: (report: Report) => Promise<void>;
+  save_tags: (report: Report, tags: string[]) => Promise<void>;
 }
 
 // ─── Context init ──────────────────────────────────────────────────────────────
@@ -137,11 +138,6 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // ── Auth: Logout ───────────────────────────────────────────────────────────
   const logout_user = async () => {
-    // Chạy ngầm unregister push token (nếu có), không await để tránh block UI gây văng màn hình
-    // if (user_info?.manv) {
-    //   unregisterPushToken(user_info.manv);
-    // }
-
     await clear_all_auth();
     set_user_info(null);
     set_user_hr_info(null);
@@ -151,17 +147,34 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
 
     router.replace('/login');
   };
-
-  // ── Reports: Fetch danh sách reports của user ──────────────────────────────
+      // ── Reports: Fetch danh sách reports của user ──────────────────────────────
   const fetch_reports = async (manv: string) => {
+    const parse_tags = (tagsVal: any): string[] => {
+      if (!tagsVal) return [];
+      if (Array.isArray(tagsVal)) return tagsVal;
+      if (typeof tagsVal === 'string') {
+        try {
+          const parsed = JSON.parse(tagsVal);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+      return [];
+    };
+
     try {
       const response = await fetch(`${REPORTS_API_URL}?manv=${manv}&is_app=1`);
       const responseText = await response.text();
       // Replace http with https for any hardcoded backend URLs
-      const replacedText = responseText.replace(/http:\/\/bi\.meraplion\.com/g, 'https://bi.meraplion.com');
+      const replacedText = responseText.replace(/http:\/\/bi\.meraplion.com/g, 'https://bi.meraplion.com');
       const data = JSON.parse(replacedText);
       const raw_reports: Report[] = data['rows_data'] || [];
-      const lstreports = raw_reports.map((el) => ({ ...el, manv }));
+      const lstreports = raw_reports.map((el) => ({
+        ...el,
+        manv,
+        tags: parse_tags(el.tags)
+      }));
       set_reports(lstreports);
       await save_reports_list(lstreports);
 
@@ -173,7 +186,13 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error('fetch_reports error:', err);
       // Load from cache nếu offline
       const cached = await get_reports_list();
-      if (cached.length > 0) set_reports(cached as Report[]);
+      if (cached.length > 0) {
+        const parsedCached = (cached as Report[]).map((el) => ({
+          ...el,
+          tags: parse_tags(el.tags)
+        }));
+        set_reports(parsedCached);
+      }
     }
   };
 
@@ -296,11 +315,14 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   const toggle_favorite = async (report: Report) => {
     if (!user_info?.manv) return;
     const is_fav = report.yeu_thich && String(report.yeu_thich) !== '0';
+    const next_fav = is_fav ? '0' : '1';
 
-    // Optimistic update
-    set_reports(prev => prev.map(r =>
-      r.stt === report.stt ? { ...r, yeu_thich: is_fav ? '0' : '1' } : r
-    ));
+    // Optimistic update + Sync AsyncStorage
+    set_reports(prev => {
+      const next = prev.map(r => r.stt === report.stt ? { ...r, yeu_thich: next_fav } : r);
+      save_reports_list(next).catch(() => void 0);
+      return next;
+    });
 
     try {
       await fetch(`${LOCALURL}/post_data/insert_report_user_prefs_fav/`, {
@@ -309,15 +331,48 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         body: JSON.stringify([{
           manv: user_info.manv,
           report_id: report.stt,
-          yeu_thich: is_fav ? '0' : '1'
+          yeu_thich: next_fav
         }]),
       });
     } catch (err) {
       console.error('toggle_favorite error', err);
       // Rollback on error
-      set_reports(prev => prev.map(r =>
-        r.stt === report.stt ? { ...r, yeu_thich: is_fav ? '1' : '0' } : r
-      ));
+      set_reports(prev => {
+        const next = prev.map(r => r.stt === report.stt ? { ...r, yeu_thich: is_fav ? '1' : '0' } : r);
+        save_reports_list(next).catch(() => void 0);
+        return next;
+      });
+    }
+  };
+
+  const save_tags = async (report: Report, tags: string[]) => {
+    if (!user_info?.manv) return;
+
+    // Optimistic update + Sync AsyncStorage
+    set_reports(prev => {
+      const next = prev.map(r => r.stt === report.stt ? { ...r, tags } : r);
+      save_reports_list(next).catch(() => void 0);
+      return next;
+    });
+
+    try {
+      await fetch(`${LOCALURL}/post_data/insert_report_user_prefs_tags/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([{
+          manv: user_info.manv,
+          report_id: report.stt,
+          tags
+        }]),
+      });
+    } catch (err) {
+      console.error('save_tags error:', err);
+      // Rollback on error
+      set_reports(prev => {
+        const next = prev.map(r => r.stt === report.stt ? { ...r, tags: report.tags || [] } : r);
+        save_reports_list(next).catch(() => void 0);
+        return next;
+      });
     }
   };
 
@@ -344,6 +399,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         toggle_favorite,
         user_logger,
         set_rp_screen,
+        save_tags,
       }}
     >
       {children}
