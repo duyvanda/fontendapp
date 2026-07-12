@@ -387,7 +387,7 @@ export default function HomeScreen() {
             <Text style={styles.guideText}>Chưa có nhóm tag nào</Text>
             <Text style={styles.guideSubText}>Nhấn và giữ (Long press) vào dòng báo cáo để thêm tags.</Text>
             <Image
-              source={{ uri: 'https://bi.meraplion.com/DMS/media/tags.jpg' }}
+              source={{ uri: 'https://bi.meraplion.com/DMS/media/MBTags.jpg' }}
               style={styles.guideImage}
               resizeMode="contain"
             />
