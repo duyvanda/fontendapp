@@ -69,6 +69,7 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
           scalesPageToFit={false}
           injectedJavaScriptBeforeContentLoaded={`
             (function() {
+              // Viewport configuration
               var meta = document.querySelector('meta[name=viewport]');
               if (!meta) {
                 meta = document.createElement('meta');
@@ -76,6 +77,48 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
                 document.head.appendChild(meta);
               }
               meta.content = 'width=1280, initial-scale=' + (window.screen.width / 1280);
+
+              // Inject CSS immediately to hide Looker Studio footer elements
+              var style_el = document.createElement('style');
+              style_el.type = 'text/css';
+              style_el.innerHTML = '.embed-footer, .embedFooter, [class*="embedFooter"], [class*="embed-footer"], .embedFooterContainer, .branding, .google-logo, .report-footer { display: none !important; }';
+              (document.head || document.documentElement).appendChild(style_el);
+
+              // Periodic search to hide elements based on class names and text content
+              function hide_elements() {
+                // Find all links to hide branding / privacy policy
+                var links = document.getElementsByTagName('a');
+                for (var i = 0; i < links.length; i++) {
+                  var link = links[i];
+                  var text_val = (link.textContent || link.innerText || '').toLowerCase();
+                  var href_val = (link.href || '').toLowerCase();
+                  if (
+                    text_val.indexOf('data studio') !== -1 ||
+                    text_val.indexOf('looker studio') !== -1 ||
+                    text_val.indexOf('quyền riêng tư') !== -1 ||
+                    text_val.indexOf('privacy') !== -1 ||
+                    href_val.indexOf('google.com/policies') !== -1
+                  ) {
+                    link.style.setProperty('display', 'none', 'important');
+                    var parent_el = link.parentElement;
+                    if (parent_el) {
+                      parent_el.style.setProperty('display', 'none', 'important');
+                      var grand_parent_el = parent_el.parentElement;
+                      if (grand_parent_el && (
+                        grand_parent_el.className.toLowerCase().indexOf('footer') !== -1 ||
+                        grand_parent_el.className.toLowerCase().indexOf('embed') !== -1 ||
+                        grand_parent_el.offsetHeight < 60
+                      )) {
+                        grand_parent_el.style.setProperty('display', 'none', 'important');
+                      }
+                    }
+                  }
+                }
+              }
+
+              // Run immediately and at intervals to catch dynamically loaded content
+              hide_elements();
+              setInterval(hide_elements, 3000);
             })();
             true;
           `}
