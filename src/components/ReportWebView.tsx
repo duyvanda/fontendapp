@@ -5,10 +5,10 @@ import { globalStyles, colors } from '@/styles/global';
 
 interface ReportWebViewProps {
   uri: string;
-  isResponsive?: boolean;
+  design_width?: number;
 }
 
-export default function ReportWebView({ uri, isResponsive }: ReportWebViewProps) {
+export default function ReportWebView({ uri, design_width = 1280 }: ReportWebViewProps) {
   const [webview_loaded, set_webview_loaded] = useState(false);
   const overlay_opacity = useRef(new Animated.Value(1)).current;
   const bar_width = useRef(new Animated.Value(0)).current;
@@ -68,11 +68,6 @@ export default function ReportWebView({ uri, isResponsive }: ReportWebViewProps)
           domStorageEnabled={true}
           renderLoading={() => <View />}
           scalesPageToFit={false}
-          userAgent={
-            Platform.OS === 'android'
-              ? 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36'
-              : 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'
-          }
           injectedJavaScriptBeforeContentLoaded={`
             (function() {
               // Viewport configuration
@@ -82,16 +77,12 @@ export default function ReportWebView({ uri, isResponsive }: ReportWebViewProps)
                 meta.name = 'viewport';
                 document.head.appendChild(meta);
               }
-              meta.content = ${
-                isResponsive 
-                  ? "'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'"
-                  : "'width=1280, initial-scale=' + (window.screen.width / 1280)"
-              };
+              meta.content = 'width=${design_width}, initial-scale=1';
 
               // Inject CSS immediately to hide Looker Studio footer elements
               var style_el = document.createElement('style');
               style_el.type = 'text/css';
-              style_el.innerHTML = '.embed-footer, .embedFooter, [class*="embedFooter"], [class*="embed-footer"], .embedFooterContainer, .branding, .google-logo, .report-footer { display: none !important; }';
+              style_el.innerHTML = '.embed-footer, .embedFooter, [class*="embedFooter"], [class*="embed-footer"], .embedFooterContainer, .branding, .google-logo, .report-footer, [data-mat-icon-name="more_vert"], [data-mat-icon-name="filter_list"] { display: none !important; }';
               (document.head || document.documentElement).appendChild(style_el);
 
               // Periodic search to hide elements based on class names and text content
