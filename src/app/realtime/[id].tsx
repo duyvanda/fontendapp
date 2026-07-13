@@ -118,7 +118,7 @@ export default function RealtimeReportScreen() {
       {shared ? (
         <ReportWebView 
           uri={`https://datastudio.google.com/embed/reporting/${report_id}${report_param}`}
-          isResponsive={filter_reports?.vw === 'responsive'}
+          isResponsive={filter_reports?.vw === 'responsive' || filter_reports?.vw === 'reponsive'}
         />
       ) : !showParamModal ? (
         <View style={globalStyles.emptyContainer}>
