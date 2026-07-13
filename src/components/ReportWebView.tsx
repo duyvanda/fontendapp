@@ -5,9 +5,10 @@ import { globalStyles, colors } from '@/styles/global';
 
 interface ReportWebViewProps {
   uri: string;
+  isResponsive?: boolean;
 }
 
-export default function ReportWebView({ uri }: ReportWebViewProps) {
+export default function ReportWebView({ uri, isResponsive }: ReportWebViewProps) {
   const [webview_loaded, set_webview_loaded] = useState(false);
   const overlay_opacity = useRef(new Animated.Value(1)).current;
   const bar_width = useRef(new Animated.Value(0)).current;
@@ -76,7 +77,11 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
                 meta.name = 'viewport';
                 document.head.appendChild(meta);
               }
-              meta.content = 'width=1280, initial-scale=' + (window.screen.width / 1280);
+              meta.content = ${
+                isResponsive 
+                  ? "'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'"
+                  : "'width=1280, initial-scale=' + (window.screen.width / 1280)"
+              };
 
               // Inject CSS immediately to hide Looker Studio footer elements
               var style_el = document.createElement('style');
