@@ -47,7 +47,7 @@ Nội dung copy từ `src/app/terms.tsx` là đủ — không cần design đẹ
 
 ## 3. Đảm bảo demo account cho Apple reviewer
 
-- Tạo tài khoản test với Mã tổ chức (Organization Code): `demo`, Tên đăng nhập: `DEMO_APPLE`, Mật khẩu: `Demo@123`
+- Tạo tài khoản test với Mã tổ chức (Organization Code): `demo`, Tên đăng nhập: `DEMO_APPLE`, Mật khẩu: `Demo@12345`
 - Phải có `show_cloud_assist = true` để BIRA hoạt động
 - Phải có ít nhất vài báo cáo được phân quyền
 - Phải có ít nhất 1-2 thông báo trong tab Notifications
