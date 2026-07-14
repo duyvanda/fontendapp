@@ -1,15 +1,23 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import {
-  View, Text, FlatList, RefreshControl, TextInput,
-  TouchableOpacity, StyleSheet, Modal, Image, Alert
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFeedback, Report } from '@/context/FeedbackContext';
-import { Ionicons } from '@expo/vector-icons';
-import { remove_accents_with_case } from '@/utils/string';
-import { colors, spacing } from '@/styles/global';
 import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
+import { Report, useFeedback } from '@/context/FeedbackContext';
+import { colors, spacing } from '@/styles/global';
+import { remove_accents_with_case } from '@/utils/string';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REPORT_ICONS = ['analytics', 'pie-chart', 'stats-chart', 'bar-chart', 'trending-up'];
 const REPORT_COLORS = [
@@ -179,8 +187,8 @@ export default function HomeScreen() {
     let list = grouped_reports[tag] || [];
     if (search_query) {
       const q = remove_accents_with_case(search_query.toLowerCase());
-      list = list.filter(r => 
-        remove_accents_with_case(r.tenreport.toLowerCase()).includes(q) || 
+      list = list.filter(r =>
+        remove_accents_with_case(r.tenreport.toLowerCase()).includes(q) ||
         remove_accents_with_case(tag.toLowerCase()).includes(q)
       );
     }
@@ -199,7 +207,7 @@ export default function HomeScreen() {
     const tags = Array.isArray(item.tags) ? item.tags : [];
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.listItem}
         onPress={() => handle_open_report(item)}
         onLongPress={() => handle_open_tag_modal(item)}
@@ -222,15 +230,15 @@ export default function HomeScreen() {
           )}
         </View>
         <View style={styles.listItemActions}>
-          <TouchableOpacity 
-            style={styles.listActionBtn} 
+          <TouchableOpacity
+            style={styles.listActionBtn}
             onPress={() => toggle_favorite(item)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons 
-              name={isFav ? "star" : "star-outline"} 
-              size={22} 
-              color={isFav ? colors.warning : '#bdbdbd'} 
+            <Ionicons
+              name={isFav ? "star" : "star-outline"}
+              size={22}
+              color={isFav ? colors.warning : '#bdbdbd'}
             />
           </TouchableOpacity>
         </View>
@@ -258,7 +266,7 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.folderChevron}>{is_open ? '▲' : '▼'}</Text>
         </TouchableOpacity>
-        
+
         {is_open && (
           <View style={styles.folderContent}>
             {reports_in_folder.length === 0 ? (
@@ -322,6 +330,7 @@ export default function HomeScreen() {
     );
   };
 
+  {/* MAIN COMPONENT */ }
   return (
     <View style={styles.screen}>
       {/* Header (Zalo Style) */}
@@ -348,22 +357,22 @@ export default function HomeScreen() {
 
       {/* Tabs Row like Zalo */}
       <View style={styles.tabRow}>
-        <TouchableOpacity 
-          style={[styles.tabButton, active_tab === 'all' && styles.tabButtonActive]} 
+        <TouchableOpacity
+          style={[styles.tabButton, active_tab === 'all' && styles.tabButtonActive]}
           onPress={() => set_active_tab('all')}
         >
           <Ionicons name="grid-outline" size={18} color={active_tab === 'all' ? '#000000' : '#757575'} style={{ marginRight: 6 }} />
           <Text style={[styles.tabText, active_tab === 'all' && styles.tabTextActive]}>Tất cả</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tabButton, active_tab === 'favorites' && styles.tabButtonActive]} 
+        <TouchableOpacity
+          style={[styles.tabButton, active_tab === 'favorites' && styles.tabButtonActive]}
           onPress={() => set_active_tab('favorites')}
         >
           <Ionicons name="star" size={18} color={active_tab === 'favorites' ? '#000000' : '#757575'} style={{ marginRight: 6 }} />
           <Text style={[styles.tabText, active_tab === 'favorites' && styles.tabTextActive]}>Yêu thích</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tabButton, active_tab === 'tags' && styles.tabButtonActive]} 
+        <TouchableOpacity
+          style={[styles.tabButton, active_tab === 'tags' && styles.tabButtonActive]}
           onPress={() => set_active_tab('tags')}
         >
           <Ionicons name="folder-open-outline" size={18} color={active_tab === 'tags' ? '#000000' : '#757575'} style={{ marginRight: 6 }} />
@@ -507,7 +516,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     height: '100%',
   },
-  
+
   tabRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -533,7 +542,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: '600',
   },
-  
+
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -609,7 +618,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 4,
   },
-  
+
   // Folder layout styles
   folderWrapper: {
     backgroundColor: '#f8fafc', // Light gray background for contrast
