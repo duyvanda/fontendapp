@@ -17,7 +17,16 @@ export default function RootLayout() {
         }
       } catch (e) { }
     }
+
+    // Check khi app khởi động
     check_and_apply_update();
+
+    // Check thêm khi user thoát ra rồi quay lại (background → foreground)
+    const { AppState } = require('react-native');
+    const sub = AppState.addEventListener('change', (state: string) => {
+      if (state === 'active') check_and_apply_update();
+    });
+    return () => sub.remove();
   }, []);
 
   return (

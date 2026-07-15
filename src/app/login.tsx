@@ -112,14 +112,14 @@ export default function LoginScreen() {
       <View style={styles.bgCircle1} />
       <View style={styles.bgCircle2} />
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={[
-          styles.scrollContent, 
-          { 
+          styles.scrollContent,
+          {
             paddingTop: Math.max(insets.top + 10, 40),
             paddingBottom: Math.max(insets.bottom + 16, spacing.lg)
           }
-        ]} 
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         {/* Logo Header */}
@@ -297,12 +297,12 @@ export default function LoginScreen() {
                 try {
                   const d = new Date(Updates.createdAt);
                   const pad = (n: number) => n.toString().padStart(2, '0');
-                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (Fix 28)`;
                 } catch (e) {
-                  return '  •  (live)';
+                  return '  •  (live) (Fix 28)';
                 }
               })()
-              : '  •  (dev)'
+              : '  •  (dev) (Fix 28)'
             }
           </Text>
           <Text style={{ color: colors.textCaption, fontSize: 10, marginTop: 2 }}>

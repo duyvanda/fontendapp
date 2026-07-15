@@ -200,7 +200,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   const fetch_filter_reports = (stt: string, isMB: boolean) => {
     const manv = user_info?.manv || '';
     const manv_int_0 = manv.replace(/MR/g, '11');
-    const filtered = reports.filter((el) => el.stt === stt);
+    // Lọc theo cả stt và manv để đảm bảo phân quyền đúng báo cáo của user này
+    const filtered = reports.filter((el) => el.stt === stt && el.manv === manv);
     const report_obj = filtered[0];
 
     set_filter_reports(report_obj || null);
@@ -213,10 +214,10 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       const rppr = isMB ? report_obj.param_mb : report_obj.param;
       if (report_obj.type === 1) {
         set_report_param(
-          rppr.replace('xxxxxx', manv).replace(/vvvvvv/g, manv_int_0),
+          rppr.replace(/xxxxxx/g, manv).replace(/vvvvvv/g, manv_int_0),
         );
       } else {
-        set_report_param(rppr.replace('xxxxxx', 'MR0000'));
+        set_report_param(rppr.replace(/xxxxxx/g, 'MR0000'));
       }
     } else {
       set_shared(false);
@@ -268,7 +269,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   ) => {
     try {
       const manv = user_info?.manv || '';
-      const report_obj = reports.find((el) => el.stt === stt);
+      const report_obj = reports.find((el) => el.stt === stt && el.manv === manv);
       if (!report_obj) return;
 
       set_filter_reports(report_obj);
