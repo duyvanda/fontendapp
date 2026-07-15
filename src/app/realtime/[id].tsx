@@ -25,6 +25,7 @@ export default function RealtimeReportScreen() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [initializedId, setInitializedId] = useState<string | null>(null);
 
+
   useEffect(() => {
     if (user_info && id && initializedId !== id) {
       const config = REPORT_PARAMS_CONFIG[id];
@@ -62,27 +63,21 @@ export default function RealtimeReportScreen() {
     <View style={globalStyles.screen}>
       <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} show_back />
       
+      {/* Parameter input Modal */}
       <Modal visible={showParamModal} transparent={true} animationType="slide" statusBarTranslucent={true}>
-        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' }}>
-          <View style={{ 
-            backgroundColor: colors.surface, 
-            borderTopLeftRadius: 16, 
-            borderTopRightRadius: 16, 
-            padding: spacing.lg,
-            paddingBottom: Math.max(insets.bottom, spacing.lg)
-          }}>
-            <Text style={[globalStyles.h2, { marginBottom: spacing.md }]}>📋 Nhập tham số báo cáo</Text>
+        <View style={{ flex: 1, justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: spacing.lg }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 8, padding: spacing.lg, maxHeight: '80%' }}>
+            <Text style={[globalStyles.h2, { marginBottom: spacing.md, color: colors.primary }]}>⚙️ Tham số báo cáo</Text>
             
-            <ScrollView style={{ maxHeight: 400 }}>
+            <ScrollView style={{ marginBottom: spacing.lg }}>
               {paramsConfig.map((param) => (
                 <View key={param.key} style={{ marginBottom: spacing.md }}>
-                  <Text style={globalStyles.sectionHeader}>{param.label}</Text>
-                  {/* Simplistic text input for date for now. In a real app, use a DatePicker component */}
+                  <Text style={{ fontSize: 14, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 6 }}>{param.label}</Text>
                   <TextInput
-                    style={[globalStyles.input]}
-                    value={formData[param.key] || ""}
+                    style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 8, fontSize: 15 }}
+                    value={formData[param.key] || ''}
                     onChangeText={(val) => handleInputChange(param.key, val)}
-                    placeholder={`Nhập ${param.label.toLowerCase()}`}
+                    placeholder={param.placeholder || ''}
                   />
                 </View>
               ))}
@@ -118,7 +113,6 @@ export default function RealtimeReportScreen() {
       {shared ? (
         <ReportWebView 
           uri={`https://datastudio.google.com/embed/reporting/${report_id}${report_param}`}
-
         />
       ) : !showParamModal ? (
         <View style={globalStyles.emptyContainer}>

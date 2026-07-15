@@ -39,7 +39,6 @@ export default function StaticReportScreen() {
       {shared ? (
         <ReportWebView 
           uri={`https://datastudio.google.com/embed/reporting/${report_id}${report_param}`}
-
         />
       ) : (
         <View style={globalStyles.emptyContainer}>

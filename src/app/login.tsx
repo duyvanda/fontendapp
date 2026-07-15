@@ -292,18 +292,6 @@ export default function LoginScreen() {
         <View style={{ alignItems: 'center', marginTop: spacing.xl }}>
           <Text style={{ color: colors.textCaption, fontSize: 11 }}>
             v{Constants.expoConfig?.version ?? '1.0.0'}
-            {Updates.createdAt
-              ? (() => {
-                try {
-                  const d = new Date(Updates.createdAt);
-                  const pad = (n: number) => n.toString().padStart(2, '0');
-                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (Fix 28)`;
-                } catch (e) {
-                  return '  •  (live) (Fix 28)';
-                }
-              })()
-              : '  •  (dev) (Fix 28)'
-            }
           </Text>
           <Text style={{ color: colors.textCaption, fontSize: 10, marginTop: 2 }}>
             ch: {Updates.channel ?? 'n/a'}  |  embedded: {String(Updates.isEmbeddedLaunch)}

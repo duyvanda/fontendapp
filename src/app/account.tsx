@@ -150,9 +150,21 @@ export default function AccountScreen() {
         <View style={styles.version_box}>
           <Text style={styles.version_text}>
             BI Portal v{Constants.expoConfig?.version ?? '1.0.0'}
+            {Updates.createdAt
+              ? (() => {
+                try {
+                  const d = new Date(Updates.createdAt);
+                  const pad = (n: number) => n.toString().padStart(2, '0');
+                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (Fix 46)`;
+                } catch (e) {
+                  return '  •  (live) (Fix 46)';
+                }
+              })()
+              : '  •  (dev) (Fix 46)'
+            }
           </Text>
           <Text style={styles.version_text}>
-            ch: {Updates.channel ?? 'n/a'}
+            ch: {Updates.channel ?? 'n/a'}  |  embedded: {String(Updates.isEmbeddedLaunch)}
           </Text>
         </View>
       </ScrollView>
