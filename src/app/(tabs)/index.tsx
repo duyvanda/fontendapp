@@ -338,7 +338,7 @@ export default function HomeScreen() {
         <Ionicons name="search" size={24} color="#ffffff" style={styles.headerIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Tìm kiếm..."
+          placeholder="Tìm kiếm báo cáo..."
           placeholderTextColor="rgba(255,255,255,0.7)"
           value={search_query}
           onChangeText={set_search_query}

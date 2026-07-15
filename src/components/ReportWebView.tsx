@@ -118,8 +118,8 @@ export default function ReportWebView({ uri, design_width = 1280 }: ReportWebVie
               }
 
               // Run immediately and at intervals to catch dynamically loaded content
-              // hide_elements();
-              // setInterval(hide_elements, 3000);
+              hide_elements();
+              setInterval(hide_elements, 3000);
             })();
             true;
           `}

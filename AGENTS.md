@@ -25,4 +25,5 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 # Build preview
 - **Build APK preview**: `eas build --profile preview --platform android`
 - **OTA Update**: `eas update --channel preview --environment preview --message "Update text"`
+- **OTA production update**: `eas update --channel production --environment production --message "Update text"`
 - **Lưu ý quan trọng**: Tuyệt đối không tự ý chạy các lệnh build nặng tạo file .apk/.aab HOẶC lệnh `eas update` (OTA Update) nếu không có sự yêu cầu trực tiếp từ người dùng. Luôn luôn đề xuất lệnh để người dùng tự xác nhận chứ không tự ý submit nữa.

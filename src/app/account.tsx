@@ -68,8 +68,8 @@ export default function AccountScreen() {
     <View style={styles.screen}>
       {/* Header phẳng, hiện đại */}
       <View style={[styles.header, { paddingTop: insets.top, height: 56 + insets.top }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.back_btn}>
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.back_btn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.header_title}>Tài khoản</Text>
         <View style={{ width: 40 }} />
@@ -170,7 +170,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  back_btn: { width: 40, alignItems: 'flex-start' },
+  back_btn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   header_title: {
     flex: 1,
     textAlign: 'center',

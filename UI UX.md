@@ -50,4 +50,13 @@ Kích thước chữ trên di động được thiết lập dựa trên các ng
 *   **Safe Area Bottom (Cạnh dưới màn hình):** Luôn dùng `insets.bottom` (từ `react-native-safe-area-context`) để cấu hình `paddingBottom` động cho chân trang. Đảm bảo các thông tin phụ hoặc nút bấm dưới cùng luôn cách mép dưới thiết bị tối thiểu **`Math.max(insets.bottom + 16, 24)`** để không bị che bởi thanh điều hướng Home Indicator của iPhone/Android tràn viền.
 *   **Vùng chạm tối thiểu (Touch Target):** Mọi nút bấm hoặc liên kết chữ có thể nhấn được phải nằm trong một container chạm có kích thước tối thiểu **`44px x 44px`** (hoặc `48px x 48px`) để ngón tay dễ dàng bấm chính xác.
 
+---
 
+## Ⅲ. Tiêu chuẩn Nút Back (Back Button)
+
+- **Hình dạng:** Nút tròn (circle), không dùng hình chữ nhật hay icon đứng trơ.
+- **Kích thước:** Tối thiểu `40x40` để đủ vùng chạm theo chuẩn HIG (44px) — có thể dùng `hitSlop` để mở rộng vùng bấm mà không cần phóng to visual.
+- **Trên header màu (Primary color):** Nền mờ trắng `rgba(255,255,255,0.18)` để nút nổi nhẹ trên nền màu, không bị lạc tông.
+- **Trên header trắng:** Nền `background` + viền `border` nhẹ để tạo chiều sâu, trông như một button thật.
+- **Icon:** Dùng `arrow-back` (Ionicons), cỡ `22px`, màu tương phản với nền header.
+- **Căn chỉnh:** Luôn `alignItems: center` + `justifyContent: center` để icon nằm đúng tâm nút.

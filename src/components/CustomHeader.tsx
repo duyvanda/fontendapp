@@ -78,9 +78,18 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
                   router.replace('/');
                 }
               }} 
-              style={{ marginRight: spacing.sm }}
+              style={{
+                marginRight: spacing.sm,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: 'rgba(255,255,255,0.18)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="arrow-back" size={24} color={colors.textInverse} />
+              <Ionicons name="arrow-back" size={22} color={colors.textInverse} />
             </TouchableOpacity>
           ) : null}
           {user_info && (
