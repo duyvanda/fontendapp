@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Animated, Platform } from 'react-native';
+import { colors, globalStyles } from '@/styles/global';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Platform, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { globalStyles, colors } from '@/styles/global';
 
 interface ReportWebViewProps {
   uri: string;
@@ -68,26 +68,59 @@ export default function ReportWebView({ uri, design_width = 1280 }: ReportWebVie
           domStorageEnabled={true}
           renderLoading={() => <View />}
           scalesPageToFit={false}
+          // injectedJavaScriptForMainFrameOnly={false}
+          // injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
           injectedJavaScriptBeforeContentLoaded={`
             (function() {
-              // Viewport configuration
+              // Viewport configuration — tự tính scale khớp đúng màn hình thật,
+              // thay vì ép cứng initial-scale=1 (gây tab/chữ bị nhỏ trên iOS).
               var meta = document.querySelector('meta[name=viewport]');
               if (!meta) {
                 meta = document.createElement('meta');
                 meta.name = 'viewport';
                 document.head.appendChild(meta);
               }
-              meta.content = 'width=${design_width}, initial-scale=1';
+              var screen_width = window.innerWidth;
+              var fit_scale = screen_width / ${design_width};
+              var zoom_extra = 1.5; // cho phép zoom thêm tối đa 50% so với mức fit màn hình (đổi 1.5 nếu muốn 50%)
+              meta.content = 'width=${design_width}, initial-scale=' + fit_scale + ', minimum-scale=' + fit_scale + ', maximum-scale=' + (fit_scale * zoom_extra) + ', user-scalable=yes';
 
-              // Inject CSS immediately to hide Looker Studio footer elements
+              // Looker Studio tự đo window.innerWidth để chọn kiểu tab (dải tab
+              // desktop hay mũi tên gọn cho mobile). Trên iOS, WebKit có thể chưa
+              // áp dụng xong scale mới lúc Looker đo lần đầu -> chọn nhầm layout.
+              // Bắn resize vài lần sau khi load để ép nó đo lại.
+              [100, 400, 900].forEach(function(delay) {
+                setTimeout(function() {
+                  window.dispatchEvent(new Event('resize'));
+                }, delay);
+              });
+
+              // Workaround cho lỗi WKWebView (iOS) hay bị trắng 1 vùng sau khi
+              // pinch-zoom trên trang nhiều canvas/chart như Looker Studio.
+              function force_repaint() {
+                var x = window.scrollX, y = window.scrollY;
+                window.scrollTo(x, y + 1);
+                window.scrollTo(x, y);
+                window.dispatchEvent(new Event('resize'));
+              }
+              document.addEventListener('gesturestart', function() {
+                document.addEventListener('gestureend', function on_gesture_end() {
+                  setTimeout(force_repaint, 60);
+                  document.removeEventListener('gestureend', on_gesture_end);
+                });
+              });
+              document.addEventListener('touchend', function() {
+                setTimeout(force_repaint, 60);
+              });
+
+              // Inject CSS immediately to hide Looker Studio footer + menu button elements
               var style_el = document.createElement('style');
               style_el.type = 'text/css';
-              style_el.innerHTML = '.embed-footer, .embedFooter, [class*="embedFooter"], [class*="embed-footer"], .embedFooterContainer, .branding, .google-logo, .report-footer, [data-mat-icon-name="more_vert"], [data-mat-icon-name="filter_list"] { display: none !important; }';
+              style_el.innerHTML = '.embed-footer, .embedFooter, [class*="embedFooter"], [class*="embed-footer"], .embedFooterContainer, .branding, .google-logo, .report-footer, .ng2-chart-menu-button, .view-applied-filters-button, [data-mat-icon-name="more_vert"], [data-mat-icon-name="filter_list"] { display: none !important; pointer-events: none !important; }';
               (document.head || document.documentElement).appendChild(style_el);
 
               // Periodic search to hide elements based on class names and text content
               function hide_elements() {
-                // Find all links to hide branding / privacy policy
                 var links = document.getElementsByTagName('a');
                 for (var i = 0; i < links.length; i++) {
                   var link = links[i];
@@ -117,9 +150,33 @@ export default function ReportWebView({ uri, design_width = 1280 }: ReportWebVie
                 }
               }
 
-              // Run immediately and at intervals to catch dynamically loaded content
+              // Ẩn cả nút bấm bao quanh icon more_vert / filter_list, không chỉ icon,
+              // để vùng chạm (touch target) cũng mất theo, không bấm trúng được nữa.
+              function hide_in_shadow(root) {
+                if (!root || !root.querySelectorAll) return;
+                var icons = root.querySelectorAll('[data-mat-icon-name="more_vert"], [data-mat-icon-name="filter_list"]');
+                for (var i = 0; i < icons.length; i++) {
+                  var icon_el = icons[i];
+                  icon_el.style.setProperty('display', 'none', 'important');
+                  var button_el = icon_el.closest ? icon_el.closest('button, [role="button"]') : null;
+                  if (button_el) {
+                    button_el.style.setProperty('display', 'none', 'important');
+                  }
+                }
+                var all_el = root.querySelectorAll('*');
+                for (var j = 0; j < all_el.length; j++) {
+                  if (all_el[j].shadowRoot) {
+                    hide_in_shadow(all_el[j].shadowRoot);
+                  }
+                }
+              }
+
               hide_elements();
-              setInterval(hide_elements, 3000);
+              hide_in_shadow(document);
+              setInterval(function() {
+                hide_elements();
+                hide_in_shadow(document);
+              }, 3000);
             })();
             true;
           `}
