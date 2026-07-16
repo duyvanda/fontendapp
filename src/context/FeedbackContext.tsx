@@ -172,6 +172,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       const raw_reports: Report[] = data['rows_data'] || [];
       const lstreports = raw_reports.map((el) => ({
         ...el,
+        tenreport: el.stt === '2002' ? 'HR Overview' : el.tenreport,
         manv,
         tags: parse_tags(el.tags)
       }));
@@ -189,6 +190,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       if (cached.length > 0) {
         const parsedCached = (cached as Report[]).map((el) => ({
           ...el,
+          tenreport: el.stt === '2002' ? 'HR Overview' : el.tenreport,
           tags: parse_tags(el.tags)
         }));
         set_reports(parsedCached);

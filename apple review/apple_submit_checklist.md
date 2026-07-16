@@ -112,7 +112,7 @@ Accounts are provisioned by organization administrators.
 DEMO ACCOUNT:
 - Organization Code: demo
 - Username: DEMO_APPLE
-- Password: Demo@123
+- Password: Demo@12345
 
 ABOUT THIS APP:
 BI Portal is a B2B analytics platform serving multiple independent 
@@ -138,14 +138,27 @@ KEY SCREENS TO TEST:
    open Account settings, where the Account Deletion feature is located.
 
 NOTE ON EMBEDDED REPORTS:
-Some legacy/specialized reports are displayed via an embedded analytics 
-view (industry-standard for BI dashboards handling large, frequently 
-updated datasets), in addition to the fully native reports listed above. 
-All embedded content is accessible to the demo account without requiring 
-a separate login.
+The app includes fully native dashboards as primary experience.
+Embedded views are used only for legacy or specialized analytics.
+
+USER-GENERATED CONTENT:
+The app does not provide any public content sharing or social features. 
+All uploaded images/documents are private and used strictly within 
+business workflows (e.g., attaching documents to AI chat for analysis).
+
+PERMISSIONS USAGE:
+- Camera & Photo Library: Used only to capture or attach business-related 
+  documents/images to AI chat for analysis. No social sharing or public posting.
+
+REQUIREMENTS:
+- Internet connection is required for AI processing and data synchronization.
+
+MONETIZATION:
+This app does not include in-app purchases or payment features.
 
 In case of any connectivity issues with private analytical servers, 
-please refer to this screen recording demonstrating the core flow: [LINK]
+please refer to this screen recording demonstrating the core flow:
+https://youtube.com/your-demo-link
 ```
 
 ---

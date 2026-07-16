@@ -1,14 +1,14 @@
 import React from 'react';
 import CRMOverallDashboard_2001 from './CRMOverallDashboard_2001';
-import DeliveryPerformance_2002 from './DeliveryPerformance_2002';
+import HROverview_2002 from './HROverview_2002';
 
 // Bảng ánh xạ stt (report_id) sang Component tương ứng
-export const NATIVE_REPORTS_MAP: Record<string, React.ComponentType> = {
+export const NATIVE_REPORTS_MAP: Record<string, React.ComponentType<{ scrollEnabled?: boolean }>> = {
   '2001': CRMOverallDashboard_2001,
-  '2002': DeliveryPerformance_2002,
+  '2002': HROverview_2002,
 };
 
 export {
   CRMOverallDashboard_2001,
-  DeliveryPerformance_2002
+  HROverview_2002
 };

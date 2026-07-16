@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useNotification, AppNotification } from '@/context/NotificationContext';
 import { useFeedback } from '@/context/FeedbackContext';
+import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
 import { colors, spacing, radius, globalStyles } from '@/styles/global';
 import { format_date_ymd } from '@/utils/string'; // Using existing helper if applicable
 
@@ -19,7 +20,7 @@ const NOTIFICATION_THEME = {
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user_info } = useFeedback();
+  const { user_info, reports } = useFeedback();
   const { 
     notifications, 
     loading, 
@@ -46,7 +47,23 @@ export default function NotificationsScreen() {
       mark_as_read([item.id]);
     }
     if (item.report_stt) {
-      router.push(`/report/${item.report_stt}` as any);
+      const report = reports?.find(r => String(r.stt) === String(item.report_stt));
+      if (report) {
+        if (Number(report.type) === 4 || report.stt in NATIVE_REPORTS_MAP) {
+          router.push(`/report/native/${item.report_stt}` as any);
+        } else if (report.link_report?.startsWith('/realtime')) {
+          router.push(`/realtime/${item.report_stt}` as any);
+        } else {
+          router.push(`/report/${item.report_stt}` as any);
+        }
+      } else {
+        // Fallback if reports not loaded or report not found in list
+        if (item.report_stt in NATIVE_REPORTS_MAP) {
+          router.push(`/report/native/${item.report_stt}` as any);
+        } else {
+          router.push(`/report/${item.report_stt}` as any);
+        }
+      }
     }
   };
 

@@ -87,11 +87,14 @@ export default function HomeScreen() {
         return name_match || tag_match;
       });
     }
-    // Sort favorited reports to the top
+    // Sort favorited reports to the top, then alphabetically (ABC) within each group
     list.sort((a, b) => {
       const aFav = a.yeu_thich && String(a.yeu_thich) !== '0' ? 1 : 0;
       const bFav = b.yeu_thich && String(b.yeu_thich) !== '0' ? 1 : 0;
-      return bFav - aFav;
+      if (aFav !== bFav) {
+        return bFav - aFav;
+      }
+      return a.tenreport.localeCompare(b.tenreport, 'vi');
     });
     return list;
   }, [reports, search_query, active_tab]);

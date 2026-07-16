@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
-import {
-  View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, ScrollView,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useFeedback } from '@/context/FeedbackContext';
-import { colors, spacing, radius } from '@/styles/global';
+import { colors, radius, spacing } from '@/styles/global';
 import { LOCALURL } from '@/utils/api';
+import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text, TouchableOpacity,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AccountScreen() {
   const router = useRouter();
@@ -68,16 +73,20 @@ export default function AccountScreen() {
     <View style={styles.screen}>
       {/* Header phẳng, hiện đại */}
       <View style={[styles.header, { paddingTop: insets.top, height: 56 + insets.top }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.back_btn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={styles.back_btn} 
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.header_title}>Tài khoản</Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={[
-          styles.content, 
+          styles.content,
           { paddingBottom: Math.max(insets.bottom + 16, spacing.lg) }
         ]}
       >
@@ -91,8 +100,8 @@ export default function AccountScreen() {
           </Text>
           <Text style={styles.user_sub}>
             {user_info?.manv || 'N/A'}
-            {user_hr_info?.chucdanhengtitle || user_hr_info?.ten_chucdanh 
-              ? `  •  ${user_hr_info.chucdanhengtitle || user_hr_info.ten_chucdanh}` 
+            {user_hr_info?.chucdanhengtitle || user_hr_info?.ten_chucdanh
+              ? `  •  ${user_hr_info.chucdanhengtitle || user_hr_info.ten_chucdanh}`
               : '  •  Tài khoản doanh nghiệp'}
           </Text>
           {(user_hr_info?.phongdeptsummary || user_hr_info?.ten_bophan) ? (
@@ -155,12 +164,12 @@ export default function AccountScreen() {
                 try {
                   const d = new Date(Updates.createdAt);
                   const pad = (n: number) => n.toString().padStart(2, '0');
-                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (Fix 46)`;
+                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (Up 47)`;
                 } catch (e) {
-                  return '  •  (live) (Fix 46)';
+                  return '  •  (live) (Fix 47)';
                 }
               })()
-              : '  •  (dev) (Fix 46)'
+              : '  •  (dev) (Fix 47)'
             }
           </Text>
           <Text style={styles.version_text}>
@@ -183,14 +192,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   back_btn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: '#f1f5f9',
   },
   header_title: {
     flex: 1,
