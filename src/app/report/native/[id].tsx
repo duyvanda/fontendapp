@@ -20,6 +20,7 @@ export default function NativeReportScreen() {
 
   // ─── States & Refs cho Gesture & Screenshot ───
   const [zoom_level, set_zoom_level] = useState(1.0);
+  const [is_capturing, set_is_capturing] = useState(false);
   const capture_view_ref = useRef<View>(null);
   
   const screen_w = Dimensions.get('window').width;
@@ -152,15 +153,19 @@ export default function NativeReportScreen() {
 
   // Xử lý chụp màn hình báo cáo
   const handle_screenshot = async () => {
+    if (is_capturing) return;
     try {
+      set_is_capturing(true);
       if (!capture_view_ref.current) return;
       const file_uri = await captureRef(capture_view_ref, {
-        format: 'png',
-        quality: 0.95,
+        format: 'jpg',
+        quality: 0.8,
       });
       await Sharing.shareAsync(file_uri);
     } catch (e) {
       console.error('Screenshot capture failed:', e);
+    } finally {
+      set_is_capturing(false);
     }
   };
 
@@ -320,7 +325,8 @@ export default function NativeReportScreen() {
             <Reanimated.View style={btn_panel_style}>
               <TouchableOpacity
                 onPress={handle_screenshot}
-                style={{
+                disabled={is_capturing}
+                style={[{
                   width: 38,
                   height: 38,
                   borderRadius: 19,
@@ -332,9 +338,9 @@ export default function NativeReportScreen() {
                   shadowOpacity: 0.25,
                   shadowRadius: 3,
                   elevation: 4,
-                }}
+                }, is_capturing && { opacity: 0.5 }]}
               >
-                <Ionicons name="camera" size={19} color="#fff" />
+                <Ionicons name={is_capturing ? 'hourglass-outline' : 'camera'} size={19} color="#fff" />
               </TouchableOpacity>
             </Reanimated.View>
           </GestureDetector>

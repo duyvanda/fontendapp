@@ -29,6 +29,7 @@ export default function RealtimeReportScreen() {
   const [paramsConfig, setParamsConfig] = useState<any[]>([]);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [initializedId, setInitializedId] = useState<string | null>(null);
+  const [is_capturing, set_is_capturing] = useState(false);
 
   const capture_view_ref = useRef<View>(null);
   const screen_w = Dimensions.get('window').width;
@@ -63,15 +64,19 @@ export default function RealtimeReportScreen() {
   }));
 
   const handle_screenshot = async () => {
+    if (is_capturing) return;
     try {
+      set_is_capturing(true);
       if (!capture_view_ref.current) return;
       const file_uri = await captureRef(capture_view_ref, {
-        format: 'png',
-        quality: 0.95,
+        format: 'jpg',
+        quality: 0.8,
       });
       await Sharing.shareAsync(file_uri);
     } catch (e) {
       console.error('Screenshot capture failed:', e);
+    } finally {
+      set_is_capturing(false);
     }
   };
 
@@ -173,9 +178,10 @@ export default function RealtimeReportScreen() {
             <Reanimated.View style={btn_panel_style}>
               <TouchableOpacity
                 onPress={handle_screenshot}
-                style={styles.screenshotBtn}
+                disabled={is_capturing}
+                style={[styles.screenshotBtn, is_capturing && { opacity: 0.5 }]}
               >
-                <Ionicons name="camera" size={19} color="#fff" />
+                <Ionicons name={is_capturing ? 'hourglass-outline' : 'camera'} size={19} color="#fff" />
               </TouchableOpacity>
             </Reanimated.View>
           </GestureDetector>
