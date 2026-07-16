@@ -31,17 +31,21 @@ Chạy file `delete_account_sql.sql` trên database production.
 
 ---
 
-## 2. Host Privacy Policy URL
+## 2. Host Privacy Policy & Support URL
 
-Apple yêu cầu 1 trang web **public** (không cần login) chứa chính sách bảo mật.
+Apple yêu cầu 2 trang web **public** (không cần đăng nhập):
+1. **Privacy Policy**: Chính sách bảo mật thông tin.
+2. **Support URL**: Thông tin liên hệ hỗ trợ người dùng khi gặp sự cố.
 
-**Cách làm:** Tạo 1 file HTML tĩnh trên server `bi.meraplion.com`:
-
-```
-https://bi.meraplion.com/privacy-policy
-```
-
-Nội dung copy từ `src/app/terms.tsx` là đủ — không cần design đẹp.
+**Cách làm:** 
+- Đưa các file HTML tĩnh lên thư mục `public/` của web frontend (ví dụ: `d:\django_apps\rest\frontend1\public\`).
+- File Privacy Policy: Sử dụng `privacy-policy.html` đã có sẵn.
+- File Support: Đã tạo file template [support.html](file:///d:/django_apps/rest/frontend1/public/support.html). Bạn có thể chỉnh sửa thông tin liên hệ trong đó nếu cần.
+- Khi deploy lên server `bi.meraplion.com`, đường dẫn public tương ứng sẽ là:
+  ```
+  https://bi.meraplion.com/privacy-policy.html
+  https://bi.meraplion.com/support.html
+  ```
 
 ---
 
@@ -87,7 +91,8 @@ Chụp các màn hình: Login → Home → BIRA Chat → Notifications → Accou
 | App Name | BI Portal |
 | Subtitle | Business Intelligence & AI Assistant |
 | Category | Business (Primary), Productivity (Secondary) |
-| Privacy Policy URL | `https://bi.meraplion.com/privacy-policy` |
+| Privacy Policy URL | `https://bi.meraplion.com/privacy-policy.html` |
+| Support URL | `https://bi.meraplion.com/support.html` |
 | Age Rating | 4+ |
 
 ### 6.3 Description (tiếng Anh)
@@ -186,7 +191,8 @@ Nếu bạn dùng tài khoản Developer cá nhân để upload app có chứa l
 ## ✅ Checklist cuối cùng
 
 - [ ] SQL `delete_user_account` đã chạy trên PostgreSQL
-- [ ] Privacy Policy URL đã host public
+- [ ] Privacy Policy URL đã host public (`https://bi.meraplion.com/privacy-policy.html`)
+- [ ] Support URL đã host public (`https://bi.meraplion.com/support.html`)
 - [ ] Demo account hoạt động + BIRA bật
 - [ ] Apple Developer account active
 - [ ] iOS build thành công
