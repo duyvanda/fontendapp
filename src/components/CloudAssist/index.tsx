@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Clipboard,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -64,6 +65,7 @@ export default function CloudAssist() {
   const [messages, set_messages] = useState<chat_message_type[]>([]);
   const [input, set_input] = useState('');
   const [is_thinking, set_is_thinking] = useState(false);
+  const [copied_id, set_copied_id] = useState<string | null>(null);
 
   const [attached_files, set_attached_files] = useState<{ name: string, content: string }[]>([]);
   const [is_uploading, set_is_uploading] = useState(false);
@@ -338,10 +340,26 @@ export default function CloudAssist() {
     }
   };
 
+  const handle_copy = (item: chat_message_type) => {
+    Clipboard.setString(item.text);
+    set_copied_id(item.id);
+    setTimeout(() => set_copied_id(null), 1500);
+  };
+
+  const handle_retry = () => {
+    // Tìm tin nhắn user cuối cùng trước tin nhắn lỗi
+    const last_user_msg = [...messages].reverse().find(m => m.sender === 'user');
+    if (!last_user_msg || is_thinking) return;
+    // Xoá tin nhắn lỗi cuối
+    set_messages(prev => prev.filter((_, i) => i < prev.length - 1));
+    handle_send(last_user_msg.text);
+  };
+
   const render_message = ({ item }: { item: chat_message_type }) => {
     const is_user = item.sender === 'user';
     const date = new Date(item.timestamp);
     const time_str = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    const is_copied = copied_id === item.id;
 
     return (
       <View style={[biraStyles.messageWrapper, is_user ? biraStyles.messageUser : biraStyles.messageBot]}>
@@ -354,9 +372,45 @@ export default function CloudAssist() {
             </Markdown>
           )}
         </View>
-        <Text style={[biraStyles.timestamp, is_user ? biraStyles.timestampUser : biraStyles.timestampBot]}>
-          {is_user ? 'Bạn' : 'Bira'} • {time_str}
-        </Text>
+        <View style={[
+          { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+          is_user ? { justifyContent: 'flex-end' } : { justifyContent: 'flex-start' }
+        ]}>
+          <Text style={[biraStyles.timestamp, is_user ? biraStyles.timestampUser : biraStyles.timestampBot]}>
+            {is_user ? 'Bạn' : 'Bira'} • {time_str}
+          </Text>
+          {!is_user && (
+            <>
+              {/* Copy button */}
+              <TouchableOpacity
+                onPress={() => handle_copy(item)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{ marginLeft: 8 }}
+              >
+                <Ionicons
+                  name={is_copied ? 'checkmark-done' : 'copy-outline'}
+                  size={14}
+                  color={is_copied ? colors.success : colors.textCaption}
+                />
+              </TouchableOpacity>
+              {/* Retry button - chỉ hiện khi lỗi */}
+              {item.is_error && (
+                <TouchableOpacity
+                  onPress={handle_retry}
+                  disabled={is_thinking}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  style={{ marginLeft: 8 }}
+                >
+                  <Ionicons
+                    name="refresh-circle-outline"
+                    size={16}
+                    color={is_thinking ? colors.textCaption : colors.error}
+                  />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
       </View>
     );
   };
