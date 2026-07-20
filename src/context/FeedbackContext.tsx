@@ -17,7 +17,7 @@ import {
   user_hr_info_type,
   user_info_type,
 } from '@/storage/auth';
-import { API_BASE_URL, LOCALURL, REPORTS_API_URL } from '@/utils/api';
+import { API_BASE_URL, LOCALURL, REPORTS_API_URL, apiFetch } from '@/utils/api';
 import { get_version } from '@/utils/string';
 //import { registerForPushNotificationsAsync, unregisterPushToken } from '@/utils/notifications';
 
@@ -114,23 +114,17 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     set_login_loading(true);
     set_login_text('');
     try {
-      const response = await fetch(`${API_BASE_URL}/loginv1/`, {
+      const data = await apiFetch<any>(`${API_BASE_URL}/loginv1/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(logindata),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        set_login_text(data.message || 'Đăng nhập thất bại');
-      } else {
-        await save_user_info(data);
-        set_user_info(data);
-        await fetch_reports(data.manv);
-        // Tạm thời tắt đăng ký Push Notification
-        // registerForPushNotificationsAsync(data.manv);
-      }
-    } catch (err) {
-      set_login_text('Lỗi kết nối. Vui lòng thử lại.');
+      await save_user_info(data);
+      set_user_info(data);
+      await fetch_reports(data.manv);
+      // Tạm thời tắt đăng ký Push Notification
+      // registerForPushNotificationsAsync(data.manv);
+    } catch (err: any) {
+      set_login_text(err.message || 'Lỗi kết nối. Vui lòng thử lại.');
     } finally {
       set_login_loading(false);
     }
@@ -147,7 +141,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
 
     router.replace('/login');
   };
-      // ── Reports: Fetch danh sách reports của user ──────────────────────────────
+  // ── Reports: Fetch danh sách reports của user ──────────────────────────────
   const fetch_reports = async (manv: string) => {
     const parse_tags = (tagsVal: any): string[] => {
       if (!tagsVal) return [];
@@ -164,18 +158,23 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     try {
-      const response = await fetch(`${REPORTS_API_URL}?manv=${manv}&is_app=1`);
-      const responseText = await response.text();
-      // Replace http with https for any hardcoded backend URLs
-      const replacedText = responseText.replace(/http:\/\/bi\.meraplion.com/g, 'https://bi.meraplion.com');
-      const data = JSON.parse(replacedText);
+      const data = await apiFetch<any>(`${REPORTS_API_URL}?manv=${manv}&is_app=1`);
+
       const raw_reports: Report[] = data['rows_data'] || [];
-      const lstreports = raw_reports.map((el) => ({
-        ...el,
-        tenreport: el.stt === '2002' ? 'HR Overview' : el.tenreport,
-        manv,
-        tags: parse_tags(el.tags)
-      }));
+      const lstreports = raw_reports.map((el) => {
+        // Optimize: Chỉ thay thế URL ở trường link_report thay vì toàn bộ chuỗi JSON lớn
+        const link_report = el.link_report 
+          ? el.link_report.replace(/http:\/\/bi\.meraplion.com/g, 'https://bi.meraplion.com') 
+          : el.link_report;
+
+        return {
+          ...el,
+          link_report,
+          tenreport: el.tenreport, // Đã xóa hardcode 'HR Overview'
+          manv,
+          tags: parse_tags(el.tags)
+        };
+      });
       set_reports(lstreports);
       await save_reports_list(lstreports);
 
@@ -190,7 +189,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       if (cached.length > 0) {
         const parsedCached = (cached as Report[]).map((el) => ({
           ...el,
-          tenreport: el.stt === '2002' ? 'HR Overview' : el.tenreport,
+          tenreport: el.tenreport, // Đã xóa hardcode 'HR Overview'
           tags: parse_tags(el.tags)
         }));
         set_reports(parsedCached);
@@ -235,27 +234,16 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     set_shared(false);
     set_loading(true);
     try {
-      const response = await fetch(`${LOCALURL}/${local_url}/`, {
+      await apiFetch(`${LOCALURL}/${local_url}/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data_user),
       });
-      const contentType = response.headers.get('content-type');
-      if (!contentType?.includes('application/json')) {
-        set_shared(false);
-        return;
-      }
-      const data = await response.json();
-      if (!response.ok) {
-        set_shared(false);
-      } else {
-        set_report_param(
-          rppr
-            .replace(/xxxxxx/g, data_user.manv as string)
-            .replace(/vvvvvv/g, data_user.version as string),
-        );
-        set_shared(true);
-      }
+      set_report_param(
+        rppr
+          .replace(/xxxxxx/g, data_user.manv as string)
+          .replace(/vvvvvv/g, data_user.version as string),
+      );
+      set_shared(true);
     } catch (err) {
       console.error('fetch_real_time_report error:', err);
       set_shared(false);
@@ -307,9 +295,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     isMB: boolean,
     dv_width: number,
   ) => {
-    fetch(`${LOCALURL}/userreportlogger/`, {
+    apiFetch(`${LOCALURL}/userreportlogger/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ manv, id, ismb: isMB, dv_width }),
     }).catch(() => void 0); // Fire and forget
   };
@@ -328,9 +315,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     try {
-      await fetch(`${LOCALURL}/post_data/insert_report_user_prefs_fav/`, {
+      await apiFetch(`${LOCALURL}/post_data/insert_report_user_prefs_fav/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([{
           manv: user_info.manv,
           report_id: report.stt,
@@ -359,9 +345,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     try {
-      await fetch(`${LOCALURL}/post_data/insert_report_user_prefs_tags/`, {
+      await apiFetch(`${LOCALURL}/post_data/insert_report_user_prefs_tags/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([{
           manv: user_info.manv,
           report_id: report.stt,

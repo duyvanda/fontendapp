@@ -1,63 +1,89 @@
-# Kế hoạch chuyển đổi cơ chế OTA Update từ tự động sang thủ công
+# Kế hoạch cập nhật OTA khi khởi động ứng dụng (Force Update on Startup)
 
-Mục tiêu là dừng hoàn toàn việc tự động kiểm tra và reload ứng dụng ở `src/app/_layout.tsx` (gây gián đoạn trải nghiệm người dùng). Thay vào đó, chúng ta sẽ thêm tính năng kiểm tra và tải bản cập nhật thủ công ngay trong màn hình **Tài khoản** (`src/app/account.tsx`).
+Mục tiêu là tự động kiểm tra và áp dụng bản cập nhật OTA ngay khi khởi động ứng dụng. Trong quá trình kiểm tra và tải bản cập nhật, một màn hình chờ (Splash/Update Screen) đẹp mắt sẽ được hiển thị để chặn người dùng thao tác. Khi hoàn tất cập nhật (hoặc nếu không có cập nhật/lỗi mạng), người dùng sẽ được chuyển vào ứng dụng để sử dụng bình thường.
+
+---
 
 ## Quy trình hoạt động mới
 
 ```mermaid
 sequenceDiagram
     actor User as Người dùng
-    participant App as Màn hình Tài khoản
+    participant App as Ứng dụng (_layout.tsx)
     participant Expo as Expo Updates API
 
-    User->>App: Nhấn nút "Kiểm tra cập nhật"
-    App->>App: Hiển thị trạng thái xoay loading (Đang kiểm tra cập nhật...)
+    User->>App: Mở ứng dụng
+    App->>App: Hiển thị giao diện "Đang kiểm tra cập nhật..."
     App->>Expo: Updates.checkForUpdateAsync()
-    alt Không có bản cập nhật mới
-        Expo-->>App: Trả về isAvailable = false
-        App->>User: Hiển thị Alert: "Ứng dụng đã ở phiên bản mới nhất."
-    else Có bản cập nhật mới
+    
+    alt Có bản cập nhật mới
         Expo-->>App: Trả về isAvailable = true
-        App->>User: Hiện Alert xác nhận: "Có bản cập nhật mới. Bạn có muốn tải về và reload không?"
-        alt Người dùng chọn Huỷ
-            User-->>App: Huỷ
-            App->>App: Trở về trạng thái bình thường
-        else Người dùng chọn Cập nhật
-            User-->>App: Cập nhật
-            App->>Expo: Updates.fetchUpdateAsync()
-            Expo-->>App: Tải xong
-            App->>Expo: Updates.reloadAsync()
-        end
+        App->>App: Cập nhật giao diện: "Đang tải bản cập nhật mới..."
+        App->>Expo: Updates.fetchUpdateAsync()
+        Expo-->>App: Tải xong bản cập nhật
+        App->>App: Cập nhật giao diện: "Đang khởi động lại ứng dụng..."
+        App->>Expo: Updates.reloadAsync()
+    else Không có bản cập nhật mới / Lỗi mạng / Quá thời gian (Timeout 8s)
+        Expo-->>App: Trả về isAvailable = false hoặc ném lỗi
+        App->>App: Tắt giao diện cập nhật (set is_updating = false)
+        App->>User: Cho phép truy cập và sử dụng ứng dụng bình thường
     end
 ```
 
+---
+
 ## Đề xuất thay đổi
 
-### 1. Cấu hình cốt lõi
+### 1. Cấu hình và Giao diện khởi động
 
 #### [MODIFY] [_layout.tsx](file:///d:/django_apps/rest/fontendapp/src/app/_layout.tsx)
-- Xoá bỏ hoàn toàn hàm `check_and_apply_update()` trong hook `useEffect` khi ứng dụng khởi động hoặc chuyển trạng thái active (foreground).
-- Loại bỏ các import không còn sử dụng (`Updates`, `useEffect` nếu không cần thiết).
+- Thêm các state quản lý tiến trình OTA ở mức ứng dụng (Root):
+  - `is_updating` (boolean, mặc định là `true` trong môi trường Production để hiển thị màn hình chờ).
+  - `update_status` (string, lưu trữ thông điệp hiện tại như `"Đang kiểm tra bản cập nhật..."`, `"Đang tải bản cập nhật mới..."`).
+- Thiết lập một hàm chạy bất đồng bộ `check_and_apply_update_startup()` trong `useEffect` khi mount:
+  - Nếu là môi trường phát triển (`__DEV__`), đặt `is_updating` thành `false` ngay lập tức để không ảnh hưởng việc code.
+  - Sử dụng cơ chế `Promise.race` kết hợp giữa việc kiểm tra cập nhật và một bộ đếm thời gian (Timeout 8 giây). Nếu quá 8 giây mà chưa phản hồi (do mạng yếu hoặc lỗi server Expo), hệ thống tự động bỏ qua và cho phép vào ứng dụng (`is_updating = false`).
+  - Thực hiện tuần tự: `checkForUpdateAsync()` -> Nếu có bản cập nhật, chạy tiếp `fetchUpdateAsync()` -> `reloadAsync()`.
+  - Nếu không có cập nhật hoặc xảy ra lỗi (catch block), đặt `is_updating` thành `false` để người dùng tiếp tục sử dụng phiên bản hiện tại.
+- Xây dựng giao diện Splash Update đẹp mắt:
+  - Giao diện full-screen đè lên toàn bộ ứng dụng khi `is_updating === true`.
+  - Sử dụng nền màu tối sang trọng (Dark theme / Gradient) kết hợp `ActivityIndicator` xoay tròn, cùng thông tin trạng thái hiển thị rõ ràng ở giữa màn hình.
 
-### 2. Màn hình Tài khoản
+### 2. Màn hình Tài khoản (Tùy chọn)
 
 #### [MODIFY] [account.tsx](file:///d:/django_apps/rest/fontendapp/src/app/account.tsx)
-- Thêm state `checking_update` kiểu boolean để quản lý trạng thái đang kiểm tra cập nhật.
-- Thêm hàm `handle_check_update` xử lý tiến trình kiểm tra bản cập nhật:
-  - Nếu là môi trường DEV (`__DEV__`), thông báo ngay và dừng lại.
-  - Sử dụng `Updates.checkForUpdateAsync()` để kiểm tra bản cập nhật OTA.
-  - Nếu không có cập nhật mới, hiện thông báo "Ứng dụng đã ở phiên bản mới nhất."
-  - Nếu có bản cập nhật mới, hiển thị hộp thoại `Alert.alert` để xác nhận từ người dùng. Khi người dùng đồng ý cập nhật thì gọi `Updates.fetchUpdateAsync()` và `Updates.reloadAsync()`.
-- Chèn dòng menu **Kiểm tra cập nhật** vào danh sách menu trong `ScrollView`, nằm phía trên mục **Đăng xuất**.
-- Đồng bộ UI/UX dòng menu:
-  - Khi chưa bấm: Hiện icon đám mây tải xuống `cloud-download-outline` màu xanh lá và chevron bên phải.
-  - Khi đang bấm: Hiện `ActivityIndicator` xoay tròn màu xanh, đổi chữ thành `"Đang kiểm tra cập nhật..."` và tắt tương tác.
+- Mặc dù đã có cập nhật tự động khi khởi động, chúng ta vẫn có thể giữ lại hoặc thêm nút **Kiểm tra cập nhật** thủ công trong mục cài đặt tài khoản để người dùng có thể check update chủ động mà không cần tắt app đi bật lại.
+- Logic kiểm tra thủ công tương tự như đã thiết kế ở kế hoạch trước nhưng sẽ là một tính năng bổ trợ.
+
+---
+
+## Chi tiết Thiết kế Giao diện Update Screen (Dự kiến)
+
+```tsx
+if (is_updating) {
+  return (
+    <View style={styles.update_container}>
+      <ActivityIndicator size="large" color="#10B981" />
+      <Text style={styles.update_title}>HỆ THỐNG CẬP NHẬT</Text>
+      <Text style={styles.update_status}>{update_status}</Text>
+    </View>
+  );
+}
+```
+
+*Thiết kế sử dụng màu chủ đạo xanh ngọc (`#10B981`) kết hợp với nền tối (`#0F172A`) để tạo cảm giác hiện đại, cao cấp.*
 
 ---
 
 ## Kế hoạch xác minh (Verification Plan)
 
-### Kiểm tra thủ công
-1. Chạy app ở chế độ DEV, vào trang Tài khoản -> Bấm nút **Kiểm tra cập nhật**. Hệ thống cần hiển thị cảnh báo đang ở dev mode và không tiếp tục kiểm tra OTA.
-2. Kiểm tra xem app khi khởi động hoặc chuyển từ background lên foreground còn tự động reload nữa hay không.
-3. Khi triển khai bản build Preview (sau này): Bấm nút để kiểm tra phản hồi từ Expo Updates server.
+### Kiểm tra tự động & thủ công
+1. **Môi trường phát triển (DEV)**:
+   - Mở app, hệ thống nhận diện `__DEV__` và bỏ qua màn hình kiểm tra cập nhật ngay lập tức. User truy cập thẳng vào trang login hoặc tab bình thường.
+2. **Môi trường Production (Giả lập bằng cách tắt __DEV__)**:
+   - Tạm thời comment điều kiện `__DEV__` để kiểm tra UI/UX của màn hình cập nhật.
+   - Thử nghiệm tắt mạng (Offline) xem app có tự động vượt qua màn hình cập nhật sau khi lỗi/timeout để vào app dùng offline bình thường không.
+3. **Môi trường Production thực tế (Build Preview/Staging)**:
+   - Cài đặt app bản Preview.
+   - Chạy lệnh OTA Update (`eas update`).
+   - Mở app lại để kiểm tra xem màn hình cập nhật có hiển thị, tiến hành tải bản cập nhật và tự động reload ứng dụng thành công hay không.
