@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hướng dẫn & Điều kiện Transfer App BI PORTAL</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 18mm;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            color: #1a365d;
+            font-size: 18pt;
+            border-bottom: 2px solid #3182ce;
+            padding-bottom: 8px;
+            margin-top: 0;
+            margin-bottom: 18px;
+        }
+        h3 {
+            color: #2b6cb0;
+            font-size: 13pt;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 10.5pt;
+            margin-bottom: 8px;
+            margin-top: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 18px;
+            font-size: 9.5pt;
+        }
+        th {
+            background-color: #2b6cb0;
+            color: #ffffff;
+            font-weight: bold;
+            padding: 8px 10px;
+            text-align: left;
+            border: 1px solid #2b6cb0;
+        }
+        td {
+            padding: 8px 10px;
+            border: 1px solid #cbd5e0;
+            vertical-align: top;
+        }
+        tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e2e8f0;
+            margin: 18px 0;
+        }
+        strong {
+            color: #1a202c;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hướng dẫn & Điều kiện Transfer App BI PORTAL (App Store Connect)</h1>
+<h3>1. Các điều kiện Transfer App theo quy định của Apple</h3>
+<table>
+<thead><tr><th>Điều kiện của Apple</th><th>Trạng thái / Yêu cầu đối với App hiện tại</th></tr></thead><tbody>
+<tr><td><strong>1. Đã có bản phát hành trên App Store</strong></td><td>App bắt buộc phải có ít nhất 1 phiên bản đã duyệt và phát hành chính thức trên App Store (<em>Ready for Sale</em>). Nếu app chỉ mới upload lên TestFlight hoặc đang ở dạng nháp (Draft) thì chưa thể transfer.</td></tr>
+<tr><td><strong>2. Trạng thái App tại thời điểm transfer</strong></td><td>App không được nằm trong các trạng thái đang duyệt/chờ duyệt:<br/>• <em>Waiting for Review</em>, <em>In Review</em><br/>• <em>Processing for Distribution</em>, <em>Accepted</em><br/>• <em>Pending Developer Release</em>, <em>Pending Apple Release</em></td></tr>
+<tr><td><strong>3. Trạng thái Đặt trước (Pre-order)</strong></td><td>App không được đang ở trạng thái cho phép người dùng đặt trước (Pre-order) ở bất kỳ quốc gia nào.</td></tr>
+<tr><td><strong>4. Trạng thái 2 tài khoản Developer</strong></td><td>Cả tài khoản chuyển (Transferor) và tài khoản nhận (Recipient) phải hoạt động bình thường (không bị lock/pending) và đã đồng ý với các hợp đồng mới nhất (Paid/Free Agreements) của Apple.</td></tr>
+<tr><td><strong>5. In-App Purchase (IAP)</strong></td><td>App hiện tại là <strong>Free</strong>, chưa tích hợp gói thanh toán IAP (tự động thỏa mãn). Nếu sau này có bổ sung IAP, các Product ID không được trùng với bất kỳ app nào thuộc tài khoản nhận.</td></tr>
+<tr><td><strong>6. Loại ứng dụng</strong></td><td>App không phải Apple Arcade và không phải Mac App dùng Shared Container. ✅ (App hiện tại đáp ứng tốt).</td></tr>
+</tbody></table>
+<hr/>
+<h3>2. Về việc Transfer App BI PORTAL trên App Store Connect:</h3>
+<p>Theo quy định của Apple, chỉ người có vai trò <strong>Account Holder</strong> (Chủ tài khoản chính - thường là Giám đốc / Trưởng phòng IT đứng tên đăng ký Apple Developer của công ty) mới có quyền gửi và duyệt Transfer App.</p>
+<p><strong>Cách phối hợp:</strong></p>
+<p style='margin-left: 15px;'><strong>1. </strong><strong>Xin thông tin từ công ty</strong>: Anh xin sếp/IT của công ty 2 thông tin:</p>
+<p style='margin-left: 35px;'>• <strong>Apple ID</strong> (email tài khoản Apple Developer công ty).</p>
+<p style='margin-left: 35px;'>• <strong>Team ID</strong> của tài khoản công ty (nằm trong mục <em>Account > Membership Details</em>).</p>
+<p style='margin-left: 15px;'><strong>2. </strong><strong>Anh thao tác gửi</strong>: Anh đăng nhập tài khoản cá nhân của anh vào App Store Connect -> chọn App -> chọn <strong>Transfer App</strong> -> nhập 2 thông tin của công ty ở trên.</p>
+<p style='margin-left: 15px;'><strong>3. </strong><strong>Nhờ công ty bấm Duyệt</strong>: Anh báo người nắm tài khoản công ty (Account Holder) đăng nhập vào App Store Connect -> vào mục <strong>Agreements, Tax, and Banking</strong> để bấm <strong>Accept Transfer</strong>.</p>
+<hr/>
+<h3>3. Giải pháp để anh tiếp tục quản lý/upload app sau khi đã Transfer:</h3>
+<p>Sau khi transfer xong, anh <strong>không cần phải xin mật khẩu tài khoản chính</strong> của công ty. Anh chỉ cần nhờ công ty cấp quyền cho anh như sau:</p>
+<p style='margin-left: 15px;'><strong>1. </strong>Nhờ <strong>Account Holder của công ty</strong> truy cập vào App Store Connect -> Mục <strong>Users and Access</strong>.</p>
+<p style='margin-left: 15px;'><strong>2. </strong>Thêm Email Apple ID của anh vào danh sách nhân sự công ty với vai trò:</p>
+<p style='margin-left: 35px;'>• <strong>Admin</strong> hoặc <strong>App Manager</strong> (Quản lý App).</p>
+<p style='margin-left: 15px;'><strong>3. </strong><strong>Kết quả</strong>:</p>
+<p style='margin-left: 35px;'>• Anh sẽ dùng chính tài khoản/email của anh để đăng nhập vào xem/quản lý App Store Connect của công ty.</p>
+<p style='margin-left: 35px;'>• Khi chạy lệnh `eas build` hoặc `eas update`, anh chỉ cần đăng nhập tài khoản cá nhân của anh (vì tài khoản anh đã thuộc Team công ty trên Apple) để nộp bản build lên App Store bình thường!</p>
+</body>
+</html>
