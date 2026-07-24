@@ -3,12 +3,14 @@ import { colors, radius, spacing } from '@/styles/global';
 import { LOCALURL } from '@/utils/api';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text, TouchableOpacity,
@@ -21,6 +23,33 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const { user_info, user_hr_info, logout_user } = useFeedback();
   const [deleting, set_deleting] = useState(false);
+
+  const handle_notification_settings = async () => {
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status === 'granted') {
+        Alert.alert(
+          'Trạng thái Thông báo',
+          'Quyền nhận thông báo đang ĐƯỢC BẬT. Bạn sẽ nhận được các thông điệp cập nhật mới nhất từ hệ thống.',
+          [
+            { text: 'Đóng', style: 'cancel' },
+            { text: 'Mở Cài đặt máy', onPress: () => Linking.openSettings() }
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Thông báo đang tắt',
+          'Ứng dụng hiện chưa được cấp quyền gửi thông báo. Bạn có muốn mở Cài đặt thiết bị để bật lại không?',
+          [
+            { text: 'Để sau', style: 'cancel' },
+            { text: 'Mở Cài đặt', onPress: () => Linking.openSettings() }
+          ]
+        );
+      }
+    } catch (e) {
+      Linking.openSettings();
+    }
+  };
 
   const handle_delete_account = () => {
     Alert.alert(
@@ -113,9 +142,19 @@ export default function AccountScreen() {
 
         {/* Menu Items */}
         <View style={styles.menu_section}>
-          <TouchableOpacity style={styles.menu_item} onPress={() => router.push('/terms' as any)}>
+          <TouchableOpacity style={styles.menu_item} onPress={handle_notification_settings}>
             <View style={[styles.menu_icon_bg, { backgroundColor: colors.primaryLight }]}>
-              <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+              <Ionicons name="notifications-outline" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.menu_text}>Cài đặt Thông báo</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textCaption} />
+          </TouchableOpacity>
+
+          <View style={styles.menu_divider} />
+
+          <TouchableOpacity style={styles.menu_item} onPress={() => router.push('/terms' as any)}>
+            <View style={[styles.menu_icon_bg, { backgroundColor: '#e0f2fe' }]}>
+              <Ionicons name="document-text-outline" size={20} color="#0284c7" />
             </View>
             <Text style={styles.menu_text}>Điều khoản & Chính sách</Text>
             <Ionicons name="chevron-forward" size={18} color={colors.textCaption} />

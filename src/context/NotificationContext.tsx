@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { LOCALURL } from '@/utils/api';
 import { useFeedback } from './FeedbackContext';
-// import * as Notifications from 'expo-notifications';
-import { AppState, AppStateStatus } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 
 export interface AppNotification {
   id: number;
@@ -78,13 +79,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setUnreadCount(prev => Math.max(0, prev - ids.length));
 
     try {
-      for (const id of ids) {
-        await fetch(`${LOCALURL}/post_data/expo_insert_mark_notification_read/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify([{ id: id }]),
-        });
-      }
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`${LOCALURL}/post_data/expo_insert_mark_notification_read/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([{ id }]),
+          })
+        )
+      );
     } catch (error) {
       console.error('Error marking as read:', error);
       // Revert optimistic update? Or let it be since it's just read status.
@@ -108,11 +111,61 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  // Register Push Token with Backend API
+  const register_push_token_async = useCallback(async (manv: string) => {
+    if (!manv) return;
+
+    try {
+      // 1. Xin quyền thông báo
+      const { status: existing_status } = await Notifications.getPermissionsAsync();
+      let final_status = existing_status;
+
+      if (existing_status !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        final_status = status;
+      }
+
+      if (final_status !== 'granted') {
+        console.log('[NotificationContext] Permission not granted for push notifications!');
+        return;
+      }
+
+      // 2. Cấu hình Channel cho Android
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'Thông báo hệ thống',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#00A79D',
+        });
+      }
+
+      // 3. Lấy Expo Push Token
+      const project_id = Constants.expoConfig?.extra?.eas?.projectId;
+      const token_data = await Notifications.getExpoPushTokenAsync({
+        projectId: project_id,
+      });
+
+      const push_token = token_data.data;
+      console.log('[NotificationContext] Generated Push Token:', push_token);
+
+      // 4. Lưu Push Token về Backend PostgreSQL
+      await fetch(`${LOCALURL}/post_data/expo_insert_push_token/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([{ manv, push_token, platform: Platform.OS }]),
+      });
+    } catch (error) {
+      console.error('[NotificationContext] Error registering push token:', error);
+    }
+  }, []);
+
   // Poll for unread count when app is in foreground and user is logged in
   useEffect(() => {
     if (!user_info?.manv) return;
 
-    // Initial fetch
+    // Initial fetch & Register Push Token
+    register_push_token_async(user_info.manv);
     refresh_unread_count(user_info.manv);
 
     const interval = setInterval(() => {
@@ -123,6 +176,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        register_push_token_async(user_info.manv);
         refresh_unread_count(user_info.manv);
       }
       appState.current = nextAppState;
@@ -137,18 +191,26 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Listen for incoming notifications while app is in foreground
   useEffect(() => {
     if (!user_info?.manv) return;
-    
-    // Push notifications temporarily disabled.
-    /*
-    const notificationListener = Notifications.addNotificationReceivedListener(() => {
-      // Refresh count when a new push is received
-      refresh_unread_count(user_info.manv);
-    });
+
+    let notificationListener: any;
+    let responseListener: any;
+
+    try {
+      notificationListener = Notifications.addNotificationReceivedListener(() => {
+        refresh_unread_count(user_info.manv);
+      });
+
+      responseListener = Notifications.addNotificationResponseReceivedListener(() => {
+        refresh_unread_count(user_info.manv);
+      });
+    } catch (e) {
+      console.log('Notification listener setup error:', e);
+    }
 
     return () => {
-      notificationListener.remove();
+      if (notificationListener) notificationListener.remove();
+      if (responseListener) responseListener.remove();
     };
-    */
   }, [user_info?.manv, refresh_unread_count]);
 
   return (

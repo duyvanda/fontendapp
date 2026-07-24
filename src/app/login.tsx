@@ -50,7 +50,7 @@ export default function LoginScreen() {
     // set_rp_screen,
   } = useFeedback();
 
-  const [tenant_id, set_tenant_id] = useState('');
+  const [tenant_id, set_tenant_id] = useState('merap');
   const [email, set_email] = useState('');
   const [password, set_password] = useState('');
   const [is_tenant_focused, set_is_tenant_focused] = useState(false);
@@ -71,6 +71,10 @@ export default function LoginScreen() {
         } else {
           router.replace('/(tabs)');
         }
+      } else {
+        setTimeout(() => {
+          email_input_ref.current?.focus();
+        }, 100);
       }
     })();
   }, [user_info, router, params.redirect]);
@@ -130,6 +134,7 @@ export default function LoginScreen() {
 
         {/* Login Card */}
         <View style={styles.card}>
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>
               Mã tổ chức <Text style={{ color: colors.error }}>*</Text>
@@ -148,7 +153,7 @@ export default function LoginScreen() {
               <TextInput
                 ref={tenant_input_ref}
                 style={styles.input}
-                placeholder="Ví dụ: demo"
+                placeholder="Nhập mã tổ chức"
                 placeholderTextColor={colors.textCaption}
                 value={tenant_id}
                 onChangeText={(text) => {
@@ -161,6 +166,8 @@ export default function LoginScreen() {
                 returnKeyType="next"
                 onSubmitEditing={() => email_input_ref.current?.focus()}
                 blurOnSubmit={false}
+                autoComplete="off"
+                textContentType="none"
               />
             </View>
           </View>
@@ -196,7 +203,7 @@ export default function LoginScreen() {
                 returnKeyType="next"
                 onSubmitEditing={() => password_input_ref.current?.focus()}
                 blurOnSubmit={false}
-                keyboardType="email-address"
+                keyboardType="default"
                 autoComplete="off"
                 textContentType="none"
               />
