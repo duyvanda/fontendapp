@@ -133,20 +133,20 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout_user = async () => {
     // 1. Hủy đăng ký Push Token trước khi xóa dữ liệu user
     if (user_info?.manv) {
-      try {
-        const push_token = await get_push_token();
-        if (push_token) {
+      const push_token = await get_push_token();
+      if (push_token) {
+        try {
           await fetch(`${LOCALURL}/post_data/expo_push_token_unregister/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify([{ manv: user_info.manv, token: push_token }]),
           });
-          
-          // Xóa token local để tránh lỗi security cho user sau
+        } catch (error) {
+          console.error('Lỗi khi unregister push token lúc logout:', error);
+        } finally {
+          // Xóa token local để tránh giữ token cũ
           await remove_push_token();
         }
-      } catch (error) {
-        console.error('Lỗi khi unregister push token lúc logout:', error);
       }
     }
 

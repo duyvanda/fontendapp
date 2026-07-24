@@ -5,8 +5,10 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
+import { router } from 'expo-router';
 import { get_push_token, save_push_token } from '../storage/notification';
 import { useFeedback } from './FeedbackContext';
+import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
 
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
@@ -36,7 +38,7 @@ const NotificationContext = createContext<NotificationContextValue>({} as Notifi
 export const useNotification = () => useContext(NotificationContext);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user_info } = useFeedback();
+  const { user_info, reports } = useFeedback();
   const [notifications, set_notifications] = useState<AppNotification[]>([]);
   const [unread_count, set_unread_count] = useState(0);
   const [loading, set_loading] = useState(false);
@@ -81,15 +83,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const mark_as_read = async (ids: number[]) => {
     if (!user_info?.manv || ids.length === 0) return;
 
-    // Optimistic update
-    const unread_ids = notifications.filter(n => ids.includes(n.id) && !n.is_read).length;
-    set_notifications(prev => prev.map(n =>
-      ids.includes(n.id) ? { ...n, is_read: true } : n
-    ));
-    const new_count = Math.max(0, unread_count - unread_ids);
-    set_unread_count(new_count);
-    // Đồng bộ badge icon app: giảm dần khi đọc từng cái, về 0 khi đọc hết
-    await Notifications.setBadgeCountAsync(new_count);
+    // Optimistic update using functional state update to prevent race conditions
+    set_notifications(prev => {
+      const updated = prev.map(n => (ids.includes(n.id) ? { ...n, is_read: true } : n));
+      const remaining_unread = updated.filter(n => !n.is_read).length;
+      
+      set_unread_count(remaining_unread);
+      Notifications.setBadgeCountAsync(remaining_unread);
+      
+      return updated;
+    });
 
     try {
       await fetch(`${LOCALURL}/post_data/expo_insert_mark_notification_read/`, {
@@ -217,10 +220,54 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [setup_push_token]);
 
-  // Lấy token và xin quyền ngay khi app vừa mở lên (để sẵn đó)
+  // Điều hướng deep-link sang màn hình báo cáo khi bấm thông báo
+  const navigate_to_report = useCallback((report_stt: string) => {
+    if (!report_stt) return;
+    const report = reports?.find(r => String(r.stt) === String(report_stt));
+    if (report) {
+      if (Number(report.type) === 4 || report.stt in NATIVE_REPORTS_MAP) {
+        router.push(`/report/native/${report_stt}` as any);
+      } else if (report.link_report?.startsWith('/realtime')) {
+        router.push(`/realtime/${report_stt}` as any);
+      } else {
+        router.push(`/report/${report_stt}` as any);
+      }
+    } else {
+      if (report_stt in NATIVE_REPORTS_MAP) {
+        router.push(`/report/native/${report_stt}` as any);
+      } else {
+        router.push(`/report/${report_stt}` as any);
+      }
+    }
+  }, [reports]);
+
+  const handle_notification_response = useCallback((response: Notifications.NotificationResponse) => {
+    if (user_info?.manv) {
+      refresh_unread_count(user_info.manv);
+    }
+    const data = response?.notification?.request?.content?.data;
+    if (data && data.report_stt) {
+      navigate_to_report(String(data.report_stt));
+    }
+  }, [user_info?.manv, refresh_unread_count, navigate_to_report]);
+
+  // Xử lý deep-linking cho trường hợp App bị tắt hẳn (Killed State)
+  const last_response = Notifications.useLastNotificationResponse();
+  const handled_last_response_id = useRef<string | null>(null);
+
   useEffect(() => {
-    setup_push_token();
-  }, [setup_push_token]);
+    if (
+      last_response &&
+      last_response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER &&
+      user_info?.manv
+    ) {
+      const response_id = last_response.notification.request.identifier;
+      if (handled_last_response_id.current !== response_id) {
+        handled_last_response_id.current = response_id;
+        handle_notification_response(last_response);
+      }
+    }
+  }, [last_response, user_info?.manv, handle_notification_response]);
 
   // Poll for unread count when app is in foreground and user is logged in
   useEffect(() => {
@@ -250,7 +297,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   }, [user_info?.manv, refresh_unread_count, register_push_token_async]);
 
-  // Listen for incoming notifications while app is in foreground
+  // Listen for incoming notifications while app is in foreground / background
   useEffect(() => {
     if (!user_info?.manv) return;
 
@@ -262,8 +309,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         refresh_unread_count(user_info.manv);
       });
 
-      response_listener = Notifications.addNotificationResponseReceivedListener(() => {
-        refresh_unread_count(user_info.manv);
+      response_listener = Notifications.addNotificationResponseReceivedListener((response) => {
+        handle_notification_response(response);
       });
     } catch (e) {
       console.log('Notification listener setup error:', e);
@@ -273,7 +320,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (notification_listener) notification_listener.remove();
       if (response_listener) response_listener.remove();
     };
-  }, [user_info?.manv, refresh_unread_count]);
+  }, [user_info?.manv, refresh_unread_count, handle_notification_response]);
 
   return (
     <NotificationContext.Provider
