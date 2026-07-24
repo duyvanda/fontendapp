@@ -1,10 +1,15 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+
+
 import { LOCALURL } from '@/utils/api';
-import { useFeedback } from './FeedbackContext';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
-import { save_push_token, get_push_token } from '../storage/notification';
+import { get_push_token, save_push_token } from '../storage/notification';
+import { useFeedback } from './FeedbackContext';
+
+import * as Application from 'expo-application';
+import * as Device from 'expo-device';
 
 export interface AppNotification {
   id: number;
@@ -35,7 +40,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [notifications, set_notifications] = useState<AppNotification[]>([]);
   const [unread_count, set_unread_count] = useState(0);
   const [loading, set_loading] = useState(false);
-  
+
   const app_state = useRef(AppState.currentState);
 
   const fetch_notifications = useCallback(async (manv: string) => {
@@ -63,7 +68,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const response = await fetch(`${LOCALURL}/get_data/expo_get_unread_notifications_count/?manv=${manv}`);
       const data = await response.json();
       if (response.ok && data.status === 'ok' && data.rows_data && data.rows_data.length > 0) {
-        set_unread_count(data.rows_data[0].unread_count || 0);
+        const count = data.rows_data[0].unread_count || 0;
+        set_unread_count(count);
+        // Đồng bộ badge icon app với unread_count thực từ server
+        await Notifications.setBadgeCountAsync(count);
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
@@ -72,13 +80,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const mark_as_read = async (ids: number[]) => {
     if (!user_info?.manv || ids.length === 0) return;
-    
+
     // Optimistic update
     const unread_ids = notifications.filter(n => ids.includes(n.id) && !n.is_read).length;
-    set_notifications(prev => prev.map(n => 
+    set_notifications(prev => prev.map(n =>
       ids.includes(n.id) ? { ...n, is_read: true } : n
     ));
-    set_unread_count(prev => Math.max(0, prev - unread_ids));
+    const new_count = Math.max(0, unread_count - unread_ids);
+    set_unread_count(new_count);
+    // Đồng bộ badge icon app: giảm dần khi đọc từng cái, về 0 khi đọc hết
+    await Notifications.setBadgeCountAsync(new_count);
 
     try {
       await fetch(`${LOCALURL}/post_data/expo_insert_mark_notification_read/`, {
@@ -94,9 +105,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const mark_all_read = async (manv: string) => {
     if (!manv) return;
-    
+
     set_notifications(prev => prev.map(n => ({ ...n, is_read: true })));
     set_unread_count(0);
+    // Xóa badge trên icon app
+    await Notifications.setBadgeCountAsync(0);
 
     try {
       await fetch(`${LOCALURL}/post_data/expo_insert_mark_all_notifications_read/`, {
@@ -144,7 +157,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       const push_token = token_data.data;
       console.log('[NotificationContext] Generated Push Token:', push_token);
-      
+
       // Lưu xuống Storage
       await save_push_token(push_token);
       return push_token;
@@ -166,11 +179,38 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (!push_token) return;
 
-      // 4. Lưu Push Token về Backend PostgreSQL
+      // 4. Thu thập toàn bộ thông tin thiết bị chi tiết
+      const brand = Device.brand || '';
+      const model_name = Device.modelName || '';
+      const device_name = await Device.getDeviceNameAsync() || '';
+      const os_name = Device.osName || Platform.OS;
+      const os_version = Device.osVersion || String(Platform.Version);
+      const app_version = Application.nativeApplicationVersion || Constants.expoConfig?.version || '1.0.0';
+      const build_number = Application.nativeBuildVersion || '1';
+      const is_device = Device.isDevice;
+
+      const device_info = {
+        platform: Platform.OS,
+        brand,
+        model_name,
+        device_name,
+        os_name,
+        os_version,
+        app_version,
+        build_number,
+        is_device,
+      };
+
+      // 5. Lưu Push Token & device_info (JSONB) về Backend PostgreSQL
       await fetch(`${LOCALURL}/post_data/expo_push_token_register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ manv, token: push_token, platform: Platform.OS }]),
+        body: JSON.stringify([{
+          manv,
+          token: push_token,
+          platform: Platform.OS,
+          device_info,
+        }]),
       });
     } catch (error) {
       console.error('[NotificationContext] Error registering push token:', error);

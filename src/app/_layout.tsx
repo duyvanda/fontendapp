@@ -64,6 +64,13 @@ export default function RootLayout() {
     // Fast check on app startup
     check_and_apply_update(true);
 
+    // TODO [OTA Background Resume]: Hiện tại khi app resume từ background,
+    // nếu có OTA mới sẽ reloadAsync() mà KHÔNG hiện splash loading → app restart đột ngột.
+    // Cần fix theo Cách A:
+    //   1. Check ngầm → nếu CÓ update → set_is_checking_update(true) để hiện splash overlay
+    //   2. Hiện text "Đang tải bản cập nhật mới..." → fetchUpdateAsync()
+    //   3. Hiện text "Đang áp dụng..." → reloadAsync()
+    //   4. Nếu KHÔNG có update → user dùng bình thường, không thấy gì
     // Silent background check on app resume from background
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
