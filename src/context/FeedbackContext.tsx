@@ -19,8 +19,7 @@ import {
 } from '@/storage/auth';
 import { API_BASE_URL, LOCALURL, REPORTS_API_URL, apiFetch } from '@/utils/api';
 import { get_version } from '@/utils/string';
-//import { registerForPushNotificationsAsync, unregisterPushToken } from '@/utils/notifications';
-
+import { get_push_token, remove_push_token } from '@/storage/notification';
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 export interface Report {
@@ -132,6 +131,26 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // ── Auth: Logout ───────────────────────────────────────────────────────────
   const logout_user = async () => {
+    // 1. Hủy đăng ký Push Token trước khi xóa dữ liệu user
+    if (user_info?.manv) {
+      try {
+        const push_token = await get_push_token();
+        if (push_token) {
+          await fetch(`${LOCALURL}/post_data/expo_push_token_unregister/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([{ manv: user_info.manv, token: push_token }]),
+          });
+          
+          // Xóa token local để tránh lỗi security cho user sau
+          await remove_push_token();
+        }
+      } catch (error) {
+        console.error('Lỗi khi unregister push token lúc logout:', error);
+      }
+    }
+
+    // 2. Xóa toàn bộ dữ liệu phiên
     await clear_all_auth();
     set_user_info(null);
     set_user_hr_info(null);

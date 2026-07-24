@@ -3,7 +3,8 @@ import { LOCALURL } from '@/utils/api';
 import { useFeedback } from './FeedbackContext';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
-import { AppState, AppStateStatus, Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
+import { save_push_token, get_push_token } from '../storage/notification';
 
 export interface AppNotification {
   id: number;
@@ -31,15 +32,15 @@ export const useNotification = () => useContext(NotificationContext);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user_info } = useFeedback();
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [unread_count, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [notifications, set_notifications] = useState<AppNotification[]>([]);
+  const [unread_count, set_unread_count] = useState(0);
+  const [loading, set_loading] = useState(false);
   
-  const appState = useRef(AppState.currentState);
+  const app_state = useRef(AppState.currentState);
 
   const fetch_notifications = useCallback(async (manv: string) => {
     if (!manv) return;
-    setLoading(true);
+    set_loading(true);
     try {
       console.log('[NotificationContext] Fetching notifications for manv:', manv);
       const response = await fetch(`${LOCALURL}/get_data/expo_get_notifications/?manv=${manv}`);
@@ -47,12 +48,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('[NotificationContext] API Response data:', JSON.stringify(data));
       if (response.ok && data.status === 'ok') {
         console.log('[NotificationContext] Setting notifications state with:', data.rows_data?.length || 0, 'items');
-        setNotifications(data.rows_data || []);
+        set_notifications(data.rows_data || []);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
-      setLoading(false);
+      set_loading(false);
     }
   }, []);
 
@@ -62,7 +63,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const response = await fetch(`${LOCALURL}/get_data/expo_get_unread_notifications_count/?manv=${manv}`);
       const data = await response.json();
       if (response.ok && data.status === 'ok' && data.rows_data && data.rows_data.length > 0) {
-        setUnreadCount(data.rows_data[0].unread_count || 0);
+        set_unread_count(data.rows_data[0].unread_count || 0);
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
@@ -73,21 +74,18 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user_info?.manv || ids.length === 0) return;
     
     // Optimistic update
-    setNotifications(prev => prev.map(n => 
+    const unread_ids = notifications.filter(n => ids.includes(n.id) && !n.is_read).length;
+    set_notifications(prev => prev.map(n => 
       ids.includes(n.id) ? { ...n, is_read: true } : n
     ));
-    setUnreadCount(prev => Math.max(0, prev - ids.length));
+    set_unread_count(prev => Math.max(0, prev - unread_ids));
 
     try {
-      await Promise.all(
-        ids.map((id) =>
-          fetch(`${LOCALURL}/post_data/expo_insert_mark_notification_read/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify([{ id }]),
-          })
-        )
-      );
+      await fetch(`${LOCALURL}/post_data/expo_insert_mark_notification_read/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ids.map(id => ({ id }))),
+      });
     } catch (error) {
       console.error('Error marking as read:', error);
       // Revert optimistic update? Or let it be since it's just read status.
@@ -97,8 +95,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const mark_all_read = async (manv: string) => {
     if (!manv) return;
     
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-    setUnreadCount(0);
+    set_notifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    set_unread_count(0);
 
     try {
       await fetch(`${LOCALURL}/post_data/expo_insert_mark_all_notifications_read/`, {
@@ -111,10 +109,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // Register Push Token with Backend API
-  const register_push_token_async = useCallback(async (manv: string) => {
-    if (!manv) return;
-
+  // Lấy và lưu Token cục bộ (Có thể gọi trước khi login)
+  const setup_push_token = useCallback(async () => {
     try {
       // 1. Xin quyền thông báo
       const { status: existing_status } = await Notifications.getPermissionsAsync();
@@ -127,7 +123,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (final_status !== 'granted') {
         console.log('[NotificationContext] Permission not granted for push notifications!');
-        return;
+        return null;
       }
 
       // 2. Cấu hình Channel cho Android
@@ -148,17 +144,43 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       const push_token = token_data.data;
       console.log('[NotificationContext] Generated Push Token:', push_token);
+      
+      // Lưu xuống Storage
+      await save_push_token(push_token);
+      return push_token;
+    } catch (error) {
+      console.error('[NotificationContext] Error setting up push token:', error);
+      return null;
+    }
+  }, []);
+
+  // Register Push Token with Backend API (Khi login thành công)
+  const register_push_token_async = useCallback(async (manv: string) => {
+    if (!manv) return;
+
+    try {
+      let push_token = await get_push_token();
+      if (!push_token) {
+        push_token = await setup_push_token();
+      }
+
+      if (!push_token) return;
 
       // 4. Lưu Push Token về Backend PostgreSQL
-      await fetch(`${LOCALURL}/post_data/expo_insert_push_token/`, {
+      await fetch(`${LOCALURL}/post_data/expo_push_token_register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ manv, push_token, platform: Platform.OS }]),
+        body: JSON.stringify([{ manv, token: push_token, platform: Platform.OS }]),
       });
     } catch (error) {
       console.error('[NotificationContext] Error registering push token:', error);
     }
-  }, []);
+  }, [setup_push_token]);
+
+  // Lấy token và xin quyền ngay khi app vừa mở lên (để sẵn đó)
+  useEffect(() => {
+    setup_push_token();
+  }, [setup_push_token]);
 
   // Poll for unread count when app is in foreground and user is logged in
   useEffect(() => {
@@ -169,38 +191,38 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     refresh_unread_count(user_info.manv);
 
     const interval = setInterval(() => {
-      if (appState.current === 'active') {
+      if (app_state.current === 'active') {
         refresh_unread_count(user_info.manv);
       }
     }, 60000); // Check every 60s
 
     const subscription = AppState.addEventListener('change', nextAppState => {
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+      if (app_state.current.match(/inactive|background/) && nextAppState === 'active') {
         register_push_token_async(user_info.manv);
         refresh_unread_count(user_info.manv);
       }
-      appState.current = nextAppState;
+      app_state.current = nextAppState;
     });
 
     return () => {
       clearInterval(interval);
       subscription.remove();
     };
-  }, [user_info?.manv, refresh_unread_count]);
+  }, [user_info?.manv, refresh_unread_count, register_push_token_async]);
 
   // Listen for incoming notifications while app is in foreground
   useEffect(() => {
     if (!user_info?.manv) return;
 
-    let notificationListener: any;
-    let responseListener: any;
+    let notification_listener: any;
+    let response_listener: any;
 
     try {
-      notificationListener = Notifications.addNotificationReceivedListener(() => {
+      notification_listener = Notifications.addNotificationReceivedListener(() => {
         refresh_unread_count(user_info.manv);
       });
 
-      responseListener = Notifications.addNotificationResponseReceivedListener(() => {
+      response_listener = Notifications.addNotificationResponseReceivedListener(() => {
         refresh_unread_count(user_info.manv);
       });
     } catch (e) {
@@ -208,8 +230,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     return () => {
-      if (notificationListener) notificationListener.remove();
-      if (responseListener) responseListener.remove();
+      if (notification_listener) notification_listener.remove();
+      if (response_listener) response_listener.remove();
     };
   }, [user_info?.manv, refresh_unread_count]);
 
