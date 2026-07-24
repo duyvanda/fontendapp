@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.duyvanda.biportal",
+      "deploymentTarget": "15.2",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Cho phép chụp ảnh để đính kèm vào câu hỏi và phân tích dữ liệu.",

@@ -24,57 +24,57 @@
 
 ---
 
-## PHASE 1 — App khởi động (Chưa cần Login)
+## PHASE 1 — App khởi động & Gatekeeper Splash (Chưa bật Popup)
 
 ```
-App mở
+App mở → Màn hình Splash Router (/index.tsx)
   │
   ├─► _layout.tsx: Notifications.setNotificationHandler()
   │     └─ Cấu hình foreground: shouldShowAlert, shouldPlaySound, shouldSetBadge = true
   │
-  └─► NotificationProvider mount
-        └─► useEffect → setup_push_token()
-              ├─ Gọi getPermissionsAsync()
-              │    ├─ Nếu chưa có quyền → requestPermissionsAsync() → Popup OS cho user chọn
-              │    └─ Nếu đã có quyền → tiếp tục
-              ├─ Android: setNotificationChannelAsync('default', MAX importance)
-              ├─ Gọi getExpoPushTokenAsync({ projectId })
-              │    └─ Trả về: ExponentPushToken[xxxxxxxxxx]
-              └─ Lưu token vào AsyncStorage (save_push_token)
-                   └─ Token sẵn sàng, chờ login để gửi lên server
+  └─► Màn Splash (/index.tsx): Đọc get_user_info() từ AsyncStorage
+        ├─ Chưa đăng nhập (null) → Điều hướng sang màn /login (Không xin quyền Push)
+        └─ Đã đăng nhập (stored_user) → Fade-out 300ms → Điều hướng sang /(tabs) (Trang chủ)
 ```
 
 ---
 
-## PHASE 2 — Login thành công
+## PHASE 2 — Đã đăng nhập & Xin quyền Push Notification tại Trang chủ `/(tabs)`
 
 ```
-User đăng nhập → FeedbackContext.login_user() thành công
+User đã đăng nhập thành công (hoặc Auto-login vào Trang chủ /(tabs))
   │
-  └─► set_user_info(data) → user_info.manv có giá trị
+  └─► user_info.manv có giá trị
         │
         └─► NotificationProvider phát hiện user_info.manv thay đổi
               └─► useEffect([user_info?.manv]) kích hoạt:
                     │
                     ├─► register_push_token_async(manv)
                     │     ├─ Lấy token từ AsyncStorage (get_push_token)
-                    │     │    └─ Nếu null → gọi lại setup_push_token()
-                    │     ├─ Thu thập device_info:
-                    │     │    ├─ Device.brand, Device.modelName
-                    │     │    ├─ Device.getDeviceNameAsync()  ← async!
-                    │     │    ├─ Device.osName, Device.osVersion
-                    │     │    ├─ Application.nativeApplicationVersion
-                    │     │    ├─ Application.nativeBuildVersion
-                    │     │    └─ Device.isDevice
+                    │     ├─ Nếu NULL (chưa có token local):
+                    │     │    └─ Gọi setup_push_token():
+                    │     │         ├─ getPermissionsAsync()
+                    │     │         ├─ Nếu chưa granted → requestPermissionsAsync()
+                    │     │         │    └─ 🔔 POPUP HỆ ĐIỀU HÀNH BẬT LÊN XIN QUYỀN TẠI TRANG CHỦ /(tabs)
+                    │     │         ├─ Android: setNotificationChannelAsync('default', MAX importance)
+                    │     │         ├─ getExpoPushTokenAsync({ projectId })
+                    │     │         └─ save_push_token(push_token) xuống AsyncStorage
+                    │     │
+                    │     ├─ Thu thập device_info (brand, model, os_name, os_version, app_version...)
                     │     └─ POST /post_data/expo_push_token_register/
                     │          Body: [{ manv, token, platform, device_info }]
                     │          → DB: INSERT/UPDATE expo_push_tokens (upsert by manv)
-                    │          → Nếu token cũ đang gắn với user khác → DELETE trước
                     │
                     ├─► refresh_unread_count(manv)
                     │     ├─ GET /get_data/expo_get_unread_notifications_count/?manv=xxx
                     │     ├─ set_unread_count(count)
                     │     └─ Notifications.setBadgeCountAsync(count) ← Đồng bộ badge icon
+                    │
+                    ├─► Xử lý Killed State Deep-linking (Notifications.useLastNotificationResponse):
+                    │     └─ Nếu user bấm Banner khi App bị tắt hẳn (Killed State):
+                    │           ├─ Lấy response từ useLastNotificationResponse()
+                    │           ├─ dùng handled_last_response_id (useRef) chặn duplicate navigation
+                    │           └─ handle_notification_response() → navigate_to_report(report_stt)
                     │
                     ├─► setInterval(60s):
                     │     └─ Nếu app đang active → refresh_unread_count(manv)
@@ -88,7 +88,7 @@ User đăng nhập → FeedbackContext.login_user() thành công
                     │     └─ Nhận push khi app đang foreground → refresh_unread_count()
                     │
                     └─► addNotificationResponseReceivedListener:
-                          └─ User bấm vào notification banner → refresh_unread_count()
+                          └─ User bấm vào notification banner → handle_notification_response() → navigate_to_report()
 ```
 
 ---

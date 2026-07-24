@@ -115,7 +115,7 @@ Accounts are provisioned by organization administrators.
 ### 6.4 Review Notes
 ```
 DEMO ACCOUNT:
-- Organization Code: demo
+- Organization Code: merap
 - Username: DEMO_APPLE
 - Password: Demo@12345
 

@@ -84,15 +84,15 @@ sequenceDiagram
             User-->>ExpoNoti: Allowed (Đồng ý)
             NotiCtx->>ExpoNoti: Lấy Push Token (getExpoPushTokenAsync)
             ExpoNoti-->>NotiCtx: Trả về ExponentPushToken[xxxxxxxxxxxx]
-            NotiCtx->>Backend: Gửi POST /post_data/expo_insert_push_token/ (manv, push_token, platform)
-            Backend-->>NotiCtx: Lưu Token thành công vào PostgreSQL
+            NotiCtx->>Backend: Gửi POST /post_data/expo_push_token_register/ (manv, token, platform, device_info)
+            Backend-->>NotiCtx: Lưu/Cập nhật Token & Dữ liệu thiết bị vào PostgreSQL
         end
     end
 
     rect rgb(240, 248, 255)
         Note over NotiCtx, Backend: Lấy dữ liệu & Đếm số chưa đọc
         NotiCtx->>Backend: Fetch danh sách thông báo & unread_count
-        Backend-->>NotiCtx: Trả về unread_count -> Hiển thị Badge đỏ trên TabBar/Header
+        Backend-->>NotiCtx: Trả về unread_count -> Hiển thị Badge đỏ trên TabBar/Header & Icon App
     end
 
     rect rgb(250, 235, 255)
@@ -103,13 +103,22 @@ sequenceDiagram
         NotiCtx->>Backend: Tự động làm mới unread_count mới nhất
         User->>NotiCtx: Xem thông báo -> Bấm "Đánh dấu đã đọc"
         NotiCtx->>Backend: Gửi API expo_insert_mark_notification_read
-        NotiCtx->>User: Giảm số Badge trên UI lập tức (Optimistic Update)
+        NotiCtx->>User: Giảm số Badge trên UI & Icon App lập tức (Optimistic Update)
+    end
+
+    rect rgb(255, 235, 235)
+        Note over User, Backend: Logout (Đăng xuất)
+        User->>Auth: Bấm Đăng xuất (logout_user)
+        Auth->>Backend: Gửi POST /post_data/expo_push_token_unregister/ (manv, token)
+        Backend-->>Auth: Xóa Push Token khỏi database PostgreSQL
+        Auth->>Auth: Xóa token local khỏi AsyncStorage (remove_push_token)
     end
 ```
 
 ### Các file liên quan
-* [`src/context/NotificationContext.tsx`](file:///d:/django_apps/rest/fontendapp/src/context/NotificationContext.tsx#L112-L170): Chứa hàm `register_push_token_async`, cấu hình Android Notification Channel, lắng nghe `addNotificationReceivedListener` và xử lý API đếm chưa đọc (`unread_count`).
-* [`src/app/_layout.tsx`](file:///d:/django_apps/rest/fontendapp/src/app/_layout.tsx#L10-L17): Cấu hình `Notifications.setNotificationHandler` hiển thị banner, âm thanh và badge khi app đang mở (Foreground).
+* [`src/context/NotificationContext.tsx`](file:///d:/django_apps/rest/fontendapp/src/context/NotificationContext.tsx#L129-L221): Chứa hàm `setup_push_token`, `register_push_token_async` (thu thập `device_info`), cấu hình Android Notification Channel, lắng nghe Notification Listener và Deep-linking từ Killed State (`useLastNotificationResponse`).
+* [`src/context/FeedbackContext.tsx`](file:///d:/django_apps/rest/fontendapp/src/context/FeedbackContext.tsx#L133-L151): Chứa hàm `logout_user()` gọi API `expo_push_token_unregister` và dọn dẹp local token.
+* [`src/app/_layout.tsx`](file:///d:/django_apps/rest/fontendapp/src/app/_layout.tsx#L10-L19): Cấu hình `Notifications.setNotificationHandler` hiển thị banner, âm thanh và badge khi app đang mở (Foreground).
 
 ---
 
@@ -144,7 +153,7 @@ sequenceDiagram
 ```
 
 ### Các file liên quan
-* [`src/app/account.tsx`](file:///d:/django_apps/rest/fontendapp/src/app/account.tsx#L23-L47): Định nghĩa hàm `handle_notification_settings()` và nút bấm **"Cài đặt Thông báo"** tích hợp `Linking.openSettings()`.
+* [`src/app/account.tsx`](file:///d:/django_apps/rest/fontendapp/src/app/account.tsx#L27-L52): Định nghĩa hàm `handle_notification_settings()` và nút bấm **"Cài đặt Thông báo"** tích hợp `Linking.openSettings()`.
 
 ---
 
@@ -154,6 +163,7 @@ sequenceDiagram
 | :--- | :--- | :--- |
 | `/get_data/expo_get_notifications/?manv={manv}` | `GET` | Lấy danh sách thông báo của nhân viên |
 | `/get_data/expo_get_unread_notifications_count/?manv={manv}` | `GET` | Lấy số lượng thông báo chưa đọc |
-| `/post_data/expo_insert_push_token/` | `POST` | Lưu cặp `(manv, push_token, platform)` vào PostgreSQL |
-| `/post_data/expo_insert_mark_notification_read/` | `POST` | Đánh dấu 1 thông báo là đã đọc |
+| `/post_data/expo_push_token_register/` | `POST` | Đăng ký Push Token + `device_info` (JSONB) vào PostgreSQL |
+| `/post_data/expo_push_token_unregister/` | `POST` | Hủy đăng ký Push Token khi người dùng Đăng xuất (Logout) |
+| `/post_data/expo_insert_mark_notification_read/` | `POST` | Đánh dấu các thông báo là đã đọc (gửi mảng ids) |
 | `/post_data/expo_insert_mark_all_notifications_read/` | `POST` | Đánh dấu tất cả thông báo của nhân viên là đã đọc |
