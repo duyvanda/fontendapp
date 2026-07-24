@@ -120,6 +120,7 @@ export default function CloudAssist() {
 
   const handle_new_chat = async () => {
     if (!session_id) return;
+    await clear_messages(session_id); // Xóa data cũ khỏi AsyncStorage
     const new_session = get_id();
     await save_bira_session_id(new_session);
     set_session_id(new_session);

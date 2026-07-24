@@ -24,6 +24,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 
 # Build preview (KHÔNG TỰ Ý BẤM)
 - **Build APK preview**: `eas build --profile preview --platform android`
+- **Check config**: `eas config --platform ios --profile production`
 - **Build TestFlight iOS (Auto Submit)**: `eas build --platform ios --profile production --auto-submit`
 - **OTA Update**: `eas update --channel preview --environment preview --message "Update text"`
 - **OTA production update**: `eas update --channel production --environment production --message "Update text"`
