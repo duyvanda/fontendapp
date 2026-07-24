@@ -4,18 +4,20 @@ import { Animated, Dimensions, Platform, Text, TouchableOpacity, useWindowDimens
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Reanimated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 interface ReportWebViewProps {
   uri: string;
+  on_orientation_change?: (is_landscape: boolean) => void;
 }
 
 const ZOOM_MIN = 1.0;
 const ZOOM_MAX = 2.0;
 const BTN_PANEL_W = 38;
-const BTN_PANEL_H = 38;
+const BTN_PANEL_H = 84;
 
 // Tạo HTML wrapper chứa iframe
 function make_html(looker_url: string): string {
@@ -182,7 +184,7 @@ function make_html(looker_url: string): string {
 </html>`;
 }
 
-export default function ReportWebView({ uri }: ReportWebViewProps) {
+export default function ReportWebView({ uri, on_orientation_change }: ReportWebViewProps) {
   const [webview_loaded, set_webview_loaded] = useState(false);
   const [webview_key, set_webview_key] = useState(0);
   const [zoom_level, set_zoom_level] = useState(ZOOM_MIN);
@@ -345,6 +347,43 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
     }
   };
 
+  const [is_landscape, set_is_landscape] = useState(false);
+
+  const handle_toggle_orientation = async () => {
+    try {
+      const next_landscape = !is_landscape;
+
+      // Reset zoom & pan to 100% when changing orientation for clean viewport fit
+      native_scale.value = withSpring(ZOOM_MIN);
+      manual_pan_x.value = withSpring(0);
+      manual_pan_y.value = withSpring(0);
+      set_zoom_level(ZOOM_MIN);
+
+      if (is_landscape) {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      } else {
+        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+      }
+      set_is_landscape(next_landscape);
+      on_orientation_change?.(next_landscape);
+    } catch (e) {
+      console.error('Failed to change screen orientation:', e);
+    }
+  };
+
+  // Restores portrait orientation on screen exit / unmount safely
+  useEffect(() => {
+    return () => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+    };
+  }, []);
+
+  // Sync and re-anchor button position when screen dimensions change (e.g. on rotation)
+  useEffect(() => {
+    btn_x.value = screen_w - BTN_PANEL_W - 12;
+    btn_y.value = Math.max(4, Math.min(screen_h - BTN_PANEL_H - 60, btn_y.value));
+  }, [screen_w, screen_h]);
+
   useEffect(() => {
     Animated.timing(bar_width, { toValue: 85, duration: 8000, useNativeDriver: false }).start();
     const loop = Animated.loop(
@@ -432,29 +471,52 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
             </Reanimated.View>
           )}
 
-          {/* Panel nút tiện ích Chụp màn hình (kéo thả được) */}
+          {/* Panel nút tiện ích Chụp màn hình & Xoay màn hình (kéo thả được) */}
           {webview_loaded && (
             <GestureDetector gesture={pan_gesture}>
               <Reanimated.View style={btn_panel_style}>
-                <TouchableOpacity
-                  onPress={handle_screenshot}
-                  disabled={is_capturing}
-                  style={[{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    backgroundColor: 'rgba(0,0,0,0.55)',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3,
-                    elevation: 4,
-                  }, is_capturing && { opacity: 0.5 }]}
-                >
-                  <Ionicons name={is_capturing ? 'hourglass-outline' : 'camera'} size={19} color="#fff" />
-                </TouchableOpacity>
+                <View style={{ gap: 8, alignItems: 'center' }}>
+                  {/* Nút 1: Chụp màn hình */}
+                  <TouchableOpacity
+                    onPress={handle_screenshot}
+                    disabled={is_capturing}
+                    style={[{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 19,
+                      backgroundColor: 'rgba(0,0,0,0.55)',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 3,
+                      elevation: 4,
+                    }, is_capturing && { opacity: 0.5 }]}
+                  >
+                    <Ionicons name={is_capturing ? 'hourglass-outline' : 'camera'} size={19} color="#fff" />
+                  </TouchableOpacity>
+
+                  {/* Nút 2: Xoay màn hình (TikTok style) */}
+                  <TouchableOpacity
+                    onPress={handle_toggle_orientation}
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 19,
+                      backgroundColor: is_landscape ? '#00A79D' : 'rgba(0,0,0,0.55)',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 3,
+                      elevation: 4,
+                    }}
+                  >
+                    <MaterialIcons name="screen-rotation" size={20} color="#fff" />
+                  </TouchableOpacity>
+                </View>
               </Reanimated.View>
             </GestureDetector>
           )}

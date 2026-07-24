@@ -10,6 +10,7 @@ export default function StaticReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user_info, fetch_filter_reports, shared, loading, report_id, report_param, filter_reports } = useFeedback();
   const [initializedId, setInitializedId] = useState<string | null>(null);
+  const [is_landscape, set_is_landscape] = useState(false);
 
   useEffect(() => {
     if (user_info && id && initializedId !== id) {
@@ -25,7 +26,9 @@ export default function StaticReportScreen() {
 
   return (
     <View style={globalStyles.screen}>
-      <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} show_back />
+      {!is_landscape && (
+        <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} show_back />
+      )}
       
       <Modal transparent={true} visible={loading} animationType="fade" statusBarTranslucent={true}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>
@@ -39,6 +42,7 @@ export default function StaticReportScreen() {
       {shared ? (
         <ReportWebView 
           uri={`https://datastudio.google.com/embed/reporting/${report_id}${report_param}`}
+          on_orientation_change={set_is_landscape}
         />
       ) : (
         <View style={globalStyles.emptyContainer}>

@@ -30,8 +30,15 @@
    * **iOS Footer Mask**: Đè thêm một thanh màu trắng `height: 20` ở đáy WebView trên iOS để che đi các liên kết điều khoản ẩn dưới của Looker.
    * **WebView Process Crash**: Sử dụng `onContentProcessDidTerminate` để tăng `webview_key`, tự động reload lại WebView khi tiến trình của hệ điều hành bị sập.
 
-8. **Kéo thả nút chụp ảnh màn hình**:
-   * Nút chụp ảnh có thể kéo thả tự do bằng cử chỉ Pan, giới hạn biên di chuyển cách mép màn hình tối thiểu 4px để không bị trôi ra ngoài.
+8. **Kéo thả cụm nút tiện ích (2-trong-1)**:
+   * Cụm nút bao gồm: Nút 1 (📸 Chụp ảnh) & Nút 2 (🔄 Xoay màn hình).
+   * Có thể kéo thả tự do bằng cử chỉ Pan. Khi xoay ngang/dọc màn hình (`screen_w` thay đổi), toạ độ `btn_x` tự động dính sát mép phải màn hình (`screen_w - BTN_PANEL_W - 12`).
+
+9. **Xoay màn hình TikTok-Style & Fullscreen Immersive**:
+   * Khóa cố định chiều dọc toàn hệ thống (`orientation: portrait` trong `app.json`).
+   * Sử dụng `expo-screen-orientation` với `OrientationLock.LANDSCAPE` cho phép xoay tự do 2 chiều (nghiêng trái/nghiêng phải).
+   * Luôn bọc `.catch(() => {})` cho `lockAsync` ở `useEffect` cleanup để đảm bảo khôi phục chiều dọc an toàn khi unmount.
+   * Truyền callback `on_orientation_change` để màn hình cha ẩn hoàn toàn `<CustomHeader>` khi ở chế độ ngang (`is_landscape === true`), nhường 100% diện tích chiều cao hiển thị báo cáo.
 
 ---
 

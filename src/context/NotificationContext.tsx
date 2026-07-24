@@ -185,7 +185,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // 4. Thu thập toàn bộ thông tin thiết bị chi tiết
       const brand = Device.brand || '';
       const model_name = Device.modelName || '';
-      const device_name = await Device.getDeviceNameAsync() || '';
+      const device_name = Device.deviceName || '';
       const os_name = Device.osName || Platform.OS;
       const os_version = Device.osVersion || String(Platform.Version);
       const app_version = Application.nativeApplicationVersion || Constants.expoConfig?.version || '1.0.0';

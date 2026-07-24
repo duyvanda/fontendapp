@@ -24,6 +24,7 @@ export default function RealtimeReportScreen() {
   const [paramsConfig, setParamsConfig] = useState<any[]>([]);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [initializedId, setInitializedId] = useState<string | null>(null);
+  const [is_landscape, set_is_landscape] = useState(false);
 
   useEffect(() => {
     if (user_info && id && initializedId !== id) {
@@ -60,7 +61,9 @@ export default function RealtimeReportScreen() {
 
   return (
     <View style={globalStyles.screen}>
-      <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} show_back />
+      {!is_landscape && (
+        <CustomHeader title={filter_reports?.tenreport || 'Chi tiết báo cáo'} show_back />
+      )}
       
       {/* Parameter input Modal */}
       <Modal visible={showParamModal} transparent={true} animationType="slide" statusBarTranslucent={true}>
@@ -112,6 +115,7 @@ export default function RealtimeReportScreen() {
       {shared ? (
         <ReportWebView 
           uri={`https://datastudio.google.com/embed/reporting/${report_id}${report_param}`}
+          on_orientation_change={set_is_landscape}
         />
       ) : !showParamModal ? (
         <View style={globalStyles.emptyContainer}>
