@@ -1,6 +1,6 @@
 import { colors, globalStyles } from '@/styles/global';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Platform, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Reanimated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
@@ -186,6 +186,7 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
   const [webview_loaded, set_webview_loaded] = useState(false);
   const [webview_key, set_webview_key] = useState(0);
   const [zoom_level, set_zoom_level] = useState(ZOOM_MIN);
+  const [is_capturing, set_is_capturing] = useState(false);
 
   const webview_ref = useRef<WebView>(null);
   const capture_view_ref = useRef<View>(null);
@@ -193,8 +194,7 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
   const overlay_opacity = useRef(new Animated.Value(1)).current;
   const bar_width = useRef(new Animated.Value(0)).current;
   const pulse_anim = useRef(new Animated.Value(0.3)).current;
-  const screen_w = Dimensions.get('window').width;
-  const screen_h = Dimensions.get('window').height;
+  const { width: screen_w, height: screen_h } = useWindowDimensions();
 
   // Native UIView scale
   const native_scale = useSharedValue(ZOOM_MIN);
@@ -329,15 +329,19 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
   }));
 
   const handle_screenshot = async () => {
+    if (is_capturing) return;
     try {
+      set_is_capturing(true);
       if (!capture_view_ref.current) return;
       const file_uri = await captureRef(capture_view_ref, {
-        format: 'png',
-        quality: 0.95,
+        format: 'jpg',
+        quality: 0.9,
       });
       await Sharing.shareAsync(file_uri);
     } catch (e) {
       console.error('Screenshot capture failed:', e);
+    } finally {
+      set_is_capturing(false);
     }
   };
 
@@ -434,7 +438,8 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
               <Reanimated.View style={btn_panel_style}>
                 <TouchableOpacity
                   onPress={handle_screenshot}
-                  style={{
+                  disabled={is_capturing}
+                  style={[{
                     width: 38,
                     height: 38,
                     borderRadius: 19,
@@ -446,9 +451,9 @@ export default function ReportWebView({ uri }: ReportWebViewProps) {
                     shadowOpacity: 0.25,
                     shadowRadius: 3,
                     elevation: 4,
-                  }}
+                  }, is_capturing && { opacity: 0.5 }]}
                 >
-                  <Ionicons name="camera" size={19} color="#fff" />
+                  <Ionicons name={is_capturing ? 'hourglass-outline' : 'camera'} size={19} color="#fff" />
                 </TouchableOpacity>
               </Reanimated.View>
             </GestureDetector>

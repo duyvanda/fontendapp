@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Dimensions, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,8 +23,7 @@ export default function NativeReportScreen() {
   const [is_capturing, set_is_capturing] = useState(false);
   const capture_view_ref = useRef<View>(null);
   
-  const screen_w = Dimensions.get('window').width;
-  const screen_h = Dimensions.get('window').height;
+  const { width: screen_w, height: screen_h } = useWindowDimensions();
 
   // Native scale và pan states
   const native_scale = useSharedValue(1.0);
