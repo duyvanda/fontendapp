@@ -22,7 +22,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - D:\ai-docs\postgres\write_get_function.md
 - D:\ai-docs\postgres\write_insert_function.md
 
-# Build preview
+# Build preview (KHÔNG TỰ Ý BẤM)
 - **Build APK preview**: `eas build --profile preview --platform android`
 - **Build TestFlight iOS (Auto Submit)**: `eas build --platform ios --profile production --auto-submit`
 - **OTA Update**: `eas update --channel preview --environment preview --message "Update text"`

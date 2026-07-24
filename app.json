@@ -9,7 +9,6 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.duyvanda.biportal",
-      "deploymentTarget": "15.2",
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Cho phép chụp ảnh để đính kèm vào câu hỏi và phân tích dữ liệu.",
@@ -63,7 +62,9 @@
           "photosPermission": "Cho phép chọn ảnh để đính kèm vào câu hỏi.",
           "cameraPermission": "Cho phép chụp ảnh để đính kèm vào câu hỏi và phân tích dữ liệu."
         }
-      ]
+      ],
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
