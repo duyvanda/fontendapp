@@ -11,10 +11,10 @@
       "bundleIdentifier": "com.duyvanda.biportal",
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "Ứng dụng cần quyền Camera để chụp ảnh đính kèm vào câu hỏi cho BIRA.",
-        "NSPhotoLibraryUsageDescription": "Ứng dụng cần quyền truy cập Thư viện ảnh để chọn ảnh đính kèm.",
-        "NSPhotoLibraryAddUsageDescription": "Ứng dụng cần quyền lưu ảnh chụp từ Camera vào thiết bị của bạn.",
-        "NSMicrophoneUsageDescription": "Ứng dụng cần quyền truy cập Microphone để hỗ trợ nhập liệu giọng nói và ghi âm kèm video (nếu có).",
+        "NSCameraUsageDescription": "Cho phép chụp ảnh để đính kèm vào câu hỏi và phân tích dữ liệu.",
+        "NSPhotoLibraryUsageDescription": "Cho phép chọn ảnh để đính kèm vào câu hỏi.",
+        "NSPhotoLibraryAddUsageDescription": "Cho phép lưu ảnh bạn chụp để sử dụng lại trong ứng dụng.",
+        "NSMicrophoneUsageDescription": "Cho phép nhập câu hỏi bằng giọng nói thay vì gõ.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -29,8 +29,7 @@
       "package": "com.duyvanda.biportal",
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -52,10 +51,16 @@
       "expo-secure-store",
       "expo-sharing",
       [
+        "expo-notifications",
+        {
+          "iosDisplayInForeground": true
+        }
+      ],
+      [
         "expo-image-picker",
         {
-          "photosPermission": "Ứng dụng cần quyền truy cập thư viện ảnh để đính kèm hình ảnh.",
-          "cameraPermission": "Ứng dụng cần quyền Camera để chụp ảnh đính kèm."
+          "photosPermission": "Cho phép chọn ảnh để đính kèm vào câu hỏi.",
+          "cameraPermission": "Cho phép chụp ảnh để đính kèm vào câu hỏi và phân tích dữ liệu."
         }
       ]
     ],
