@@ -4,7 +4,7 @@
  * Thay thế: localStorage → AsyncStorage, window.* → Dimensions
  */
 import { router } from 'expo-router';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 import {
   clear_all_auth,
@@ -92,76 +92,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, set_loading] = useState(false);
   const [rp_screen, set_rp_screen] = useState(false);
 
-  // ── Init: Load user từ AsyncStorage khi app khởi động ─────────────────────
-  useEffect(() => {
-    (async () => {
-      const stored_user = await get_user_info();
-      const stored_hr = await get_user_hr_info();
-      if (stored_user) {
-        set_user_info(stored_user);
-        if (stored_hr) set_user_hr_info(stored_hr);
-        await fetch_reports(stored_user.manv);
-        // Tạm thời tắt đăng ký Push Notification
-        // registerForPushNotificationsAsync(stored_user.manv);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Auth: Login ────────────────────────────────────────────────────────────
-  const login_user = async (logindata: { email: string; password: string; tenant_id?: string }) => {
-    set_login_loading(true);
-    set_login_text('');
-    try {
-      const data = await apiFetch<any>(`${API_BASE_URL}/loginv1/`, {
-        method: 'POST',
-        body: JSON.stringify(logindata),
-      });
-      await save_user_info(data);
-      set_user_info(data);
-      await fetch_reports(data.manv);
-      // Tạm thời tắt đăng ký Push Notification
-      // registerForPushNotificationsAsync(data.manv);
-    } catch (err: any) {
-      set_login_text(err.message || 'Lỗi kết nối. Vui lòng thử lại.');
-    } finally {
-      set_login_loading(false);
-    }
-  };
-
-  // ── Auth: Logout ───────────────────────────────────────────────────────────
-  const logout_user = async () => {
-    // 1. Hủy đăng ký Push Token trước khi xóa dữ liệu user
-    if (user_info?.manv) {
-      const push_token = await get_push_token();
-      if (push_token) {
-        try {
-          await fetch(`${LOCALURL}/post_data/expo_push_token_unregister/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify([{ manv: user_info.manv, token: push_token }]),
-          });
-        } catch (error) {
-          console.error('Lỗi khi unregister push token lúc logout:', error);
-        } finally {
-          // Xóa token local để tránh giữ token cũ
-          await remove_push_token();
-        }
-      }
-    }
-
-    // 2. Xóa toàn bộ dữ liệu phiên
-    await clear_all_auth();
-    set_user_info(null);
-    set_user_hr_info(null);
-    set_reports([]);
-    set_filter_reports(null);
-    set_login_text('');
-
-    router.replace('/login');
-  };
   // ── Reports: Fetch danh sách reports của user ──────────────────────────────
-  const fetch_reports = async (manv: string) => {
+  const fetch_reports = useCallback(async (manv: string) => {
     const parse_tags = (tagsVal: any): string[] => {
       if (!tagsVal) return [];
       if (Array.isArray(tagsVal)) return tagsVal;
@@ -214,10 +146,82 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         set_reports(parsedCached);
       }
     }
-  };
+  }, []);
+
+  // ── Init: Load user từ AsyncStorage khi app khởi động ─────────────────────
+  useEffect(() => {
+    (async () => {
+      const stored_user = await get_user_info();
+      const stored_hr = await get_user_hr_info();
+      if (stored_user) {
+        set_user_info(stored_user);
+        if (stored_hr) set_user_hr_info(stored_hr);
+        await fetch_reports(stored_user.manv);
+        // Tạm thời tắt đăng ký Push Notification
+        // registerForPushNotificationsAsync(stored_user.manv);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+
+  // ── Auth: Login ────────────────────────────────────────────────────────────
+  const login_user = useCallback(async (logindata: { email: string; password: string; tenant_id?: string }) => {
+    set_login_loading(true);
+    set_login_text('');
+    try {
+      const data = await apiFetch<any>(`${API_BASE_URL}/loginv1/`, {
+        method: 'POST',
+        body: JSON.stringify(logindata),
+      });
+      await save_user_info(data);
+      set_user_info(data);
+      await fetch_reports(data.manv);
+      // Tạm thời tắt đăng ký Push Notification
+      // registerForPushNotificationsAsync(data.manv);
+    } catch (err: any) {
+      set_login_text(err.message || 'Lỗi kết nối. Vui lòng thử lại.');
+    } finally {
+      set_login_loading(false);
+    }
+  }, [fetch_reports]);
+
+  // ── Auth: Logout ───────────────────────────────────────────────────────────
+  const logout_user = useCallback(async () => {
+    // 1. Hủy đăng ký Push Token trước khi xóa dữ liệu user
+    if (user_info?.manv) {
+      const push_token = await get_push_token();
+      if (push_token) {
+        try {
+          await fetch(`${LOCALURL}/post_data/expo_push_token_unregister/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([{ manv: user_info.manv, token: push_token }]),
+          });
+        } catch (error) {
+          console.error('Lỗi khi unregister push token lúc logout:', error);
+        } finally {
+          // Xóa token local để tránh giữ token cũ
+          await remove_push_token();
+        }
+      }
+    }
+
+    // 2. Xóa toàn bộ dữ liệu phiên
+    await clear_all_auth();
+    set_user_info(null);
+    set_user_hr_info(null);
+    set_reports([]);
+    set_filter_reports(null);
+    set_login_text('');
+
+    router.replace('/login');
+  }, [user_info?.manv]);
+
 
   // ── Reports: Filter report tĩnh (Looker Studio embed trực tiếp) ────────────
-  const fetch_filter_reports = (stt: string, isMB: boolean) => {
+  const fetch_filter_reports = useCallback((stt: string, isMB: boolean) => {
     const manv = user_info?.manv || '';
     const manv_int_0 = manv.replace(/MR/g, '11');
     // Lọc theo cả stt và manv để đảm bảo phân quyền đúng báo cáo của user này
@@ -242,10 +246,10 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       set_shared(false);
     }
-  };
+  }, [reports, user_info?.manv]);
 
   // ── Reports: Fetch realtime report ─────────────────────────────────────────
-  const fetch_real_time_report = async (
+  const fetch_real_time_report = useCallback(async (
     data_user: Record<string, unknown>,
     local_url: string,
     rppr: string,
@@ -269,9 +273,9 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       set_loading(false);
     }
-  };
+  }, []);
 
-  const fetch_filter_reports_rt = async (
+  const fetch_filter_reports_rt = useCallback(async (
     stt: string,
     isMB: boolean,
     filter_data: Record<string, unknown>,
@@ -300,15 +304,15 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       set_shared(false);
       set_loading(false);
     }
-  };
+  }, [reports, user_info?.manv, fetch_real_time_report]);
 
   // ── Reports: Clear filter ──────────────────────────────────────────────────
-  const clear_filter_report = () => {
+  const clear_filter_report = useCallback(() => {
     set_filter_reports(null);
-  };
+  }, []);
 
   // ── Logger ─────────────────────────────────────────────────────────────────
-  const user_logger = (
+  const user_logger = useCallback((
     manv: string,
     id: string,
     isMB: boolean,
@@ -318,10 +322,10 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
       method: 'POST',
       body: JSON.stringify({ manv, id, ismb: isMB, dv_width }),
     }).catch(() => void 0); // Fire and forget
-  };
+  }, []);
 
   // ── Render ─────────────────────────────────────────────────────────────────
-  const toggle_favorite = async (report: Report) => {
+  const toggle_favorite = useCallback(async (report: Report) => {
     if (!user_info?.manv) return;
     const is_fav = report.yeu_thich && String(report.yeu_thich) !== '0';
     const next_fav = is_fav ? '0' : '1';
@@ -351,9 +355,9 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         return next;
       });
     }
-  };
+  }, [user_info?.manv]);
 
-  const save_tags = async (report: Report, tags: string[]) => {
+  const save_tags = useCallback(async (report: Report, tags: string[]) => {
     if (!user_info?.manv) return;
 
     // Optimistic update + Sync AsyncStorage
@@ -381,7 +385,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         return next;
       });
     }
-  };
+  }, [user_info?.manv]);
 
   return (
     <FeedbackContext.Provider

@@ -4,7 +4,8 @@ import {
   chat_message_type,
   create_bot_message,
   create_user_message,
-  load_messages, save_messages
+  load_messages, save_messages,
+  clear_messages
 } from '@/storage/chat';
 import { colors } from '@/styles/global';
 import { BIRA_API_URL, MARKDOWN_CONVERT_URL } from '@/utils/api';

@@ -1,14 +1,14 @@
 
 
+import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
 import { LOCALURL } from '@/utils/api';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
+import { router } from 'expo-router';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
-import { router } from 'expo-router';
 import { get_push_token, save_push_token } from '../storage/notification';
 import { useFeedback } from './FeedbackContext';
-import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
 
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
@@ -80,17 +80,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  const mark_as_read = async (ids: number[]) => {
+  const mark_as_read = useCallback(async (ids: number[]) => {
     if (!user_info?.manv || ids.length === 0) return;
 
     // Optimistic update using functional state update to prevent race conditions
     set_notifications(prev => {
       const updated = prev.map(n => (ids.includes(n.id) ? { ...n, is_read: true } : n));
       const remaining_unread = updated.filter(n => !n.is_read).length;
-      
+
       set_unread_count(remaining_unread);
       Notifications.setBadgeCountAsync(remaining_unread);
-      
+
       return updated;
     });
 
@@ -104,9 +104,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.error('Error marking as read:', error);
       // Revert optimistic update? Or let it be since it's just read status.
     }
-  };
+  }, [user_info?.manv]);
 
-  const mark_all_read = async (manv: string) => {
+  const mark_all_read = useCallback(async (manv: string) => {
     if (!manv) return;
 
     set_notifications(prev => prev.map(n => ({ ...n, is_read: true })));
@@ -123,7 +123,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
-  };
+  }, []);
 
   // Lấy và lưu Token cục bộ (Có thể gọi trước khi login)
   const setup_push_token = useCallback(async () => {
@@ -245,16 +245,54 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (user_info?.manv) {
       refresh_unread_count(user_info.manv);
     }
+    // Cấu trúc dữ liệu mong đợi gửi từ backend:
+    // {
+    //   "to": "ExponentPushToken[xxxxxxxxxx]",
+    //   "title": "Tiêu đề thông báo",
+    //   "body": "Nội dung thông báo",
+    //   "sound": "default",
+    //   "badge": 3,
+    //   "data": { 
+    //     "report_stt": "001"
+    //   }
+    // }
     const data = response?.notification?.request?.content?.data;
-    if (data && data.report_stt) {
-      navigate_to_report(String(data.report_stt));
+    const report_stt = data?.report_stt;
+
+    if (report_stt) {
+      navigate_to_report(String(report_stt));
     }
+    // else sẽ không làm gì cả chỉ update unread count.
   }, [user_info?.manv, refresh_unread_count, navigate_to_report]);
 
   // Xử lý deep-linking cho trường hợp App bị tắt hẳn (Killed State)
+  /**
+   * Phản hồi thông báo cuối cùng khiến app được mở (chỉ chạy khi mở app từ Killed State).
+   * Trả về đối tượng `NotificationResponse` hoặc `null`.
+   * 
+   * Cấu trúc mong đợi:
+   * ```json
+   * {
+   *   "actionIdentifier": "expo.modules.notifications.actions.DEFAULT",
+   *   "notification": {
+   *     "request": {
+   *       "identifier": "00000000-0000",
+   *       "content": { "data": { "report_stt": "001" } }
+   *     }
+   *   }
+   * }
+   * ```
+   */
   const last_response = Notifications.useLastNotificationResponse();
+
+  /**
+   * Ref lưu trữ ID của thông báo gần nhất đã được điều hướng thành công.
+   * Dùng làm cơ chế chặn (anti-duplicate) để tránh việc ứng dụng tự động điều hướng
+   * liên tục đến màn hình báo cáo mỗi khi component bị re-render.
+   */
   const handled_last_response_id = useRef<string | null>(null);
 
+  // useEffect xử lý deep-linking cho trường hợp App bị tắt hẳn (Killed State)
   useEffect(() => {
     if (
       last_response &&
@@ -269,7 +307,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [last_response, user_info?.manv, handle_notification_response]);
 
-  // Poll for unread count when app is in foreground and user is logged in
+  /**
+   * Quét (poll) số lượng thông báo chưa đọc mỗi 60s khi app ở foreground.
+   * 
+   * Lý do:
+   * 1. Đồng bộ dữ liệu unread khi user thao tác/đọc thông báo trên thiết bị khác.
+   * 2. Dự phòng (fallback) nếu Push Service (FCM/APNs) bị trễ hoặc mất kết nối mạng.
+   * 3. Chỉ quét khi app đang active ở foreground để tối ưu pin và băng thông.
+   */
   useEffect(() => {
     if (!user_info?.manv) return;
 
