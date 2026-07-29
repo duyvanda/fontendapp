@@ -45,3 +45,11 @@ apple review/
 
 # Data files
 *.csv
+
+# Firebase credentials - DO NOT commit to git
+# google-services.json contains sensitive API keys
+# Nhưng EAS build cần file này -> đã exclude khỏi .gitignore để EAS đọc được
+# Thay vào đó dùng EAS Secret hoặc để local only
+google-services.json
+expo.json
+GoogleService-Info.plist

@@ -21,7 +21,7 @@ BEGIN
     
     v_id := COALESCE(v_row->>'manv', v_row->>'id');
     v_token := v_row->>'token';
-    v_platform := v_row->>'platform';
+	v_platform := COALESCE(v_row->>'platform', 'unknown');
     v_device_info := COALESCE(v_row->'device_info', v_row);
 
     IF v_id IS NULL OR v_token IS NULL THEN
@@ -34,8 +34,8 @@ BEGIN
     -- Upsert logic: Mỗi user (manv) chỉ có 1 token mới nhất. Cập nhật nếu user đã có token cũ.
     INSERT INTO expo_push_tokens (manv, token, platform, device_info, updated_at)
     VALUES (v_id, v_token, v_platform, v_device_info, CURRENT_TIMESTAMP)
-    ON CONFLICT (manv) 
-    DO UPDATE SET 
+    ON CONFLICT (manv, platform)
+    DO UPDATE SET
         token = EXCLUDED.token,
         platform = EXCLUDED.platform,
         device_info = EXCLUDED.device_info,
