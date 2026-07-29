@@ -1,5 +1,3 @@
-
-
 import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
 import { LOCALURL } from '@/utils/api';
 import Constants from 'expo-constants';
@@ -12,6 +10,7 @@ import { useFeedback } from './FeedbackContext';
 
 import * as Application from 'expo-application';
 import * as Device from 'expo-device';
+import { get_device_info } from '../utils/device';
 
 export interface AppNotification {
   id: number;
@@ -183,26 +182,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (!push_token) return;
 
       // 4. Thu thập toàn bộ thông tin thiết bị chi tiết
-      const brand = Device.brand || '';
-      const model_name = Device.modelName || '';
-      const device_name = Device.deviceName || '';
-      const os_name = Device.osName || Platform.OS;
-      const os_version = Device.osVersion || String(Platform.Version);
-      const app_version = Application.nativeApplicationVersion || Constants.expoConfig?.version || '1.0.0';
-      const build_number = Application.nativeBuildVersion || '1';
-      const is_device = Device.isDevice;
-
-      const device_info = {
-        platform: Platform.OS,
-        brand,
-        model_name,
-        device_name,
-        os_name,
-        os_version,
-        app_version,
-        build_number,
-        is_device,
-      };
+      const device_info = get_device_info();
 
       // 5. Lưu Push Token & device_info (JSONB) về Backend PostgreSQL
       await fetch(`${LOCALURL}/post_data/expo_push_token_register/`, {

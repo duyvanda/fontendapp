@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Modal, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import { get_device_info } from '@/utils/device';
 import { useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { globalStyles, colors, spacing } from '@/styles/global';
@@ -18,7 +19,7 @@ const REPORT_PARAMS_CONFIG: Record<string, any[]> = {
 export default function RealtimeReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { user_info, fetch_filter_reports_rt, shared, loading, report_id, report_param, filter_reports } = useFeedback();
+  const { user_info, fetch_filter_reports_rt, shared, loading, report_id, report_param, filter_reports, user_logger } = useFeedback();
   
   const [showParamModal, setShowParamModal] = useState(false);
   const [paramsConfig, setParamsConfig] = useState<any[]>([]);
@@ -39,6 +40,12 @@ export default function RealtimeReportScreen() {
         setShowParamModal(true);
       } else {
         fetch_filter_reports_rt(id, true, {});
+        
+        const logView = async () => {
+          const device_info = await get_device_info();
+          user_logger(user_info.manv, id, true, Dimensions.get('window').width, device_info);
+        };
+        logView();
       }
       setInitializedId(id);
     }
@@ -52,6 +59,14 @@ export default function RealtimeReportScreen() {
     if (id) {
       setShowParamModal(false);
       fetch_filter_reports_rt(id, true, formData);
+      
+      const logSubmit = async () => {
+        const device_info = await get_device_info();
+        if (user_info) {
+          user_logger(user_info.manv, id, true, Dimensions.get('window').width, device_info);
+        }
+      };
+      logSubmit();
     }
   };
 

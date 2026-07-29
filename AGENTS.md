@@ -37,3 +37,5 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - Hệ thống sử dụng PostgreSQL Stored Functions nhận và trả về JSONB.
 - URL get: https://bi.meraplion.com/local/get_data/<ten_ham>, input json là query params
 - URL post: https://bi.meraplion.com/local/post_data/<ten_ham>
+
+# Workthough format: walkthrough_DDMMYYYY_hhmmss và move vào thư mục md

@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar, Dimensions, useWindowDimensions } from 'react-native';
+import { get_device_info } from '@/utils/device';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +17,17 @@ export default function NativeReportScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { reports, toggle_favorite, user_info } = useFeedback();
+  const { reports, toggle_favorite, user_info, user_logger } = useFeedback();
+
+  useEffect(() => {
+    if (user_info && id) {
+      const logView = async () => {
+        const device_info = await get_device_info();
+        user_logger(user_info.manv, id, true, Dimensions.get('window').width, device_info);
+      };
+      logView();
+    }
+  }, [user_info, id, user_logger]);
 
   // ─── States & Refs cho Gesture & Screenshot ───
   const [zoom_level, set_zoom_level] = useState(1.0);

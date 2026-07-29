@@ -58,7 +58,7 @@ interface FeedbackContextValue {
   fetch_filter_reports: (stt: string, isMB: boolean) => void;
   fetch_filter_reports_rt: (stt: string, isMB: boolean, filter_data: Record<string, unknown>) => Promise<void>;
   clear_filter_report: () => void;
-  user_logger: (manv: string, id: string, isMB: boolean, dv_width: number) => void;
+  user_logger: (manv: string, id: string, isMB: boolean, dv_width: number, device_info: any) => void;
   set_rp_screen: (val: boolean) => void;
   toggle_favorite: (report: Report) => Promise<void>;
   save_tags: (report: Report, tags: string[]) => Promise<void>;
@@ -317,10 +317,11 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     id: string,
     isMB: boolean,
     dv_width: number,
+    device_info: any,
   ) => {
-    apiFetch(`${LOCALURL}/userreportlogger/`, {
+    apiFetch(`${API_BASE_URL}/userreportlogger/`, {
       method: 'POST',
-      body: JSON.stringify({ manv, id, ismb: isMB, dv_width }),
+      body: JSON.stringify({ manv, id, ismb: isMB, dv_width, device_info }),
     }).catch(() => void 0); // Fire and forget
   }, []);
 

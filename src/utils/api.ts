@@ -3,6 +3,8 @@
  * Port từ frontend1/src/context/FeedbackContext.js constants.
  */
 
+import * as Crypto from 'expo-crypto';
+
 export const API_BASE_URL = 'https://birest-6ey4kecoka-as.a.run.app/api';
 export const LOCALURL = 'https://bi.meraplion.com/local';
 export const BIRA_API_URL = 'https://bi.meraplion.com:18002/api';
@@ -10,15 +12,28 @@ export const MARKDOWN_CONVERT_URL = 'https://bi.meraplion.com:18002/api/convert-
 export const REPORTS_API_URL = `${LOCALURL}/get_data/get_report_phan_quyen_tong_hop/`;
 
 /**
- * Generic fetch wrapper với error handling chuẩn.
+ * Generic fetch wrapper với error handling chuẩn và bảo mật mật mã động.
  */
 export async function apiFetch<T = unknown>(
   url: string,
   options?: RequestInit,
 ): Promise<T> {
+  // Tạo thời gian ảo lùi 14 ngày
+  const fake_time = Date.now() - (14 * 24 * 60 * 60 * 1000);
+  // Băm mật mã
+  const signature = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    `biportal${fake_time}`
+  );
+
   const response = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Portal-Time': fake_time.toString(),
+      'X-Portal-Token': signature,
+      ...options?.headers,
+    },
   });
 
   const contentType = response.headers.get('content-type');

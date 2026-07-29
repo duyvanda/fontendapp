@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, ActivityIndicator, Modal, Dimensions } from 'react-native';
+import { get_device_info } from '@/utils/device';
 import { useLocalSearchParams } from 'expo-router';
 import { globalStyles } from '@/styles/global';
 import CustomHeader from '@/components/CustomHeader';
@@ -8,7 +9,7 @@ import { useFeedback } from '@/context/FeedbackContext';
 
 export default function StaticReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user_info, fetch_filter_reports, shared, loading, report_id, report_param, filter_reports } = useFeedback();
+  const { user_info, fetch_filter_reports, shared, loading, report_id, report_param, filter_reports, user_logger } = useFeedback();
   const [initializedId, setInitializedId] = useState<string | null>(null);
   const [is_landscape, set_is_landscape] = useState(false);
 
@@ -16,9 +17,16 @@ export default function StaticReportScreen() {
     if (user_info && id && initializedId !== id) {
       // isMB = true for mobile layout param
       fetch_filter_reports(id, true);
+      
+      const logView = async () => {
+        const device_info = await get_device_info();
+        user_logger(user_info.manv, id, true, Dimensions.get('window').width, device_info);
+      };
+      logView();
+      
       setInitializedId(id);
     }
-  }, [user_info, id, initializedId, fetch_filter_reports]);
+  }, [user_info, id, initializedId, fetch_filter_reports, user_logger]);
 
   if (initializedId !== id) {
     return <View style={globalStyles.screen} />;
