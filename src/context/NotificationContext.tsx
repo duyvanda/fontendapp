@@ -182,7 +182,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (!push_token) return;
 
       // 4. Thu thập toàn bộ thông tin thiết bị chi tiết
-      const device_info = get_device_info();
+      const device_info = await get_device_info();
 
       // 5. Lưu Push Token & device_info (JSONB) về Backend PostgreSQL
       await fetch(`${LOCALURL}/post_data/expo_push_token_register/`, {
