@@ -281,7 +281,9 @@ export default function ReportWebView({ uri, on_orientation_change }: ReportWebV
       drag_start_y.value = btn_y.value;
     })
     .onUpdate((e) => {
-      btn_x.value = Math.max(4, Math.min(screen_w - BTN_PANEL_W - 4, drag_start_x.value + e.translationX));
+      const is_land = screen_w > screen_h;
+      const r_margin = (Platform.OS === 'android' && is_land) ? 60 : 4;
+      btn_x.value = Math.max(4, Math.min(screen_w - BTN_PANEL_W - r_margin, drag_start_x.value + e.translationX));
       btn_y.value = Math.max(4, Math.min(screen_h - BTN_PANEL_H - 60, drag_start_y.value + e.translationY));
     });
 
@@ -380,7 +382,9 @@ export default function ReportWebView({ uri, on_orientation_change }: ReportWebV
 
   // Sync and re-anchor button position when screen dimensions change (e.g. on rotation)
   useEffect(() => {
-    btn_x.value = screen_w - BTN_PANEL_W - 12;
+    const is_land = screen_w > screen_h;
+    const r_margin = (Platform.OS === 'android' && is_land) ? 60 : 12;
+    btn_x.value = screen_w - BTN_PANEL_W - r_margin;
     btn_y.value = Math.max(4, Math.min(screen_h - BTN_PANEL_H - 60, btn_y.value));
   }, [screen_w, screen_h]);
 

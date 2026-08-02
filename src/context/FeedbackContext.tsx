@@ -35,6 +35,7 @@ export interface Report {
   manv: string;
   yeu_thich?: string;
   tags?: string[];
+  index?: number;
 }
 
 interface FeedbackContextValue {
@@ -123,7 +124,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
           link_report,
           tenreport: el.tenreport, // Đã xóa hardcode 'HR Overview'
           manv,
-          tags: parse_tags(el.tags)
+          tags: parse_tags(el.tags),
+          index: el.index !== undefined ? Number(el.index) : undefined
         };
       });
       set_reports(lstreports);
@@ -141,7 +143,8 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         const parsedCached = (cached as Report[]).map((el) => ({
           ...el,
           tenreport: el.tenreport, // Đã xóa hardcode 'HR Overview'
-          tags: parse_tags(el.tags)
+          tags: parse_tags(el.tags),
+          index: el.index !== undefined ? Number(el.index) : undefined
         }));
         set_reports(parsedCached);
       }

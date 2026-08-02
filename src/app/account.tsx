@@ -203,12 +203,12 @@ export default function AccountScreen() {
                 try {
                   const d = new Date(Updates.createdAt);
                   const pad = (n: number) => n.toString().padStart(2, '0');
-                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} (Up 47)`;
+                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
                 } catch (e) {
-                  return '  •  (live) (Fix 47)';
+                  return '  •  (live)';
                 }
               })()
-              : '  •  (dev) (Fix 47)'
+              : '  •  (dev)'
             }
           </Text>
           <Text style={styles.version_text}>

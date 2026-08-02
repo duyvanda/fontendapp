@@ -6,8 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { globalStyles, colors, spacing } from '@/styles/global';
 import CustomHeader from '@/components/CustomHeader';
 import ReportWebView from '@/components/ReportWebView';
+import SimpleDatePicker from '@/components/SimpleDatePicker';
 import { useFeedback } from '@/context/FeedbackContext';
 import { format_date_ymd } from '@/utils/string';
+import { Ionicons } from '@expo/vector-icons';
 
 const REPORT_PARAMS_CONFIG: Record<string, any[]> = {
   "17": [
@@ -26,6 +28,8 @@ export default function RealtimeReportScreen() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [initializedId, setInitializedId] = useState<string | null>(null);
   const [is_landscape, set_is_landscape] = useState(false);
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [activeDateKey, setActiveDateKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (user_info && id && initializedId !== id) {
@@ -90,12 +94,27 @@ export default function RealtimeReportScreen() {
               {paramsConfig.map((param) => (
                 <View key={param.key} style={{ marginBottom: spacing.md }}>
                   <Text style={{ fontSize: 14, fontWeight: 'bold', color: colors.textPrimary, marginBottom: 6 }}>{param.label}</Text>
-                  <TextInput
-                    style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 8, fontSize: 15 }}
-                    value={formData[param.key] || ''}
-                    onChangeText={(val) => handleInputChange(param.key, val)}
-                    placeholder={param.placeholder || ''}
-                  />
+                  {param.type === 'date' ? (
+                    <TouchableOpacity 
+                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: colors.border, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 10 }}
+                      onPress={() => {
+                        setActiveDateKey(param.key);
+                        setDatePickerVisible(true);
+                      }}
+                    >
+                      <Text style={{ fontSize: 15, color: formData[param.key] ? colors.textPrimary : '#999' }}>
+                        {formData[param.key] || 'Chọn ngày'}
+                      </Text>
+                      <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+                    </TouchableOpacity>
+                  ) : (
+                    <TextInput
+                      style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 8, fontSize: 15 }}
+                      value={formData[param.key] || ''}
+                      onChangeText={(val) => handleInputChange(param.key, val)}
+                      placeholder={param.placeholder || ''}
+                    />
+                  )}
                 </View>
               ))}
             </ScrollView>
@@ -117,6 +136,19 @@ export default function RealtimeReportScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Date Picker Modal */}
+      <SimpleDatePicker 
+        visible={datePickerVisible}
+        currentDateStr={activeDateKey ? formData[activeDateKey] : undefined}
+        onClose={() => setDatePickerVisible(false)}
+        onSelect={(dateStr) => {
+          if (activeDateKey) {
+            handleInputChange(activeDateKey, dateStr);
+          }
+          setDatePickerVisible(false);
+        }}
+      />
 
       <Modal transparent={true} visible={loading} animationType="fade" statusBarTranslucent={true}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.2)' }}>

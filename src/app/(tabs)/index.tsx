@@ -87,12 +87,21 @@ export default function HomeScreen() {
         return name_match || tag_match;
       });
     }
-    // Sort favorited reports to the top, then alphabetically (ABC) within each group
+    // Sort favorited reports to the top, then by index, then alphabetically
     list.sort((a, b) => {
       const aFav = a.yeu_thich && String(a.yeu_thich) !== '0' ? 1 : 0;
       const bFav = b.yeu_thich && String(b.yeu_thich) !== '0' ? 1 : 0;
       if (aFav !== bFav) {
         return bFav - aFav;
+      }
+      if (a.index !== undefined && b.index !== undefined) {
+        if (a.index !== b.index) {
+          return a.index - b.index;
+        }
+      } else if (a.index !== undefined) {
+        return -1;
+      } else if (b.index !== undefined) {
+        return 1;
       }
       return a.tenreport.localeCompare(b.tenreport, 'vi');
     });
@@ -195,11 +204,23 @@ export default function HomeScreen() {
         remove_accents_with_case(tag.toLowerCase()).includes(q)
       );
     }
-    // Sort favorited reports inside the folder to the top
+    // Sort favorited reports inside the folder to the top, then by index, then alphabetically
     return [...list].sort((a, b) => {
       const aFav = a.yeu_thich && String(a.yeu_thich) !== '0' ? 1 : 0;
       const bFav = b.yeu_thich && String(b.yeu_thich) !== '0' ? 1 : 0;
-      return bFav - aFav;
+      if (aFav !== bFav) {
+        return bFav - aFav;
+      }
+      if (a.index !== undefined && b.index !== undefined) {
+        if (a.index !== b.index) {
+          return a.index - b.index;
+        }
+      } else if (a.index !== undefined) {
+        return -1;
+      } else if (b.index !== undefined) {
+        return 1;
+      }
+      return a.tenreport.localeCompare(b.tenreport, 'vi');
     });
   };
 
