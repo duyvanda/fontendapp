@@ -8,7 +8,7 @@ import {
   clear_messages
 } from '@/storage/chat';
 import { colors } from '@/styles/global';
-import { BIRA_API_URL, MARKDOWN_CONVERT_URL } from '@/utils/api';
+import { BIRA_API_URL, MARKDOWN_CONVERT_URL, apiFetch } from '@/utils/api';
 import {
   get_id
 } from '@/utils/string';
@@ -309,15 +309,10 @@ export default function CloudAssist() {
     };
 
     try {
-      const response = await fetch(`${BIRA_API_URL}/chat`, {
+      const events = await apiFetch<any>(`${BIRA_API_URL}/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const events = await response.json();
       let bot_response = "Không tìm thấy phản hồi từ Agent.";
 
       if (Array.isArray(events)) {
