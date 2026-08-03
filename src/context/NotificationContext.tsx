@@ -1,5 +1,5 @@
 import { NATIVE_REPORTS_MAP } from '@/components/native_reports';
-import { LOCALURL } from '@/utils/api';
+import { LOCALURL, apiFetch } from '@/utils/api';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
@@ -49,10 +49,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     set_loading(true);
     try {
       console.log('[NotificationContext] Fetching notifications for manv:', manv);
-      const response = await fetch(`${LOCALURL}/get_data/expo_get_notifications/?manv=${manv}`);
-      const data = await response.json();
+      const data = await apiFetch<any>(`${LOCALURL}/get_data/expo_get_notifications/?manv=${manv}`);
       console.log('[NotificationContext] API Response data:', JSON.stringify(data));
-      if (response.ok && data.status === 'ok') {
+      if (data && data.status === 'ok') {
         console.log('[NotificationContext] Setting notifications state with:', data.rows_data?.length || 0, 'items');
         set_notifications(data.rows_data || []);
       }
@@ -66,9 +65,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const refresh_unread_count = useCallback(async (manv: string) => {
     if (!manv) return;
     try {
-      const response = await fetch(`${LOCALURL}/get_data/expo_get_unread_notifications_count/?manv=${manv}`);
-      const data = await response.json();
-      if (response.ok && data.status === 'ok' && data.rows_data && data.rows_data.length > 0) {
+      const data = await apiFetch<any>(`${LOCALURL}/get_data/expo_get_unread_notifications_count/?manv=${manv}`);
+      if (data && data.status === 'ok' && data.rows_data && data.rows_data.length > 0) {
         const count = data.rows_data[0].unread_count || 0;
         set_unread_count(count);
         // Đồng bộ badge icon app với unread_count thực từ server
@@ -94,9 +92,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
 
     try {
-      await fetch(`${LOCALURL}/post_data/expo_insert_mark_notification_read/`, {
+      await apiFetch(`${LOCALURL}/post_data/expo_insert_mark_notification_read/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ids.map(id => ({ id }))),
       });
     } catch (error) {
@@ -114,9 +111,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     await Notifications.setBadgeCountAsync(0);
 
     try {
-      await fetch(`${LOCALURL}/post_data/expo_insert_mark_all_notifications_read/`, {
+      await apiFetch(`${LOCALURL}/post_data/expo_insert_mark_all_notifications_read/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([{ manv }]),
       });
     } catch (error) {
@@ -185,9 +181,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const device_info = await get_device_info();
 
       // 5. Lưu Push Token & device_info (JSONB) về Backend PostgreSQL
-      await fetch(`${LOCALURL}/post_data/expo_push_token_register/`, {
+      await apiFetch(`${LOCALURL}/post_data/expo_push_token_register/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify([{
           manv,
           token: push_token,
@@ -244,48 +239,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
     // else sẽ không làm gì cả chỉ update unread count.
   }, [user_info?.manv, refresh_unread_count, navigate_to_report]);
-
-  // Xử lý deep-linking cho trường hợp App bị tắt hẳn (Killed State)
-  /**
-   * Phản hồi thông báo cuối cùng khiến app được mở (chỉ chạy khi mở app từ Killed State).
-   * Trả về đối tượng `NotificationResponse` hoặc `null`.
-   * 
-   * Cấu trúc mong đợi:
-   * ```json
-   * {
-   *   "actionIdentifier": "expo.modules.notifications.actions.DEFAULT",
-   *   "notification": {
-   *     "request": {
-   *       "identifier": "00000000-0000",
-   *       "content": { "data": { "report_stt": "001" } }
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  const last_response = Notifications.useLastNotificationResponse();
-
-  /**
-   * Ref lưu trữ ID của thông báo gần nhất đã được điều hướng thành công.
-   * Dùng làm cơ chế chặn (anti-duplicate) để tránh việc ứng dụng tự động điều hướng
-   * liên tục đến màn hình báo cáo mỗi khi component bị re-render.
-   */
-  const handled_last_response_id = useRef<string | null>(null);
-
-  // useEffect xử lý deep-linking cho trường hợp App bị tắt hẳn (Killed State)
-  useEffect(() => {
-    if (
-      last_response &&
-      last_response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER &&
-      user_info?.manv
-    ) {
-      const response_id = last_response.notification.request.identifier;
-      if (handled_last_response_id.current !== response_id) {
-        handled_last_response_id.current = response_id;
-        handle_notification_response(last_response);
-      }
-    }
-  }, [last_response, user_info?.manv, handle_notification_response]);
 
   /**
    * Quét (poll) số lượng thông báo chưa đọc mỗi 60s khi app ở foreground.

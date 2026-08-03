@@ -17,8 +17,13 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 
 # backend
 - D:\django_apps\rest\frontend1\bi_local_rest
-    - local_views.py
-    - local_urls.py
+    - `local_views.py`:
+        - `get_data(request, pk)`: Endpoint GET lấy dữ liệu qua Stored Function PostgreSQL (`/get_data/<pk>/`)
+        - `post_data(request, pk)`: Endpoint POST thực thi Stored Function PostgreSQL (`/post_data/<pk>/`, ví dụ: `expo_push_token_register`, `expo_push_token_unregister`)
+        - `api_send_push_notification(request)`: Endpoint POST gửi Push Notification qua Expo API (`/send-push-notification/`)
+        - `api_get_superset_guest_token(request)`: Endpoint lấy Guest Token Superset (`/get_superset_guest_token/`)
+        - `send_support_email_notification(request)`: Endpoint gửi Email thông báo hỗ trợ (`/send_support_email_notification/`)
+    - `local_urls.py`: Khai báo URL routing cho các endpoint của `bi_local_rest`
 
 # folder structure
 - @folder_structure.md
@@ -26,6 +31,12 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 # api là postgresql luôn thông qua local_views hàm get_data và hàm get_data. Cách viết PSQL như sau:
 - D:\ai-docs\postgres\write_get_function.md
 - D:\ai-docs\postgres\write_insert_function.md
+
+# sql
+- `sql/`: Thư mục chứa các script DDL và Stored Functions PostgreSQL:
+    - `expo_push_tokens.sql`: DDL bảng `public.expo_push_tokens` (lưu token notification, platform, device_info JSONB theo `manv`).
+    - `expo_push_token_register.sql`: Function `expo_push_token_register(jsonb)` xử lý lưu/cập nhật token push notification cho user khi login.
+    - `expo_push_token_unregister.sql`: Function `expo_push_token_unregister(jsonb)` xử lý xóa token push notification khi user logout.
 
 # Build preview (KHÔNG TỰ Ý BẤM)
 - **Build APK preview**: `eas build --profile preview --platform android`
@@ -43,3 +54,4 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - URL post: https://bi.meraplion.com/local/post_data/<ten_ham>
 
 # Workthough format: walkthrough_DDMMYYYY_HHMMSS.md tạo trong thư mục changelog/ ở gốc dự án (không bỏ vào thư mục md/)
+- Ưu tiên gom file lại nếu trùng giờ.
