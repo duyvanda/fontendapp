@@ -246,7 +246,7 @@ export default function NativeReportScreen() {
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.replace('/');
+                  router.replace('/(tabs)');
                 }
               }} 
               style={{

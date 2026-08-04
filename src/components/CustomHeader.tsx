@@ -38,7 +38,7 @@ export default function CustomHeader({ title = 'BI PORTAL', show_back = false }:
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.replace('/');
+                  router.replace('/(tabs)');
                 }
               }} 
               style={{
