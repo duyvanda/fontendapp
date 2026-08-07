@@ -117,8 +117,13 @@ Backend Server
          "data": { "report_stt": "001" }
        }
          │
-         ▼
-Expo Push Service → gửi đến APNs (iOS) / FCM (Android)
+118:         │
+119:         ├─► Nếu Expo API trả về response error "DeviceNotRegistered":
+120:         │     └─ Backend thực hiện dọn dẹp: DELETE FROM expo_push_tokens WHERE token = xxx
+121:         │        (Token cũ bị hỏng/vô hiệu hóa do user gỡ app)
+122:         │
+123:         ▼
+124: Expo Push Service → gửi đến APNs (iOS) / FCM (Android)
          │
          ▼
 ┌─────────────────────────────────────────────────────┐
@@ -247,3 +252,77 @@ FeedbackContext.logout_user()
 | `/post_data/expo_push_token_unregister/` | POST | Hủy token khi logout |
 | `/post_data/expo_insert_mark_notification_read/` | POST | Đánh dấu đã đọc (batch) |
 | `/post_data/expo_insert_mark_all_notifications_read/` | POST | Đánh dấu tất cả đã đọc |
+| `/send-push-notification/` | POST | Gửi Push Notification (Batch & Multi-device) |
+
+### 📄 Cấu trúc Response chuẩn của API `/send-push-notification/`
+
+```json
+{
+    "status": "ok",
+    "results": [
+        {
+            "status": "success",
+            "manv": "MR2523",
+            "devices_sent": 2,
+            "device_results": [
+                {
+                    "token": "ExponentPushToken[iPhone_7Ne2VUNG30DgWcl7OnKYAX]",
+                    "ticket_id": "019fd9c9-25c4-7399-971e-6cc8bafe54fd"
+                },
+                {
+                    "token": "ExponentPushToken[iPad_8Mf3WXVH41EhXdm8PoLZBY]",
+                    "ticket_id": "028ae8da-36d5-8400-082f-7dd9cbgf65ge"
+                }
+            ],
+            "expo_json": {
+                "data": [
+                    { "status": "ok", "id": "019fd9c9-25c4-7399-971e-6cc8bafe54fd" },
+                    { "status": "ok", "id": "028ae8da-36d5-8400-082f-7dd9cbgf65ge" }
+                ]
+            }
+        }
+    ]
+}
+```
+
+---
+
+## 🔍 Kiểm tra trạng thái Push Receipt từ Expo (Khi App bị gỡ / Uninstall)
+
+Khi người dùng đã gỡ ứng dụng (Uninstall App) nhưng chưa Logout, token vẫn còn tồn tại trong DB `expo_push_tokens`. Khi gọi API gửi thông báo, Expo API ban đầu sẽ trả về Ticket ID với `status: "ok"` (do đã nhận tin vào queue). 
+
+Để kiểm tra trạng thái thực tế sau khi Expo đã giao tiếp với **Google FCM** hoặc **Apple APNs**, sử dụng API **Get Push Receipts**:
+
+- **URL:** `POST https://exp.host/--/api/v2/push/getReceipts`
+- **Headers:** `Content-Type: application/json`
+- **Body:**
+  ```json
+  {
+    "ids": [
+      "019fd9c9-25c4-7399-971e-6cc8bafe54fd"
+    ]
+  }
+  ```
+
+- **Response khi thiết bị đã Uninstall (FCM / APNs từ chối):**
+  ```json
+  {
+    "data": {
+      "019fd9c9-25c4-7399-971e-6cc8bafe54fd": {
+        "status": "error",
+        "message": "The recipient device is not registered with FCM.",
+        "messageEnum": 7,
+        "messageParamValues": [],
+        "details": {
+          "error": "DeviceNotRegistered",
+          "errorCodeEnum": 3,
+          "sentAt": 1786065266
+        },
+        "__debug": {}
+      }
+    }
+  }
+  ```
+
+> 💡 **Ghi chú:**  
+> Lỗi `"DeviceNotRegistered"` xác nhận thiết bị này đã bị gỡ ứng dụng hoặc token đã hoàn toàn vô hiệu hóa trên dịch vụ của Google/Apple.
