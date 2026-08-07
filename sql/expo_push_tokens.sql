@@ -1,6 +1,7 @@
--- Table: public.expo_push_tokens
-
--- DROP TABLE IF EXISTS public.expo_push_tokens;
+-- Migration script cho Database đang chạy:
+-- ALTER TABLE public.expo_push_tokens DROP CONSTRAINT IF EXISTS expo_push_tokens_manv_platform_key;
+-- ALTER TABLE public.expo_push_tokens DROP CONSTRAINT IF EXISTS expo_push_tokens_pkey;
+-- ALTER TABLE public.expo_push_tokens ADD CONSTRAINT expo_push_tokens_pkey PRIMARY KEY (manv, token);
 
 CREATE TABLE IF NOT EXISTS public.expo_push_tokens
 (
@@ -10,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.expo_push_tokens
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     device_info jsonb,
-    CONSTRAINT expo_push_tokens_pkey PRIMARY KEY (manv),
+    CONSTRAINT expo_push_tokens_pkey PRIMARY KEY (manv, token),
     CONSTRAINT expo_push_tokens_token_key UNIQUE (token)
 )
 

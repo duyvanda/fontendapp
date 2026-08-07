@@ -49,21 +49,29 @@ User đã đăng nhập thành công (hoặc Auto-login vào Trang chủ /(tabs)
         └─► NotificationProvider phát hiện user_info.manv thay đổi
               └─► useEffect([user_info?.manv]) kích hoạt:
                     │
-                    ├─► register_push_token_async(manv)
-                    │     ├─ Lấy token từ AsyncStorage (get_push_token)
-                    │     ├─ Nếu NULL (chưa có token local):
-                    │     │    └─ Gọi setup_push_token():
-                    │     │         ├─ getPermissionsAsync()
-                    │     │         ├─ Nếu chưa granted → requestPermissionsAsync()
-                    │     │         │    └─ 🔔 POPUP HỆ ĐIỀU HÀNH BẬT LÊN XIN QUYỀN TẠI TRANG CHỦ /(tabs)
-                    │     │         ├─ Android: setNotificationChannelAsync('default', MAX importance)
-                    │     │         ├─ getExpoPushTokenAsync({ projectId })
-                    │     │         └─ save_push_token(push_token) xuống AsyncStorage
-                    │     │
-                    │     ├─ Thu thập device_info (brand, model, os_name, os_version, app_version...)
-                    │     └─ POST /post_data/expo_push_token_register/
-                    │          Body: [{ manv, token, platform, device_info }]
-                    │          → DB: INSERT/UPDATE expo_push_tokens (upsert by manv)
+52:                     ├─► register_push_token_async(manv)
+53:                     │     ├─ Lấy token từ AsyncStorage (get_push_token)
+54:                     │     ├─ Nếu NULL (chưa có token local):
+55:                     │     │    └─ Gọi setup_push_token():
+56:                     │     │         ├─ getPermissionsAsync()
+57:                     │     │         ├─ Nếu chưa granted → requestPermissionsAsync()
+58:                     │     │         │    └─ 🔔 POPUP HỆ ĐIỀU HÀNH BẬT LÊN XIN QUYỀN TẠI TRANG CHỦ /(tabs)
+59:                     │     │         │
+60:                     │     │         ├─ ❌ TRƯỜNG HỢP USER TỪ CHỐI (status !== 'granted'):
+61:                     │     │         │    └─ Log warning → trả về NULL
+62:                     │     │         │
+63:                     │     │         └─ ✅ TRƯỜNG HỢP USER ĐỒNG Ý (status === 'granted'):
+64:                     │     │              ├─ Android: setNotificationChannelAsync('default', MAX importance)
+65:                     │     │              ├─ getExpoPushTokenAsync({ projectId })
+66:                     │     │              └─ save_push_token(push_token) xuống AsyncStorage
+67:                     │     │
+68:                     │     ├─ ❌ Nếu push_token là NULL (do từ chối quyền):
+69:                     │     │    └─ DỪNG NGAY (return early) → KHÔNG thu thập device_info & KHÔNG gọi API backend register
+70:                     │     │
+72:                     │          ├─ Thu thập device_info (brand, model, os_name, os_version, app_version...)
+73:                     │          └─ POST /post_data/expo_push_token_register/
+74:                     │               Body: [{ manv, token, platform, device_info }]
+75:                     │               → DB: INSERT/UPDATE expo_push_tokens (upsert by manv, token)
                     │
                     ├─► refresh_unread_count(manv)
                     │     ├─ GET /get_data/expo_get_unread_notifications_count/?manv=xxx
@@ -180,11 +188,12 @@ setInterval (60s, chỉ khi app active):
 ```
 FeedbackContext.logout_user()
   │
-  ├─► Lấy push_token từ AsyncStorage (get_push_token)
+  ├─► Lấy push_token của thiết bị hiện tại từ AsyncStorage (get_push_token)
   ├─► POST /post_data/expo_push_token_unregister/
   │      Body: [{ manv, token }]
   │      → DB: DELETE FROM expo_push_tokens WHERE token = xxx
-  │      → Thiết bị ngừng nhận push notification ngay sau khi logout
+  │      → Chỉ xóa đúng token của thiết bị vừa bấm logout (Các thiết bị khác của user vẫn giữ nguyên)
+  │      → Thiết bị hiện tại ngừng nhận push notification ngay lập tức
   │
   ├─► remove_push_token() ← xóa token khỏi AsyncStorage
   │      (Lần đăng nhập sau sẽ xin lại token mới từ Expo)
@@ -213,6 +222,18 @@ FeedbackContext.logout_user()
 | Polling 60s | Đồng bộ với DB | Server |
 | Bấm vào 1 notification | Giảm đi số đã đọc | Optimistic local |
 | Bấm "Đọc hết" | Set = 0 | Optimistic local |
+
+---
+
+## Chi tiết & Vòng đời của Push Token
+
+### 1. Nguồn gốc sinh Token
+- **Android**: `Notifications.getExpoPushTokenAsync()` kết nối với **Google FCM (Firebase Cloud Messaging)** để lấy token thiết bị, sau đó chuẩn hóa thành dạng `ExponentPushToken[...]`.
+- **iOS**: Thư viện kết nối với **Apple APNs (Apple Push Notification service)** lấy APNs token, sau đó chuẩn hóa thành dạng `ExponentPushToken[...]`.
+
+### 2. Quản lý lưu trữ local
+- Token sinh ra được lưu trữ dưới local storage bằng hàm `save_push_token(token)` trong [`src/storage/notification.ts`](../src/storage/notification.ts) (Key: `'push_token'`).
+- Khi user thực hiện **Logout**, `remove_push_token()` được gọi để dọn dẹp key `'push_token'` trong `AsyncStorage`.
 
 ---
 

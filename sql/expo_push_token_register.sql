@@ -31,12 +31,11 @@ BEGIN
     -- Xóa token cũ nếu nó đang được gắn cho user khác (đăng xuất/đổi tài khoản trên cùng 1 máy)
     DELETE FROM expo_push_tokens WHERE token = v_token AND manv != v_id;
 
-    -- Upsert logic: Mỗi user (manv) chỉ có 1 token mới nhất. Cập nhật nếu user đã có token cũ.
+    -- Upsert logic: Cập nhật nếu trùng cả manv và token (1 user nhiều thiết bị)
     INSERT INTO expo_push_tokens (manv, token, platform, device_info, updated_at)
     VALUES (v_id, v_token, v_platform, v_device_info, CURRENT_TIMESTAMP)
-    ON CONFLICT (manv, platform)
+    ON CONFLICT (manv, token)
     DO UPDATE SET
-        token = EXCLUDED.token,
         platform = EXCLUDED.platform,
         device_info = EXCLUDED.device_info,
         updated_at = CURRENT_TIMESTAMP;
