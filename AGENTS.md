@@ -53,5 +53,11 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - URL get: https://bi.meraplion.com/local/get_data/<ten_ham>, input json là query params
 - URL post: https://bi.meraplion.com/local/post_data/<ten_ham>
 
+# Report Types
+- `type: 0` & `type: 1`: Looker Studio embed (tự động thay `xxxxxx` -> `manv`, `vvvvvv` -> `manv_int_0`).
+- `type: 4`: Native report (Render bằng React Native component khai báo trong `NATIVE_REPORTS_MAP`).
+- `link_report` bắt đầu bằng `/realtime`: Realtime report xử lý qua backend API.
+- `type: 5`: Echart HTML report (Render trực tiếp qua file HTML từ `link_report`, tự động thay `xxxxxx` -> `manv` của user).
+
 # Workthough format: walkthrough_DDMMYYYY_HHMMSS.md tạo trong thư mục changelog/ ở gốc dự án (không bỏ vào thư mục md/)
 - Ưu tiên gom file lại nếu trùng giờ.

@@ -243,6 +243,9 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         set_report_param(
           rppr.replace(/xxxxxx/g, manv).replace(/vvvvvv/g, manv_int_0),
         );
+      } else if (report_obj.type === 5) {
+        const final_link = (report_obj.link_report || '').replace(/xxxxxx/g, manv);
+        set_report_param(final_link);
       } else {
         set_report_param(rppr.replace(/xxxxxx/g, 'MR0000'));
       }

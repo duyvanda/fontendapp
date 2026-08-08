@@ -407,9 +407,11 @@ export default function ReportWebView({ uri, on_orientation_change }: ReportWebV
     });
   };
 
+  const is_direct_url = uri.startsWith('http') && !uri.includes('datastudio.google.com') && !uri.includes('lookerstudio.google.com');
   const base_url = 'https://lookerstudio.google.com';
   const normalized_uri = uri.replace('datastudio.google.com', 'lookerstudio.google.com');
   const html_source = make_html(normalized_uri);
+  const webview_source = is_direct_url ? { uri } : { html: html_source, baseUrl: base_url };
 
   return (
     <View style={globalStyles.screen}>
@@ -427,7 +429,7 @@ export default function ReportWebView({ uri, on_orientation_change }: ReportWebV
                 <WebView
                   ref={webview_ref}
                   key={webview_key}
-                  source={{ html: html_source, baseUrl: base_url }}
+                  source={webview_source}
                   onLoadEnd={handle_load_end}
                   style={{ flex: 1 }}
                   userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"

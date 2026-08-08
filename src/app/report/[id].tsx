@@ -49,7 +49,13 @@ export default function StaticReportScreen() {
 
       {shared ? (
         <ReportWebView 
-          uri={`https://datastudio.google.com/embed/reporting/${report_id}${report_param}`}
+          uri={
+            filter_reports?.type === 5
+              ? (filter_reports.link_report
+                  ? filter_reports.link_report.replace(/xxxxxx/g, user_info?.manv || '')
+                  : report_param)
+              : `https://datastudio.google.com/embed/reporting/${report_id}${report_param}`
+          }
           on_orientation_change={set_is_landscape}
         />
       ) : (
