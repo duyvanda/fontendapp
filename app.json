@@ -2,7 +2,7 @@
   "expo": {
     "name": "BI Portal",
     "slug": "bi-portal",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "bimera",
@@ -54,6 +54,8 @@
       [
         "expo-notifications",
         {
+          "icon": "./assets/images/notification_icon.png",
+          "color": "#00A79D",
           "iosDisplayInForeground": true
         }
       ],

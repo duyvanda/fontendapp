@@ -20,6 +20,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "vanquangduy@gmail.com",
+        "ascAppId": "6790836391",
+        "bundleIdentifier": "com.duyvanda.biportal"
+      }
+    }
   }
 }

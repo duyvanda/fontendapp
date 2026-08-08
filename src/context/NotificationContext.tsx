@@ -43,6 +43,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [loading, set_loading] = useState(false);
 
   const app_state = useRef(AppState.currentState);
+  const last_handled_notification_id = useRef<string | null>(null);
 
   const fetch_notifications = useCallback(async (manv: string) => {
     if (!manv) return;
@@ -216,29 +217,65 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [reports]);
 
-  const handle_notification_response = useCallback((response: Notifications.NotificationResponse) => {
-    if (user_info?.manv) {
-      refresh_unread_count(user_info.manv);
+  const handle_notification_response = useCallback((
+    response: Notifications.NotificationResponse,
+  ) => {
+    // Chỉ xử lý tap mặc định vào notification.
+    if (
+      response.actionIdentifier !==
+      Notifications.DEFAULT_ACTION_IDENTIFIER
+    ) {
+      return;
     }
-    // Cấu trúc dữ liệu mong đợi gửi từ backend:
-    // {
-    //   "to": "ExponentPushToken[xxxxxxxxxx]",
-    //   "title": "Tiêu đề thông báo",
-    //   "body": "Nội dung thông báo",
-    //   "sound": "default",
-    //   "badge": 3,
-    //   "data": { 
-    //     "report_stt": "001"
-    //   }
-    // }
-    const data = response?.notification?.request?.content?.data;
+
+    const notification_id =
+      response.notification.request.identifier;
+
+    // Chống cùng một response bị xử lý 2 lần trong cùng JS session.
+    if (
+      notification_id &&
+      last_handled_notification_id.current ===
+        notification_id
+    ) {
+      return;
+    }
+
+    if (notification_id) {
+      last_handled_notification_id.current =
+        notification_id;
+    }
+
+    if (user_info?.manv) {
+      void refresh_unread_count(user_info.manv);
+    }
+
+    const data =
+      response.notification.request.content.data;
+
     const report_stt = data?.report_stt;
 
     if (report_stt) {
       navigate_to_report(String(report_stt));
     }
-    // else sẽ không làm gì cả chỉ update unread count.
-  }, [user_info?.manv, refresh_unread_count, navigate_to_report]);
+
+    /*
+     * App đang sống đã xử lý response này rồi.
+     * Clear native response để lần cold boot sau
+     * RootLayout không đọc lại notification cũ.
+     */
+    try {
+      Notifications.clearLastNotificationResponse();
+    } catch (error) {
+      console.log(
+        '[NotificationContext] Clear notification response error:',
+        error,
+      );
+    }
+  }, [
+    user_info?.manv,
+    refresh_unread_count,
+    navigate_to_report,
+  ]);
 
   /**
    * Quét (poll) số lượng thông báo chưa đọc mỗi 60s khi app ở foreground.

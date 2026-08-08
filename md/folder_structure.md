@@ -33,9 +33,9 @@ fontendapp/
 │   │   │   └── native/
 │   │   │       └── [id].tsx   <-- Xem Báo cáo dạng Native UI (React Native Charts)
 │   │   │
-│   │   ├── _layout.tsx        <-- Root Layout (Cấu hình Stack Navigation, OTA Check, Notifications Handler)
+│   │   ├── _layout.tsx        <-- Root Layout (Stack Navigation, Notifications Handler, bootstrap_app: capture_initial_notification → OTA Check → Version API Check)
 │   │   ├── account.tsx        <-- Màn hình Cài đặt tài khoản & Xóa tài khoản (Account Deletion)
-│   │   ├── index.tsx          <-- Màn hình Splash Gatekeeper (Kiểm tra session Auth & Fade-out)
+│   │   ├── index.tsx          <-- Splash Gatekeeper: chờ initialized từ FeedbackContext → đọc pending_notification → routing (deep-link / tabs / login)
 │   │   ├── login.tsx          <-- Màn hình Đăng nhập (Auto-focus email, Tenant mặc định)
 │   │   └── terms.tsx          <-- Màn hình Điều khoản dịch vụ & Chính sách bảo mật
 │   │
@@ -54,13 +54,13 @@ fontendapp/
 │   │   └── ReportWebView_rules.md <-- Quy tắc phát triển ReportWebView
 │   │
 │   ├── context/               <-- Quản lý State toàn cục (React Context API)
-│   │   ├── FeedbackContext.tsx    <-- Quản lý Auth, User Info, Danh sách Reports, Thao tác Yêu thích
+│   │   ├── FeedbackContext.tsx    <-- Quản lý Auth, User Info, Danh sách Reports; initialized flag; hydrate từ AsyncStorage cache trước khi fetch network
 │   │   └── NotificationContext.tsx <-- Quản lý Push Token, Đếm Unread, Polling 60s & Deep-linking
 │   │
 │   ├── storage/               <-- Các hàm thao tác với AsyncStorage local
 │   │   ├── auth.ts            <-- Lưu & xóa thông tin Đăng nhập (User Info)
 │   │   ├── chat.ts            <-- Lưu lịch sử hội thoại Chat với BIRA
-│   │   └── notification.ts    <-- Lưu & xóa Push Token cục bộ
+│   │   └── notification.ts    <-- Push Token (save/get/remove_push_token) + PendingNotification (save/get/remove_pending_notification) — persist notification intent qua OTA reload
 │   │
 │   ├── styles/                <-- Hệ thống thiết kế (Design Tokens)
 │   │   └── global.ts          <-- Bảng màu (colors), Spacing, Border Radius, Layout Styles

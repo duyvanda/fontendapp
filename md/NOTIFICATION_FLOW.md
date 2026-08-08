@@ -1,7 +1,7 @@
 # 🔔 NotificationContext — Full Flow Documentation
 
-> **File nguồn:** [`NotificationContext.tsx`](./NotificationContext.tsx)  
-> **Liên quan:** [`FeedbackContext.tsx`](./FeedbackContext.tsx) · [`../storage/notification.ts`](../storage/notification.ts)
+> **File nguồn:** [`NotificationContext.tsx`](../src/context/NotificationContext.tsx)  
+> **Liên quan:** [`FeedbackContext.tsx`](../src/context/FeedbackContext.tsx) · [`../storage/notification.ts`](../src/storage/notification.ts) · [`_layout.tsx`](../src/app/_layout.tsx) · [`index.tsx`](../src/app/index.tsx)
 
 ---
 
@@ -11,8 +11,11 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        _layout.tsx                              │
 │  Notifications.setNotificationHandler(...)  ← Foreground config │
+│  capture_initial_notification() ← Lưu pending vào AsyncStorage  │
+│  bootstrap_app(): capture → OTA check                           │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │                  FeedbackProvider                        │   │
+│  │  initialized flag ← hydrate cache → set true            │   │
 │  │  ┌───────────────────────────────────────────────────┐  │   │
 │  │  │              NotificationProvider                  │  │   │
 │  │  │  - notifications[]    - unread_count               │  │   │
@@ -24,22 +27,68 @@
 
 ---
 
-## PHASE 1 — App khởi động & Gatekeeper Splash (Chưa bật Popup)
+## PHASE 1 — App khởi động & Bootstrap Sequence (Cold Boot)
 
 ```
-App mở → Màn hình Splash Router (/index.tsx)
+App mở (_layout.tsx)
   │
-  ├─► _layout.tsx: Notifications.setNotificationHandler()
-  │     └─ Cấu hình foreground: shouldShowAlert, shouldPlaySound, shouldSetBadge = true
+  ├─► Notifications.setNotificationHandler() ← Cấu hình foreground handler
   │
-  └─► Màn Splash (/index.tsx): Đọc get_user_info() từ AsyncStorage
-        ├─ Chưa đăng nhập (null) → Điều hướng sang màn /login (Không xin quyền Push)
-        └─ Đã đăng nhập (stored_user) → Fade-out 300ms → Điều hướng sang /(tabs) (Trang chủ)
+  └─► bootstrap_app() [SEQUENTIAL]:
+        │
+        ├─► 1. capture_initial_notification()  ← PHẢI CHẠY TRƯỚC OTA
+        │       ├─ Đọc Notifications.getLastNotificationResponse() (sync)
+        │       ├─ Kiểm tra DEFAULT_ACTION_IDENTIFIER + report_stt hợp lệ
+        │       └─ Lưu vào AsyncStorage: save_pending_notification({
+        │              notification_id, report_stt, captured_at
+        │          })
+        │          ✅ Persist qua OTA reloadAsync()
+        │
+        └─► 2. check_and_apply_update(true)
+                ├─ check_native_version_api()   ← Native version check
+                └─ OTA check → fetchUpdateAsync() → reloadAsync()
+                        ↓
+                   ════ JS RUNTIME RESTART ════
+                        ↓
+                   bootstrap_app() lại từ đầu
+                   capture_initial_notification() → overwrite OK (cùng notification_id)
+                   OTA: không còn update mới → tiếp tục bình thường
 ```
 
 ---
 
-## PHASE 2 — Đã đăng nhập & Xin quyền Push Notification tại Trang chủ `/(tabs)`
+## PHASE 2 — Splash Router (index.tsx) Routing
+
+```
+FeedbackContext hydrate (song song AsyncStorage):
+  │  Promise.all([get_user_info(), get_user_hr_info(), get_reports_list()])
+  │  → set_user_info, set_user_hr_info, set_reports (từ cache ngay)
+  │  → finally: set_initialized(true)   ← signal cho index.tsx
+  │
+  └─► index.tsx: useEffect([initialized, user_info, reports])
+        │
+        ├─ Chờ initialized = true  ← guard bắt buộc
+        │
+        ├─► Không có session (user_info = null)
+        │       → navigate_with_fade('/login', clear_notification=true)
+        │
+        └─► Có session → get_pending_notification() từ AsyncStorage
+              │
+              ├─► CÓ pending notification (report_stt = "8")
+              │       ├─ Tìm report trong Context reports[]
+              │       ├─ Xác định route:
+              │       │    ├─ type=4 hoặc trong NATIVE_REPORTS_MAP → /report/native/{stt}
+              │       │    ├─ link_report starts '/realtime' → /realtime/{stt}
+              │       │    └─ Còn lại → /report/{stt}
+              │       └─ navigate_with_fade(target_route, clear_notification=true)
+              │              └─ Sau fade: clearLastNotificationResponse() + remove_pending_notification()
+              │
+              └─► KHÔNG có pending → navigate_with_fade('/(tabs)')
+```
+
+---
+
+## PHASE 3 — Đã đăng nhập & Xin quyền Push Notification tại Trang chủ `/(tabs)`
 
 ```
 User đã đăng nhập thành công (hoặc Auto-login vào Trang chủ /(tabs))
@@ -49,40 +98,35 @@ User đã đăng nhập thành công (hoặc Auto-login vào Trang chủ /(tabs)
         └─► NotificationProvider phát hiện user_info.manv thay đổi
               └─► useEffect([user_info?.manv]) kích hoạt:
                     │
-52:                     ├─► register_push_token_async(manv)
-53:                     │     ├─ Lấy token từ AsyncStorage (get_push_token)
-54:                     │     ├─ Nếu NULL (chưa có token local):
-55:                     │     │    └─ Gọi setup_push_token():
-56:                     │     │         ├─ getPermissionsAsync()
-57:                     │     │         ├─ Nếu chưa granted → requestPermissionsAsync()
-58:                     │     │         │    └─ 🔔 POPUP HỆ ĐIỀU HÀNH BẬT LÊN XIN QUYỀN TẠI TRANG CHỦ /(tabs)
-59:                     │     │         │
-60:                     │     │         ├─ ❌ TRƯỜNG HỢP USER TỪ CHỐI (status !== 'granted'):
-61:                     │     │         │    └─ Log warning → trả về NULL
-62:                     │     │         │
-63:                     │     │         └─ ✅ TRƯỜNG HỢP USER ĐỒNG Ý (status === 'granted'):
-64:                     │     │              ├─ Android: setNotificationChannelAsync('default', MAX importance)
-65:                     │     │              ├─ getExpoPushTokenAsync({ projectId })
-66:                     │     │              └─ save_push_token(push_token) xuống AsyncStorage
-67:                     │     │
-68:                     │     ├─ ❌ Nếu push_token là NULL (do từ chối quyền):
-69:                     │     │    └─ DỪNG NGAY (return early) → KHÔNG thu thập device_info & KHÔNG gọi API backend register
-70:                     │     │
-72:                     │          ├─ Thu thập device_info (brand, model, os_name, os_version, app_version...)
-73:                     │          └─ POST /post_data/expo_push_token_register/
-74:                     │               Body: [{ manv, token, platform, device_info }]
-75:                     │               → DB: INSERT/UPDATE expo_push_tokens (upsert by manv, token)
+                    ├─► register_push_token_async(manv)
+                    │     ├─ Lấy token từ AsyncStorage (get_push_token)
+                    │     ├─ Nếu NULL (chưa có token local):
+                    │     │    └─ Gọi setup_push_token():
+                    │     │         ├─ getPermissionsAsync()
+                    │     │         ├─ Nếu chưa granted → requestPermissionsAsync()
+                    │     │         │    └─ 🔔 POPUP HỆ ĐIỀU HÀNH BẬT LÊN XIN QUYỀN TẠI TRANG CHỦ /(tabs)
+                    │     │         │
+                    │     │         ├─ ❌ TRƯỜNG HỢP USER TỪ CHỐI (status !== 'granted'):
+                    │     │         │    └─ Log warning → trả về NULL
+                    │     │         │
+                    │     │         └─ ✅ TRƯỜNG HỢP USER ĐỒNG Ý (status === 'granted'):
+                    │     │              ├─ Android: setNotificationChannelAsync('default', MAX importance)
+                    │     │              ├─ getExpoPushTokenAsync({ projectId })
+                    │     │              └─ save_push_token(push_token) xuống AsyncStorage
+                    │     │
+                    │     ├─ ❌ Nếu push_token là NULL (do từ chối quyền):
+                    │     │    └─ DỪNG NGAY (return early) → KHÔNG thu thập device_info & KHÔNG gọi API backend register
+                    │     │
+                    │     └─ ✅ push_token hợp lệ:
+                    │          ├─ Thu thập device_info (brand, model, os_name, os_version, app_version...)
+                    │          └─ POST /post_data/expo_push_token_register/
+                    │               Body: [{ manv, token, platform, device_info }]
+                    │               → DB: INSERT/UPDATE expo_push_tokens (upsert by manv, token)
                     │
                     ├─► refresh_unread_count(manv)
                     │     ├─ GET /get_data/expo_get_unread_notifications_count/?manv=xxx
                     │     ├─ set_unread_count(count)
                     │     └─ Notifications.setBadgeCountAsync(count) ← Đồng bộ badge icon
-                    │
-                    ├─► Xử lý Killed State Deep-linking (Notifications.useLastNotificationResponse):
-                    │     └─ Nếu user bấm Banner khi App bị tắt hẳn (Killed State):
-                    │           ├─ Lấy response từ useLastNotificationResponse()
-                    │           ├─ dùng handled_last_response_id (useRef) chặn duplicate navigation
-                    │           └─ handle_notification_response() → navigate_to_report(report_stt)
                     │
                     ├─► setInterval(60s):
                     │     └─ Nếu app đang active → refresh_unread_count(manv)
@@ -96,12 +140,18 @@ User đã đăng nhập thành công (hoặc Auto-login vào Trang chủ /(tabs)
                     │     └─ Nhận push khi app đang foreground → refresh_unread_count()
                     │
                     └─► addNotificationResponseReceivedListener:
-                          └─ User bấm vào notification banner → handle_notification_response() → navigate_to_report()
+                          └─ handle_notification_response(response):
+                                ├─ Guard: DEFAULT_ACTION_IDENTIFIER only
+                                ├─ Dedup: last_handled_notification_id ref
+                                ├─ refresh_unread_count(manv)
+                                ├─ navigate_to_report(report_stt)
+                                └─ clearLastNotificationResponse()
+                                     ← Xóa native response để cold boot sau không re-process
 ```
 
 ---
 
-## PHASE 3 — Nhận Push Notification
+## PHASE 4 — Nhận Push Notification
 
 ```
 Backend Server
@@ -117,13 +167,12 @@ Backend Server
          "data": { "report_stt": "001" }
        }
          │
-118:         │
-119:         ├─► Nếu Expo API trả về response error "DeviceNotRegistered":
-120:         │     └─ Backend thực hiện dọn dẹp: DELETE FROM expo_push_tokens WHERE token = xxx
-121:         │        (Token cũ bị hỏng/vô hiệu hóa do user gỡ app)
-122:         │
-123:         ▼
-124: Expo Push Service → gửi đến APNs (iOS) / FCM (Android)
+         ├─► Nếu Expo API trả về response error "DeviceNotRegistered":
+         │     └─ Backend thực hiện dọn dẹp: DELETE FROM expo_push_tokens WHERE token = xxx
+         │        (Token cũ bị hỏng/vô hiệu hóa do user gỡ app)
+         │
+         ▼
+Expo Push Service → gửi đến APNs (iOS) / FCM (Android)
          │
          ▼
 ┌─────────────────────────────────────────────────────┐
@@ -143,9 +192,9 @@ Backend Server
 
 ---
 
-## PHASE 4 — User tương tác với Notification
+## PHASE 5 — User tương tác với Notification
 
-### 4A. User bấm vào 1 notification (mark as read)
+### 5A. User bấm vào 1 notification (mark as read)
 
 ```
 notifications.tsx: handle_press(item)
@@ -165,7 +214,7 @@ notifications.tsx: handle_press(item)
         └─ Còn lại → /report/{stt}
 ```
 
-### 4B. User bấm "Đánh dấu tất cả đã đọc"
+### 5B. User bấm "Đánh dấu tất cả đã đọc"
 
 ```
 notifications.tsx: mark_all_read(user_info.manv)
@@ -176,7 +225,7 @@ notifications.tsx: mark_all_read(user_info.manv)
        Body: [{ manv: "MR0123" }]
 ```
 
-### 4C. Polling 60s đồng bộ badge với server
+### 5C. Polling 60s đồng bộ badge với server
 
 ```
 setInterval (60s, chỉ khi app active):
@@ -188,7 +237,7 @@ setInterval (60s, chỉ khi app active):
 
 ---
 
-## PHASE 5 — Logout
+## PHASE 6 — Logout
 
 ```
 FeedbackContext.logout_user()
@@ -230,15 +279,31 @@ FeedbackContext.logout_user()
 
 ---
 
+## Phân vai xử lý Notification theo trạng thái App
+
+| Trạng thái | Ai xử lý | Cơ chế |
+|---|---|---|
+| **Killed State** (tap noti mở app) | `_layout.tsx` + `index.tsx` | `capture_initial_notification()` → AsyncStorage → `get_pending_notification()` |
+| **App đang sống** (foreground / background) | `NotificationContext` | `addNotificationResponseReceivedListener` → `handle_notification_response()` |
+
+> ⚠️ **Không có hai nơi cùng tranh nhau consume** `pending_notification`:
+> - Killed state: chỉ dùng AsyncStorage path
+> - App alive: chỉ dùng listener path + `clearLastNotificationResponse()` ngay sau khi xử lý
+
+---
+
 ## Chi tiết & Vòng đời của Push Token
 
 ### 1. Nguồn gốc sinh Token
 - **Android**: `Notifications.getExpoPushTokenAsync()` kết nối với **Google FCM (Firebase Cloud Messaging)** để lấy token thiết bị, sau đó chuẩn hóa thành dạng `ExponentPushToken[...]`.
 - **iOS**: Thư viện kết nối với **Apple APNs (Apple Push Notification service)** lấy APNs token, sau đó chuẩn hóa thành dạng `ExponentPushToken[...]`.
 
-### 2. Quản lý lưu trữ local
-- Token sinh ra được lưu trữ dưới local storage bằng hàm `save_push_token(token)` trong [`src/storage/notification.ts`](../src/storage/notification.ts) (Key: `'push_token'`).
-- Khi user thực hiện **Logout**, `remove_push_token()` được gọi để dọn dẹp key `'push_token'` trong `AsyncStorage`.
+### 2. Quản lý lưu trữ local (`src/storage/notification.ts`)
+
+| Key | Hàm | Mục đích |
+|---|---|---|
+| `push_token` | `save/get/remove_push_token()` | Lưu Expo Push Token |
+| `pending_notification` | `save/get/remove_pending_notification()` | Persist notification intent qua OTA reload |
 
 ---
 

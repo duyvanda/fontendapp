@@ -34,146 +34,13 @@ function make_html(looker_url: string): string {
     iframe{width:100%;height:100%;border:none;display:block}
   </style>
   <script>
-    // Chặn pinch zoom mặc định của WebKit
+    // Chặn pinch zoom mặc định của WebKit để dùng gesture zoom mượt mà của app
     var _b=function(e){e.preventDefault();e.stopPropagation();};
     document.addEventListener('gesturestart',_b,{passive:false});
     document.addEventListener('gesturechange',_b,{passive:false});
     document.addEventListener('gestureend',_b,{passive:false});
     document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)_b(e);},{passive:false});
-
-    // Inject CSS và ẩn footer trong iframe (cùng origin nhờ baseUrl)
-    window.addEventListener('DOMContentLoaded', function() {
-      var iframe = document.querySelector('iframe');
-      if (!iframe) return;
-
-      function injectCSS() {
-        try {
-          var doc = iframe.contentDocument || iframe.contentWindow.document;
-          if (!doc) return;
-          if (doc.getElementById('custom-hide-css')) return;
-          var s = doc.createElement('style');
-          s.id = 'custom-hide-css';
-          s.innerHTML = [
-            '.embed-footer,.embedFooter,[class*="embedFooter"],[class*="embed-footer"],.embedFooterContainer,.branding,.google-logo,.report-footer,',
-            '.branding-info,a[href*="datastudio.google.com"],a[href*="lookerstudio.google.com"],a[href*="15683626"],a[href*="looker-studio/answer"],a[href*="abuse"],a[href*="report_abuse"],.branding-info ~ div,a[href*="15683626"] ~ div',
-            '{display:none!important;pointer-events:none!important;height:0!important;width:0!important;opacity:0!important}',
-            '.embed-navigation-bar,.embed-header,[class*="embedHeader"],[class*="embed-header"],[class*="navigation-bar"],[class*="navigationBar"]{min-height:48px!important;height:auto!important;padding:6px!important}',
-            '[class*="navigation"] button,[class*="navigation"] [role="button"],[class*="header"] button{transform:scale(1.2)!important;transform-origin:center!important}'
-          ].join('');
-          (doc.head || doc.documentElement).appendChild(s);
-        } catch(e) {}
-      }
-
-      function setupClickBlocker(doc) {
-        if (!doc) return;
-        var blockerId = 'click-blocker-listener';
-        if (doc[blockerId]) return;
-        doc[blockerId] = true;
-
-        function handler(e) {
-          var target = e.target;
-          while (target && target !== doc.body) {
-            if (target.tagName && target.tagName.toUpperCase() === 'NG2-VISUAL-CONTAINER') {
-              // Cho phép click vào bộ lọc (dropdown, bộ chọn...) để người dùng chọn thông số
-              if (target.querySelector('.input-control') || target.querySelector('ng2-filter-control') || target.innerHTML.indexOf('input-control') !== -1) {
-                return;
-              }
-              // Chặn đứng sự kiện click ở capture phase để Looker không nhận được tiêu điểm mở menu/phễu
-              e.stopPropagation();
-              break;
-            }
-            target = target.parentElement;
-          }
-        }
-
-        doc.addEventListener('click', handler, true);
-        doc.addEventListener('mousedown', handler, true);
-        doc.addEventListener('mouseup', handler, true);
-      }
-
-      function hide_privacy(root) {
-        if (!root) return;
-
-        // Nếu là document (nodeType === 9), cài đặt bộ chặn click
-        if (root.nodeType === 9) {
-          setupClickBlocker(root);
-        }
-
-        ['.embed-footer','.embedFooter','.embedFooterContainer','.branding','.google-logo','.report-footer','[class*="embedFooter"]','[class*="embed-footer"]','[class*="branding"]','[class*="google-logo"]','[class*="report-footer"]','.logo-container',
-         '.branding-info','a[href*="datastudio.google.com"]','a[href*="lookerstudio.google.com"]','a[href*="15683626"]','a[href*="looker-studio/answer"]','a[href*="abuse"]','a[href*="report_abuse"]'
-        ].forEach(function(sel) {
-          try {
-            var els = root.querySelectorAll(sel);
-            for (var i=0;i<els.length;i++){
-              els[i].style.setProperty('display','none','important');
-              els[i].style.setProperty('height','0','important');
-              els[i].style.setProperty('width','0','important');
-              els[i].style.setProperty('opacity','0','important');
-              els[i].style.setProperty('pointer-events','none','important');
-            }
-          } catch(e){}
-        });
-
-        // Ẩn triệt để liên kết và toàn bộ khung chứa Quyền riêng tư/Điều khoản/Lạm dụng
-        try {
-          var fls = root.querySelectorAll('a[href*="15683626"], a[href*="looker-studio/answer"], a[href*="abuse"], a[href*="report_abuse"], a[href*="privacy"], a[href*="terms"]');
-          for (var k = 0; k < fls.length; k++) {
-            var a = fls[k];
-            a.style.setProperty('display', 'none', 'important');
-            a.style.setProperty('height', '0', 'important');
-            a.style.setProperty('opacity', '0', 'important');
-            
-            // Ẩn cha trực tiếp
-            var p = a.parentElement;
-            if (p) {
-              p.style.setProperty('display', 'none', 'important');
-              p.style.setProperty('height', '0', 'important');
-              p.style.setProperty('opacity', '0', 'important');
-              
-              // Ẩn ông nội để mất toàn bộ dòng text/separator
-              var gp = p.parentElement;
-              if (gp) {
-                gp.style.setProperty('display', 'none', 'important');
-                gp.style.setProperty('height', '0', 'important');
-                gp.style.setProperty('opacity', '0', 'important');
-                
-                // Ẩn tiếp cụ nếu là thanh footer dẹt dưới đáy
-                var ggp = gp.parentElement;
-                if (ggp && (ggp.offsetHeight < 80 || ggp.className.toLowerCase().indexOf('footer') !== -1)) {
-                  ggp.style.setProperty('display', 'none', 'important');
-                  ggp.style.setProperty('height', '0', 'important');
-                  ggp.style.setProperty('opacity', '0', 'important');
-                }
-              }
-            }
-          }
-        } catch(e){}
-
-        var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
-        for (var i=0;i<all.length;i++){
-          var el=all[i]; if(el.style&&el.style.display==='none') continue;
-          var t=''; if(el.childNodes){for(var c=0;c<el.childNodes.length;c++){if(el.childNodes[c].nodeType===3)t+=el.childNodes[c].textContent;}}
-          t=t.trim().toLowerCase();
-          if(t.length>0&&t.length<60&&(t.indexOf('quyền riêng tư')!==-1||t.indexOf('chính sách')!==-1||t.indexOf('điều khoản')!==-1||t.indexOf('privacy')!==-1||t.indexOf('terms')!==-1||t.indexOf('data studio')!==-1||t.indexOf('looker studio')!==-1||t.indexOf('báo cáo vi phạm')!==-1||t.indexOf('report abuse')!==-1)){
-            el.style.setProperty('display','none','important');el.style.setProperty('height','0','important');el.style.setProperty('opacity','0','important');
-            var p=el.parentElement; if(p){p.style.setProperty('display','none','important');var gp=p.parentElement;if(gp&&(gp.offsetHeight<80||gp.className.toLowerCase().indexOf('footer')!==-1)){gp.style.setProperty('display','none','important');}}
-          }
-          if(el.shadowRoot) hide_privacy(el.shadowRoot);
-        }
-      }
-
-      function runScan() {
-        injectCSS();
-        try {
-          var doc = iframe.contentDocument || iframe.contentWindow.document;
-          if (doc) hide_privacy(doc);
-        } catch(e) {}
-      }
-
-      iframe.onload = runScan;
-      setInterval(runScan, 300);
-    });
-  <\/script>
+  </script>
 </head>
 <body>
   <iframe
@@ -444,9 +311,6 @@ export default function ReportWebView({ uri, on_orientation_change }: ReportWebV
                     set_webview_loaded(false);
                   }}
                 />
-                {Platform.OS === 'ios' && (
-                  <View pointerEvents="none" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 20, backgroundColor: '#ffffff', zIndex: 5 }} />
-                )}
               </Reanimated.View>
             </View>
           </GestureDetector>

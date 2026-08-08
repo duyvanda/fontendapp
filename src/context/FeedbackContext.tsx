@@ -44,6 +44,7 @@ interface FeedbackContextValue {
   user_hr_info: user_hr_info_type | null;
   login_text: string;
   login_loading: boolean;
+  initialized: boolean;
   // Report state
   reports: Report[];
   filter_reports: Report | null;
@@ -83,6 +84,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user_hr_info, set_user_hr_info] = useState<user_hr_info_type | null>(null);
   const [login_text, set_login_text] = useState('');
   const [login_loading, set_login_loading] = useState(false);
+  const [initialized, set_initialized] = useState(false);
 
   // Report state
   const [reports, set_reports] = useState<Report[]>([]);
@@ -151,21 +153,80 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // ── Init: Load user từ AsyncStorage khi app khởi động ─────────────────────
+  // ── Init: Hydrate user + reports từ AsyncStorage khi app khời động ──────────────
   useEffect(() => {
+    let is_mounted = true;
+
     (async () => {
-      const stored_user = await get_user_info();
-      const stored_hr = await get_user_hr_info();
-      if (stored_user) {
-        set_user_info(stored_user);
-        if (stored_hr) set_user_hr_info(stored_hr);
-        await fetch_reports(stored_user.manv);
-        // Tạm thời tắt đăng ký Push Notification
-        // registerForPushNotificationsAsync(stored_user.manv);
+      let stored_user: user_info_type | null = null;
+      let has_cached_reports = false;
+
+      try {
+        const [
+          stored_user_data,
+          stored_hr,
+          cached_reports,
+        ] = await Promise.all([
+          get_user_info(),
+          get_user_hr_info(),
+          get_reports_list(),
+        ]);
+
+        if (!is_mounted) {
+          return;
+        }
+
+        stored_user = stored_user_data;
+
+        // 1. Hydrate user trước
+        if (stored_user) {
+          set_user_info(stored_user);
+        }
+
+        if (stored_hr) {
+          set_user_hr_info(stored_hr);
+        }
+
+        // 2. Hydrate reports từ cache ngay lập tức
+        if (
+          Array.isArray(cached_reports) &&
+          cached_reports.length > 0
+        ) {
+          set_reports(cached_reports as Report[]);
+          has_cached_reports = true;
+        }
+
+        // 3. Nếu không có cache nhưng user đã đăng nhập,
+        // cần fetch server trước khi cho app initialized.
+        if (stored_user && !has_cached_reports) {
+          await fetch_reports(stored_user.manv);
+        }
+      } catch (error) {
+        console.error(
+          '[FeedbackContext] Initial hydration error:',
+          error,
+        );
+      } finally {
+        if (is_mounted) {
+          set_initialized(true);
+        }
+      }
+
+      // 4. Nếu đã có cache:
+      // cho UI dùng cache ngay, refresh server chạy background.
+      if (
+        is_mounted &&
+        stored_user &&
+        has_cached_reports
+      ) {
+        void fetch_reports(stored_user.manv);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    return () => {
+      is_mounted = false;
+    };
+  }, [fetch_reports]);
 
 
 
@@ -401,6 +462,7 @@ export const FeedbackProvider: React.FC<{ children: React.ReactNode }> = ({
         user_hr_info,
         login_text,
         login_loading,
+        initialized,
         reports,
         filter_reports,
         report_id,

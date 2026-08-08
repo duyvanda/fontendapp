@@ -1,5 +1,4 @@
 # Expo HAS CHANGED
-
 Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
 
 # Duyệt plan trước khi sửa file và code.
@@ -37,16 +36,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
     - `expo_push_tokens.sql`: DDL bảng `public.expo_push_tokens` (lưu token notification, platform, device_info JSONB theo `manv`).
     - `expo_push_token_register.sql`: Function `expo_push_token_register(jsonb)` xử lý lưu/cập nhật token push notification cho user khi login.
     - `expo_push_token_unregister.sql`: Function `expo_push_token_unregister(jsonb)` xử lý xóa token push notification khi user logout.
-
-# Build preview (KHÔNG TỰ Ý BẤM)
-- **Build APK preview**: `eas build --profile preview --platform android`
-- **Check config**: `eas config --platform ios --profile production`
-- **Build TestFlight iOS (Auto Submit)**: `eas build --platform ios --profile production --auto-submit`
-- **OTA Update**: `eas update --channel preview --environment preview --message "Update text"`
-- **OTA production update**: `eas update --channel production --environment production --message "Update text"`
-- npx tsc --noEmit luôn chạy trước khi build
-- **Lưu ý quan trọng**: Tuyệt đối không tự ý chạy các lệnh build nặng tạo file .apk/.aab HOẶC lệnh `eas update` (OTA Update) nếu không có sự yêu cầu trực tiếp từ người dùng. Luôn luôn đề xuất lệnh để người dùng tự xác nhận chứ không tự ý submit nữa.
-
+    - `expo_check_app_version.sql`: DDL bảng `public.expo_app_version` và function `expo_check_app_version(jsonb)` kiểm tra phiên bản app Native theo platform.
 
 # API
 - Hệ thống sử dụng PostgreSQL Stored Functions nhận và trả về JSONB.
@@ -61,3 +51,47 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 
 # Workthough format: walkthrough_DDMMYYYY_HHMMSS.md tạo trong thư mục changelog/ ở gốc dự án (không bỏ vào thư mục md/)
 - Ưu tiên gom file lại nếu trùng giờ.
+
+# Notification Deep-link Architecture
+- **Killed State**: `_layout.tsx` → `capture_initial_notification()` → `save_pending_notification()` → AsyncStorage (persist qua OTA) → `index.tsx` chờ `initialized` → `get_pending_notification()` → route → clear.
+- **App Alive (foreground/background)**: `NotificationContext` → `addNotificationResponseReceivedListener` → `handle_notification_response()` → `navigate_to_report()` → `clearLastNotificationResponse()`.
+- **Phân vai rõ ràng**: Không có hai nơi cùng tranh nhau consume cùng một notification response.
+- **`initialized` flag**: `FeedbackContext` set `initialized = true` trong `finally` block sau khi hydrate user + reports từ cache. `index.tsx` **bắt buộc** phải chờ `initialized` trước khi routing.
+- **`pending_notification` storage key**: Lưu `{ notification_id, report_stt, captured_at }`. Được xóa ngay sau khi đã consume.
+
+# App Versioning & Version Check (Cơ chế Kiểm tra Phiên bản)
+- **Cấu hình DB & API**: Bảng `public.expo_app_version` & Function `expo_check_app_version(jsonb)` (`/get_data/expo_check_app_version/?platform=<android|ios>`).
+- **Đơn giản hóa**: Loại bỏ hoàn toàn `min_required_version`. Chỉ sử dụng duy nhất `latest_version` và cờ `is_force_update`.
+- **Cơ chế so sánh**: Hàm `check_version_status(CURRENT_NATIVE_VERSION, version_info)` trong `@/constants/version`:
+  - So sánh `CURRENT_NATIVE_VERSION < latest_version` $\rightarrow$ `has_update = true`.
+  - `is_force_update = true`: Bắt buộc cập nhật (Modal ẩn nút "Để sau", khóa phím Back Android, dừng luồng OTA check ở Splash).
+  - `is_force_update = false`: Gợi ý cập nhật (Modal có nút "Để sau").
+  - Nếu `CURRENT_NATIVE_VERSION >= latest_version`: App hoạt động bình thường, không bị block nhầm.
+- **Thứ tự ưu tiên thực thi (Execution Priority)**:
+  - Luồng kiểm tra Native App Version qua API luôn được chạy **ĐẦU TIÊN** trong mọi kịch bản.
+  - **Cold Boot (Khởi động từ đầu / Kill app mở lại)**: Chạy `check_native_version_api()` ngay tại Splash Screen. Nếu là Bắt buộc cập nhật $\rightarrow$ Chặn ngay lập tức, dừng luồng OTA check, hiện Modal khóa ứng dụng.
+  - **Background AppState (`AppState === 'active'`)**: Khi từ Background quay lại Foreground, app gọi lại `check_native_version_api()` với cờ Mutex Lock `is_running` ngăn Race condition. Nếu Admin vừa bật `is_force_update = true` trên Server, Modal sẽ lập tức hiện đè lên màn hình khóa ứng dụng.
+
+# Notification & OTA Updates (Lưu ý về Push Notification & OTA)
+- **Native Plugin Assets**: Các tài nguyên Native khai báo trong Plugin `app.json` (như `expo-notifications` với `icon: ./assets/images/notification_icon.png`) cần được build lại APK/IPA Native để nhúng trực tiếp vào Android/iOS binary resources (`res/drawable`). OTA Update chỉ đẩy Javascript bundle nên không sửa được Native Resources của ứng dụng đã cài trước đó trên máy user.
+- **Tương thích OTA Version**: Khi đẩy OTA update (`eas update`), giữ nguyên `"version"` trong `app.json` nếu muốn các máy chạy bản Native APK/IPA hiện tại nhận được cập nhật (do `runtimeVersion` đang cấu hình theo policy `appVersion`).
+- **Đẩy OTA cho nhiều phiên bản Native song song (vd: `1.0.1` & `1.0.2`)**:
+  - Do `runtimeVersion` ăn theo `appVersion`, máy ở phiên bản Native nào sẽ chỉ nhận OTA phát hành riêng cho phiên bản đó.
+  - **Quy trình đẩy đồng thời cho cả 2 nhóm người dùng**:
+    1. Đẩy cho nhóm `1.0.2`: Giữ `"version": "1.0.2"` trong `app.json` $\rightarrow$ Chạy `eas update --channel production --environment production --message "..."`.
+    2. Đẩy cho nhóm `1.0.1`: Tạm sửa `"version": "1.0.1"` trong `app.json` $\rightarrow$ Chạy `eas update --channel production --environment production --message "..."`.
+    3. Đổi lại `app.json` về `"version": "1.0.2"`.
+- **Cold Boot Notification (Killed State Deep-link)**: Dùng `AsyncStorage` (`pending_notification`) thay vì `getLastNotificationResponseAsync()`. Flow: `capture_initial_notification()` trong `_layout.tsx` lưu intent TRƯỚC OTA → sau reload, `index.tsx` đọc `get_pending_notification()` và route → clear bằng `remove_pending_notification()` + `clearLastNotificationResponse()`.
+
+# Build & Submission (Lệnh Build & Nộp ứng dụng Store)
+- **Lưu ý quan trọng**: Tuyệt đối **KHÔNG** tự ý chạy các lệnh build nặng tạo file `.apk`/`.aab`/`.ipa` hay lệnh `eas update` nếu không có yêu cầu trực tiếp từ người dùng. Luôn chạy `npx tsc --noEmit` trước khi build.
+- **Lệnh Android AAB Production (CH Play)**: `eas build --platform android --profile production`
+- **Lệnh Android APK Preview**: `eas build --profile preview --platform android`
+- **Lệnh iOS TestFlight (Auto Submit)**: `eas build --platform ios --profile production --auto-submit`
+- **Lệnh OTA Update Production**: `eas update --channel production --environment production --message "..."`
+- **Nộp iOS từ Windows (App-Specific Password)**:
+  ```powershell
+  $env:EXPO_APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+  eas submit --platform ios --latest
+  # Chọn Provider: MERAP GROUP CORPORATION (128862239)
+  ```

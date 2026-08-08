@@ -1,16 +1,18 @@
+import { AppVersionInfo, CURRENT_NATIVE_VERSION, check_version_status } from '@/constants/version';
 import { useFeedback } from '@/context/FeedbackContext';
 import { colors, radius, spacing } from '@/styles/global';
-import { LOCALURL } from '@/utils/api';
+import { LOCALURL, apiFetch } from '@/utils/api';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Text, TouchableOpacity,
@@ -23,6 +25,23 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const { user_info, user_hr_info, logout_user } = useFeedback();
   const [deleting, set_deleting] = useState(false);
+  const [server_version_info, set_server_version_info] = useState<AppVersionInfo | null>(null);
+
+  const status_info = check_version_status(CURRENT_NATIVE_VERSION, server_version_info);
+
+  useEffect(() => {
+    async function fetch_version_info() {
+      try {
+        const res = await apiFetch<any>(`${LOCALURL}/get_data/expo_check_app_version/?platform=${Platform.OS}`);
+        if (res && res.status === 'ok' && res.rows_data && res.rows_data.length > 0) {
+          set_server_version_info(res.rows_data[0]);
+        }
+      } catch (e) {
+        console.log('Account fetch version error:', e);
+      }
+    }
+    fetch_version_info();
+  }, []);
 
   const handle_notification_settings = async () => {
     try {
@@ -194,26 +213,75 @@ export default function AccountScreen() {
           </Text>
         </View>
 
-        {/* Version */}
-        <View style={styles.version_box}>
-          <Text style={styles.version_text}>
-            BI Portal v{Constants.expoConfig?.version ?? '1.0.0'}
-            {Updates.createdAt
-              ? (() => {
+        {/* Version Note Card */}
+        <View style={styles.version_card}>
+          <View style={styles.version_card_header}>
+            <View style={styles.version_card_title_row}>
+              <Ionicons name="information-circle-outline" size={18} color={colors.primary} style={{ marginRight: 6 }} />
+              <Text style={styles.version_card_title}>Thông tin Phiên bản</Text>
+            </View>
+            {server_version_info && (
+              <View
+                style={[
+                  styles.status_chip,
+                  status_info.is_force
+                    ? { backgroundColor: '#fee2e2', borderColor: '#ef4444' }
+                    : status_info.is_optional
+                    ? { backgroundColor: '#fef3c7', borderColor: '#f59e0b' }
+                    : { backgroundColor: '#dcfce7', borderColor: '#22c55e' },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.status_chip_text,
+                    status_info.is_force
+                      ? { color: '#dc2626' }
+                      : status_info.is_optional
+                      ? { color: '#d97706' }
+                      : { color: '#16a34a' },
+                  ]}
+                >
+                  {status_info.is_force
+                    ? 'Bắt buộc cập nhật'
+                    : status_info.is_optional
+                    ? `Có bản mới v${server_version_info.latest_version}`
+                    : 'Mới nhất'}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.version_info_row}>
+            <Text style={styles.version_info_label}>Phiên bản máy (Installed):</Text>
+            <Text style={styles.version_info_val}>v{CURRENT_NATIVE_VERSION}</Text>
+          </View>
+
+          {server_version_info && (
+            <View style={styles.version_info_row}>
+              <Text style={styles.version_info_label}>Phiên bản Server (Latest):</Text>
+              <Text style={styles.version_info_val}>v{server_version_info.latest_version}</Text>
+            </View>
+          )}
+
+          <View style={styles.version_info_row}>
+            <Text style={styles.version_info_label}>Channel OTA:</Text>
+            <Text style={styles.version_info_val}>{Updates.channel || 'development'}</Text>
+          </View>
+
+          {Updates.createdAt && (
+            <Text style={styles.version_sub_note}>
+              OTA phát hành:{' '}
+              {(() => {
                 try {
                   const d = new Date(Updates.createdAt);
                   const pad = (n: number) => n.toString().padStart(2, '0');
-                  return `  •  ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-                } catch (e) {
-                  return '  •  (live)';
+                  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                } catch {
+                  return 'Live';
                 }
-              })()
-              : '  •  (dev)'
-            }
-          </Text>
-          <Text style={styles.version_text}>
-            ch: {Updates.channel ?? 'n/a'}  |  embedded: {String(Updates.isEmbeddedLaunch)}
-          </Text>
+              })()}
+            </Text>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -368,13 +436,60 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     lineHeight: 18,
   },
-  version_box: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
+  version_card: {
+    backgroundColor: '#ffffff',
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  version_text: {
-    fontSize: 12,
+  version_card_header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: spacing.sm,
+  },
+  version_card_title_row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  version_card_title: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  status_chip: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  status_chip_text: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  version_info_row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  version_info_label: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  version_info_val: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  version_sub_note: {
+    fontSize: 11,
     color: colors.textCaption,
-    marginBottom: 2,
+    textAlign: 'right',
+    marginTop: 4,
   },
 });
